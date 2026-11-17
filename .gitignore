@@ -16,3 +16,5 @@ ml/datasets/raw/
 
 # parallel-sonnet agent briefs & run logs
 .agents/
+.pytest_cache/
+.ruff_cache/

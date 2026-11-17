@@ -1,0 +1,217 @@
+{
+  "note": "Single source of truth for the Ark airframe. Edit 'requirements', 'environment', 'fixed_mass_kg', 'frame', 'hull' and 'candidates' by hand. 'chosen' and 'runners_up' are written by sizing/size_ark.py; do not edit them.",
+  "requirements": {
+    "payload_kg": 2.0,
+    "range_out_km": 20.0,
+    "range_back_km": 20.0,
+    "reserve_frac": 0.2,
+    "hover_out_s": 120,
+    "water_ops_s": 120,
+    "hover_back_s": 60,
+    "cruise_speed_range_mps": [
+      8,
+      20
+    ],
+    "twr_min": 2.0,
+    "reserve_buoyancy_frac": 1.0,
+    "prop_clearance_min_m": 0.25,
+    "gm_min_m": 0.05
+  },
+  "environment": {
+    "rho_air": 1.16,
+    "rho_water": 1000.0,
+    "g": 9.81,
+    "air_note": "30 C, sea level, humid (Sabah/Sarawak floods). Fresh floodwater, not seawater: the lower density is the worst case for buoyancy."
+  },
+  "fixed_mass_kg": {
+    "flight_controller_gps": 0.15,
+    "companion_computer": 0.2,
+    "comms_lte_lora_sat": 0.12,
+    "perception_radar_lidar_camera": 0.3,
+    "payload_release": 0.25,
+    "wiring_pdb_connectors": 0.35,
+    "hatch_and_seals": 0.2
+  },
+  "frame": {
+    "arm_kg_per_m": 0.15,
+    "motor_mount_kg": 0.05,
+    "arm_tube_d_m": 0.03,
+    "prop_gap_frac": 0.1,
+    "motor_pylon_m": 0.15,
+    "cd_arm": 1.0,
+    "motor_frontal_m2": 0.004,
+    "cda_extras_m2": 0.01
+  },
+  "hull": {
+    "shape": "ellipsoid",
+    "aspect_width": 0.7,
+    "aspect_height": 0.4,
+    "shell_kg_per_m2": 2.5,
+    "cd_hull": 0.3,
+    "min_length_m": 0.45,
+    "layout_z_frac": {
+      "battery": 0.25,
+      "payload": 0.35,
+      "fixed": 0.55,
+      "shell": 0.5,
+      "arms": 1.0
+    }
+  },
+  "candidates": {
+    "propulsion_note": "Datasheet-class estimates for large-prop 12S power sets (motor + prop + ESC per arm). Replace with real datasheet numbers once a set is chosen.",
+    "propulsion": [
+      {
+        "name": "6010-class 170KV + 22x7.2 in",
+        "prop_in": 22,
+        "motor_kg": 0.25,
+        "prop_kg": 0.05,
+        "esc_kg": 0.09,
+        "max_thrust_kg": 7.0,
+        "fm": 0.65,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "7010-class 150KV + 24x8 in",
+        "prop_in": 24,
+        "motor_kg": 0.3,
+        "prop_kg": 0.06,
+        "esc_kg": 0.1,
+        "max_thrust_kg": 8.5,
+        "fm": 0.65,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "8108-class 120KV + 26x8.5 in",
+        "prop_in": 26,
+        "motor_kg": 0.36,
+        "prop_kg": 0.07,
+        "esc_kg": 0.11,
+        "max_thrust_kg": 10.5,
+        "fm": 0.66,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "8318-class 100KV + 28x9.2 in",
+        "prop_in": 28,
+        "motor_kg": 0.45,
+        "prop_kg": 0.09,
+        "esc_kg": 0.12,
+        "max_thrust_kg": 13.0,
+        "fm": 0.66,
+        "eta_drive": 0.8
+      }
+    ],
+    "series_cells": 12,
+    "parallel_range": [
+      2,
+      12
+    ],
+    "pack_overhead_frac": 0.15,
+    "usable_dod": 0.9,
+    "cells": [
+      {
+        "name": "21700 4.5 Ah high-power (P45B-class)",
+        "ah": 4.5,
+        "v_nom": 3.6,
+        "kg": 0.07,
+        "max_a": 45
+      },
+      {
+        "name": "21700 5.0 Ah high-energy (50S-class)",
+        "ah": 5.0,
+        "v_nom": 3.6,
+        "kg": 0.069,
+        "max_a": 25
+      }
+    ]
+  },
+  "chosen": {
+    "propulsion": "8108-class 120KV + 26x8.5 in",
+    "cell": "21700 5.0 Ah high-energy (50S-class)",
+    "pack": "12S6P",
+    "feasible": true,
+    "checks": {
+      "energy": true,
+      "thrust_to_weight": true,
+      "pack_current": true,
+      "prop_clearance": true,
+      "stability": true
+    },
+    "energy_margin": 1.0146,
+    "mass_kg": {
+      "all_up": 13.1507,
+      "payload": 2.0,
+      "pack": 5.7132,
+      "power_set": 2.16,
+      "arms": 0.5082,
+      "hull_shell": 1.1993,
+      "fixed": 1.57
+    },
+    "geometry_m": {
+      "prop_d": 0.6604,
+      "arm_radius": 0.5137,
+      "span_tip_to_tip": 1.6877,
+      "hull_length": 0.564,
+      "hull_width": 0.3948,
+      "hull_height": 0.2256,
+      "hull_volume_l": 26.3013,
+      "cda_m2": 0.1086
+    },
+    "power_w": {
+      "hover_loaded": 1556.5581,
+      "hover_empty": 1215.332,
+      "cruise_out": 1474.995,
+      "cruise_back": 1180.6064,
+      "peak_at_twr_min": 4402.6111
+    },
+    "cruise_speed_mps": {
+      "out": 19.0,
+      "back": 18.0
+    },
+    "energy_wh": {
+      "pack": 1296.0,
+      "usable": 1166.4,
+      "mission": 919.6958,
+      "needed_with_reserve": 1149.6198
+    },
+    "pack_peak_current_a": 101.9123,
+    "thrust_to_weight": 3.1938,
+    "flight_time_min": 41.0624,
+    "float_loaded": {
+      "draft_m": 0.1128,
+      "kg_m": 0.132,
+      "gm_m": 0.068,
+      "prop_clearance_m": 0.2628
+    }
+  },
+  "runners_up": [
+    {
+      "propulsion": "6010-class 170KV + 22x7.2 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S7P",
+      "energy_margin": 1.0035,
+      "all_up_kg": 13.4751
+    },
+    {
+      "propulsion": "8318-class 100KV + 28x9.2 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S6P",
+      "energy_margin": 1.0162,
+      "all_up_kg": 13.6868
+    },
+    {
+      "propulsion": "7010-class 150KV + 24x8 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S7P",
+      "energy_margin": 1.0386,
+      "all_up_kg": 13.7982
+    },
+    {
+      "propulsion": "8108-class 120KV + 26x8.5 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S7P",
+      "energy_margin": 1.0818,
+      "all_up_kg": 14.1637
+    }
+  ]
+}
