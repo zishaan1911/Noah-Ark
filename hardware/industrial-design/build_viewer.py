@@ -64,8 +64,13 @@ def main() -> int:
             v = widen_radially(v, motor_d)
         parts[name] = pack(v, f)
     props = np.concatenate([d[k] for k in d.files if k.startswith("GEO_Propeller") and k.endswith("::v")])
+    livery = {
+        p.stem: "data:image/png;base64," + base64.b64encode(p.read_bytes()).decode()
+        for p in sorted((HERE / "livery").glob("*.png"))
+    }
     data = {
-        "span_m": round(float(np.hypot(props[:, 0], props[:, 1]).max()) * 2, 3),
+        "livery": livery,
+        "span_m":round(float(np.hypot(props[:, 0], props[:, 1]).max()) * 2, 3),
         "parts": parts,
         "id": {k: idc[k] for k in ("pontoon", "added_mass_kg")} | {"result": res},
         "chosen": {
