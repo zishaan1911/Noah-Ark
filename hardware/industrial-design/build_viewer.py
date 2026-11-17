@@ -2,8 +2,7 @@
 
     python industrial-design/build_viewer.py   # out/ark_model.npz + ark.json -> out/ark_viewer.html
 
-Two geometry edits happen here: the battery housing is stretched to hold the chosen pack, and the motor pods are
-widened to the real T-Motor MN801-S diameter. Meshes are quantised to uint16 per part to keep the page small.
+One geometry edit happens here: the motor pods are widened to the real T-Motor MN801-S diameter. Meshes are quantised to uint16 per part to keep the page small.
 """
 
 import base64
@@ -15,14 +14,6 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 ARK_JSON = HERE.parent / "ark.json"
 OUT = HERE / "out"
-
-
-def stretch_x(v: np.ndarray, extra: float) -> np.ndarray:
-    lo, hi = v[:, 0].min(), v[:, 0].max()
-    c = (lo + hi) / 2
-    out = v.copy()
-    out[:, 0] = c + (v[:, 0] - c) * (hi - lo + extra) / (hi - lo)
-    return out
 
 
 def widen_radially(v: np.ndarray, diameter: float) -> np.ndarray:
@@ -58,8 +49,6 @@ def main() -> int:
     parts = {}
     for name in sorted({k.split("::")[0] for k in d.files}):
         v, f = d[name + "::v"].astype(np.float64), d[name + "::f"]
-        if name == "Battery":
-            v = stretch_x(v, res["battery"]["housing_stretch_m"][0])
         if name.startswith("GEO_Base"):
             v = widen_radially(v, motor_d)
         parts[name] = pack(v, f)
@@ -70,7 +59,7 @@ def main() -> int:
     }
     data = {
         "livery": livery,
-        "span_m":round(float(np.hypot(props[:, 0], props[:, 1]).max()) * 2, 3),
+        "span_m": round(float(np.hypot(props[:, 0], props[:, 1]).max()) * 2, 3),
         "parts": parts,
         "id": {k: idc[k] for k in ("pontoon", "added_mass_kg")} | {"result": res},
         "chosen": {

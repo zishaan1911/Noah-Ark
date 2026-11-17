@@ -753,6 +753,7 @@
     "result": {
       "scale": 0.77915,
       "removed_parts": [
+        "Battery",
         "GEO_Camera_Part_011",
         "GEO_Camera_Part_012",
         "GEO_Camera_Part_013",
@@ -779,7 +780,6 @@
         "GEO_Wires_05"
       ],
       "kept_parts": [
-        "Battery",
         "GEO_Base_01",
         "GEO_Base_02",
         "GEO_Base_03",
@@ -792,32 +792,41 @@
         "Green_Light",
         "Legs"
       ],
-      "triangles": 238400,
+      "triangles": 209652,
       "body_area_m2": 1.6187,
       "structure_kg": 2.428,
       "auw_estimate_kg": 13.747,
       "battery": {
         "pack": "12S4P",
+        "location": "belly well, inside the hub",
         "grid": [
-          7,
-          7
+          12,
+          4
         ],
         "pack_size_m": [
-          0.1578,
-          0.1578,
+          0.2648,
+          0.0936,
           0.0785
         ],
-        "slot_size_m": [
-          0.1502,
-          0.1666,
-          0.1088
-        ],
-        "housing_stretch_m": [
-          0.0076,
+        "pack_centre_m": [
+          -0.06,
           0.0,
-          0.0
-        ]
+          -0.192
+        ],
+        "well_m": {
+          "x_m": [
+            -0.23,
+            0.11
+          ],
+          "y_m": [
+            -0.11,
+            0.11
+          ],
+          "floor_z_m": -0.2382
+        },
+        "fits": true
       },
+      "deck_z_m": -0.1467,
       "pontoons": {
         "volume_l_each": 15.27,
         "reserve_buoyancy": 1.221,
@@ -836,6 +845,9 @@
       }
     },
     "shell_wall_m": 0.002,
-    "shell_density": 1500
+    "shell_density": 1500,
+    "belly_floor_below_m": -0.22,
+    "deck_gap_m": 0.006,
+    "deck_max_z_m": -0.12
   }
 }

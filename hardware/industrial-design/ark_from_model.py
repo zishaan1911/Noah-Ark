@@ -5,7 +5,7 @@
 - Scale so the motor centres sit on Ark's arm radius (from ark.json chosen geometry); model forward (-y) becomes +x.
 - Remove the camera gimbal and its damping mount (the user's call: Ark carries cargo, not a camera).
 - Structure mass from the shell surface area x a composite areal density.
-- Battery: does the chosen pack (12S x P, 21700 cells upright) fit the model's rear battery slot?
+- Battery: the chosen pack (12S x P, 21700 cells upright) goes inside, in the hub's belly well; check it fits.
 - Inflatable pontoons: two tubes along the skids, stowed in flight, inflated by CO2 for a water landing; size them
   for all-up mass x (1 + reserve) and find the draft and the prop clearance above the water.
 """
@@ -20,7 +20,8 @@ HERE = Path(__file__).resolve().parent
 ARK_JSON = HERE.parent / "ark.json"
 SRC = HERE / "drone-model" / "drone.npz"
 OUT = HERE / "out"
-GIMBAL = ("GEO_Camera", "GEO_Lens", "GEO_Lathe", "GEO_Support", "GEO_Computer", "GEO_Wires")
+# the camera gimbal and its damping mount go (Ark carries cargo); so does the external battery (the pack moves inside)
+GIMBAL = ("GEO_Camera", "GEO_Lens", "GEO_Lathe", "GEO_Support", "GEO_Computer", "GEO_Wires", "Battery")
 
 
 def load_parts(path: Path) -> dict[str, tuple[np.ndarray, np.ndarray]]:
@@ -43,6 +44,25 @@ def surface_z(v: np.ndarray, x: float, y: float, r: float = 0.015, lowest: bool 
     if len(near) == 0:
         raise ValueError(f"no shell vertices near ({x}, {y})")
     return float(near[:, 2].min() if lowest else near[:, 2].max())
+
+
+def belly_well(v: np.ndarray, below: float, cell: float = 0.01) -> dict:
+    """Plan extent and floor of the hub's deep channel: grid cells whose lowest shell point is below `below`."""
+    hub = v[(np.abs(v[:, 0]) < 0.26) & (np.abs(v[:, 1]) < 0.26) & (v[:, 2] > -0.3)]
+    ix = np.floor(hub[:, 0] / cell).astype(int)
+    iy = np.floor(hub[:, 1] / cell).astype(int)
+    floors: dict[tuple[int, int], float] = {}
+    for i, j, z in zip(ix, iy, hub[:, 2], strict=True):
+        floors[(i, j)] = min(floors.get((i, j), z), z)
+    deep = np.array([(i, j, z) for (i, j), z in floors.items() if z < below])
+    # the channel straddles the centreline: keep the cells connected to it (|y| within the centre band)
+    xs, ys = deep[:, 0] * cell, deep[:, 1] * cell
+    band = np.abs(ys + cell / 2) < 0.12
+    return {
+        "x_m": [round(float(xs[band].min()), 3), round(float(xs[band].max() + cell), 3)],
+        "y_m": [round(float(ys[band].min()), 3), round(float(ys[band].max() + cell), 3)],
+        "floor_z_m": round(float(np.median(deep[band, 2])), 4),
+    }
 
 
 def tube_volume(d: float, length: float) -> float:
@@ -80,16 +100,22 @@ def main() -> int:
     # the shell is modelled with thickness (closed mesh), so its inner and outer faces are both counted: halve it
     structure_kg = body_area / 2 * idc["shell_wall_m"] * idc["shell_density"]
 
-    # battery: chosen pack, cells upright in the squarest grid that holds 12 x P cells
+    # battery: inside the hub's belly well (the deep channel under the centre), cells upright, S along x and P along y
     s, p = (int(x) for x in ch["pack"].removesuffix("P").split("S"))
     cell, case = ark["mechanical"]["cell_21700_m"], ark["mechanical"]["pack_case_m"]
-    n_cells = s * p
-    cols = math.ceil(math.sqrt(n_cells))
-    rows = math.ceil(n_cells / cols)
-    pack_size = [cols * cell["d"] + 2 * case, rows * cell["d"] + 2 * case, cell["h"] + 2 * case]
-    bv = parts["Battery"][0]
-    slot = (bv.max(0) - bv.min(0)).tolist()
-    stretch = [max(0.0, pack_size[k] - slot[k]) for k in range(3)]
+    pack_size = [s * cell["d"] + 2 * case, p * cell["d"] + 2 * case, cell["h"] + 2 * case]
+    well = belly_well(body_v, idc["belly_floor_below_m"])
+    inset = idc["shell_wall_m"] + ark["mechanical"]["clearance_m"]
+    pack_floor = well["floor_z_m"] + inset
+    pack_centre = [(well["x_m"][0] + well["x_m"][1]) / 2, 0.0, pack_floor + pack_size[2] / 2]
+    deck_z = pack_floor + pack_size[2] + idc["deck_gap_m"]
+    fits = (
+        pack_size[0] <= well["x_m"][1] - well["x_m"][0] - 2 * inset
+        and pack_size[1] <= well["y_m"][1] - well["y_m"][0] - 2 * inset
+        and deck_z <= idc["deck_max_z_m"]
+    )
+    if not fits:
+        raise ValueError(f"{ch['pack']} pack {pack_size} does not fit the belly well {well}")
 
     # pontoons along the skid bars
     legs = body_v[body_v[:, 2] < idc["skid_z_below_m"]]
@@ -115,11 +141,14 @@ def main() -> int:
         "auw_estimate_kg": round(auw, 3),
         "battery": {
             "pack": ch["pack"],
-            "grid": [cols, rows],
+            "location": "belly well, inside the hub",
+            "grid": [s, p],
             "pack_size_m": [round(x, 4) for x in pack_size],
-            "slot_size_m": [round(x, 4) for x in slot],
-            "housing_stretch_m": [round(x, 4) for x in stretch],
+            "pack_centre_m": [round(x, 4) for x in pack_centre],
+            "well_m": well,
+            "fits": fits,
         },
+        "deck_z_m": round(deck_z, 4),
         "pontoons": {
             "volume_l_each": round(each * 1e3, 2),
             "reserve_buoyancy": round(2 * each * 1000 / auw - 1, 3),

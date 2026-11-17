@@ -30,11 +30,15 @@ def test_stored_design_floats_with_reserve_and_clears_the_water():
     assert 0 < pt["draft_m"] < ARK["industrial_design"]["pontoon"]["d_m"]
 
 
-def test_battery_fits_after_the_housing_stretch():
-    b = RES["battery"]
-    assert all(b["slot_size_m"][k] + b["housing_stretch_m"][k] >= b["pack_size_m"][k] for k in range(3))
-    assert b["grid"][0] * b["grid"][1] >= int(b["pack"].removesuffix("P").split("S")[1]) * 12
+def test_battery_sits_inside_the_belly_well_under_the_deck():
+    b, w = RES["battery"], RES["battery"]["well_m"]
+    assert b["fits"]
+    assert b["grid"][0] * b["grid"][1] == 12 * int(b["pack"].removesuffix("P").split("S")[1])
+    assert w["x_m"][0] < b["pack_centre_m"][0] - b["pack_size_m"][0] / 2
+    assert b["pack_centre_m"][0] + b["pack_size_m"][0] / 2 < w["x_m"][1]
+    assert b["pack_centre_m"][2] - b["pack_size_m"][2] / 2 > w["floor_z_m"]
+    assert b["pack_centre_m"][2] + b["pack_size_m"][2] / 2 < RES["deck_z_m"]
 
 
-def test_gimbal_is_gone():
-    assert not any(n.startswith(("GEO_Camera", "GEO_Lens")) for n in RES["kept_parts"])
+def test_gimbal_and_external_battery_are_gone():
+    assert not any(n.startswith(("GEO_Camera", "GEO_Lens", "Battery")) for n in RES["kept_parts"])
