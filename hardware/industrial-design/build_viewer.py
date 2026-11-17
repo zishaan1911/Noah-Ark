@@ -73,9 +73,9 @@ def main() -> int:
         "parts": parts,
         "id": {k: idc[k] for k in ("pontoon", "added_mass_kg")} | {"result": res},
         "chosen": {
-            "pack": ark["chosen"]["pack"],
-            "pack_kg": ark["chosen"]["mass_kg"]["pack"],
-            "pack_kwh": ark["chosen"]["energy_wh"]["pack"] / 1000,
+            "pack": res["battery"]["pack"],
+            "pack_kg": res["battery"]["pack_kg"],
+            "pack_kwh": res["battery"]["pack_wh"] / 1000,
             "flight_min": ark["chosen"]["flight_time_min"],
             "propulsion": ark["chosen"]["propulsion"],
         },

@@ -1,0 +1,3963 @@
+{
+ "about": "Ark-1 electrical system, the single source of truth for the harness: every component with its real product, position (drone frame: x forward, y left, z up, metres; pos = box centre, yaw about z in degrees) and ports, and every wire from port to port with gauge, colour, connectors and route. Checked by harness.py; drawn by viewer/20_electronics.js. Fields listed in a component's `estimated` are not published by the maker.",
+ "architecture": {
+  "power": ["Pack 12S4P (48 x INR21700-50S, 50.4 V full) -> JBD BMS (low side) -> XT90-S arming plug behind the rear hatch", "-> Holybro PM02D HV (I2C V/I sensing, 5.2 V to POWER1) -> 2 mF bulk bank -> Matek FCHUB-12S -> 4 x T-Motor ALPHA 80A (12 AWG, XT60)", "FCHUB-12S 5.1 V 5 A BEC -> Pixhawk servo rail (latch servo, NeoPixels, RC-switch logic); FCHUB 12 V 4 A -> pontoon firing driver", "Matek BEC12S-PRO @ 12 V -> Jetson Orin Nano DC jack; Matek BEC12S-PRO @ 5.2 V -> Pixhawk POWER2 (backup)"],
+  "data": ["ESCs: I/O PWM OUT 1-4 (PWM 400 Hz); ALPHA telemetry lines -> FTDI FT4232H -> Jetson USB", "Ethernet Pixhawk <-> Jetson (MAVLink/UDP); TELEM1 RFD900x; TELEM2 RockBLOCK 9603; TELEM3 Ainstein US-D1 radar", "GPS1 Holybro M10 (GNSS, compass, safety switch, buzzer); RC IN FrSky R-XSR SBUS; CAN2 -> cargo pogo contacts (DroneCAN)", "FMU PWM OUT (AUX): 1 latch servo, 3 firing ARM, 4/5 FIRE L/R, 6/7 pontoon pressure OK L/R (GPIO in, 10 k pull-ups), 8 NeoPixel status + nav chain", "LTE Quectel EG25-G (USB) and BMS UART into the Jetson"]
+ },
+ "decisions": ["Classic stack at the CG: FCHUB-12S on the deck, Pixhawk 6X on 20 mm standoffs and isolators above it; ESC feeds radiate along the arm diagonals.", "XT90-S anti-spark plug is the arming plug, reached through the rear service hatch that also closes the model's old battery slot.", "PM02D HV carries the full pack current (60 A continuous / 100 A < 60 s) with its XT60s replaced by 8 AWG; it is the 6X's digital power source.", "Bulk capacitance 4 x 470 uF / 63 V = 1.88 mF, matching the 2 mF in the SPICE bus model; 63 V parts for a 50.4 V bus.", "ALPHA telemetry is not a BLHeli protocol ArduPilot reads, so the four telemetry lines go to the Jetson through an FTDI quad UART.", "Jetson Wi-Fi card removed: the RC link uses 2.4 GHz and the Jetson talks through Ethernet/LTE.", "Pontoon pin plan from the pontoon system (its Lua hardcodes it): AUX3 ARM interlock, AUX4/AUX5 FIRE L/R into one in-house driver (3 x IRLML6344, ARM in series with each FIRE) on the FCHUB 12 V BEC; each 12 V latch solenoid (0.5 A x 300 ms) releases a Halkey-Roberts head; Multicomp PSF102 pressure switches confirm on AUX6/AUX7.", "Cargo pogo contacts carry CAN2 (VCC, CANH, CANL, GND): a smart pod is a DroneCAN node (ID, sensors, release confirm).", "LTE and RC antennas sit inside the glass-fibre shell (RF-transparent); RFD900x and Iridium antennas are outside on bulkheads; GNSS on the mast.", "Belly loom: radar and cargo cables run down the well beside the pack to IP68 glands in the floor; the inflator leads run down the front legs to glands above the skids."],
+ "connector_ratings": {
+  "12 AWG pair soldered to the capacitor leads": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "2-pin sealed connector (Deutsch DTM06-2S class)": {
+   "cont_a": 7.5,
+   "peak_a": 7.5,
+   "basis": "Deutsch DTM: 7.5 A per contact"
+  },
+  "2.54 mm 16-pin header (Holybro RFD900x-to-Pixhawk GH cable)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "0.1 in header/servo contacts: 3 A per contact"
+  },
+  "2.54 mm 3-pin header": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "0.1 in header/servo contacts: 3 A per contact"
+  },
+  "2.54 mm header pin": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "0.1 in header/servo contacts: 3 A per contact"
+  },
+  "2.54 mm servo header (signal, VDD_SERVO, GND)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "0.1 in header/servo contacts: 3 A per contact"
+  },
+  "22 AWG taps soldered to each series bus": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "4.0 mm gold bullet (female on the ESC)": {
+   "cont_a": 40,
+   "peak_a": 70,
+   "basis": "estimate: AMASS 4.0 mm banana (not published per contact)"
+  },
+  "4.0 mm gold bullet (male on the motor lead)": {
+   "cont_a": 40,
+   "peak_a": 70,
+   "basis": "estimate: AMASS 4.0 mm banana (not published per contact)"
+  },
+  "40-pin 2.54 mm header pins 6/8/10 (UART1)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "0.1 in header/servo contacts: 3 A per contact"
+  },
+  "8 AWG soldered to the +12S nickel bus": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "8 AWG soldered to the -0 nickel bus": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "B- solder pad (8 AWG)": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "DC barrel jack 5.5 x 2.5 mm (9-20 V)": {
+   "cont_a": 5.0,
+   "peak_a": 5.0,
+   "basis": "typical 5 A barrel jack"
+  },
+  "FCHUB-12S 12V/GND pads": {
+   "cont_a": 4,
+   "peak_a": 5,
+   "basis": "Matek: 12 V BEC 4 A continuous, 5 A max"
+  },
+  "FCHUB-12S 12VSW pad (PINIO switched)": {
+   "cont_a": 2,
+   "peak_a": 2,
+   "basis": "Matek: 2 A"
+  },
+  "FCHUB-12S 5V/GND pads": {
+   "cont_a": 5,
+   "peak_a": 6,
+   "basis": "Matek: 5 V BEC 5 A continuous, 6 A max"
+  },
+  "FCHUB-12S CURR/VBAT sense pads": {
+   "cont_a": 0.01,
+   "peak_a": 0.01,
+   "basis": "sense"
+  },
+  "FCHUB-12S ESC pad": {
+   "cont_a": 70,
+   "peak_a": 110,
+   "basis": "Matek: 4 x 70 A continuous, 110 A burst"
+  },
+  "FCHUB-12S VBAT/GND pads": {
+   "cont_a": 5,
+   "peak_a": 5,
+   "basis": "estimate: auxiliary pads"
+  },
+  "FCHUB-12S battery pad": {
+   "cont_a": 140,
+   "peak_a": 220,
+   "basis": "estimate: board rated 140 A class (2 x ESC pad); 440 A sensor"
+  },
+  "IPEX (U.FL)": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "IPEX lead (1.13 mm coax, 150 mm)": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "JR 3-pin servo plug (IP67 micro servo inside the housing)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "servo plug: 3 A per contact"
+  },
+  "JR 3-pin servo plug (white PWM, black GND)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "servo plug: 3 A per contact"
+  },
+  "JR 3-pin servo plug, yellow lead (ALPHA telemetry, 19200 baud)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "servo plug: 3 A per contact"
+  },
+  "JST-GH 1.25 mm 10-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 11-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 3-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 4-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 4-pin (Ainstein Pixhawk cable)": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 4-pin to the pogo block (VCC, CANH, CANL, GND)": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 6-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 7-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-GH 1.25 mm 8-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST GH series: 1 A per contact (AWG 26)"
+  },
+  "JST-PH 2.0 4-pin NTC header": {
+   "cont_a": 2.0,
+   "peak_a": 2.0,
+   "basis": "JST PH: 2 A per contact"
+  },
+  "JST-PH 2.0 4-pin isolated UART": {
+   "cont_a": 2.0,
+   "peak_a": 2.0,
+   "basis": "JST PH: 2 A per contact"
+  },
+  "JST-SH 1.0 mm 5-pin (SBUS, 5V, GND used)": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST SH: 1 A per contact"
+  },
+  "JST-XH 13-pin balance header (2 x 7-pin housings)": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "JST XH: 3 A per contact"
+  },
+  "JST-ZH 1.5 mm 3-pin": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "JST ZH: 1 A per contact"
+  },
+  "Molex CLIK-Mate 2.00 mm 6-pin": {
+   "cont_a": 3.0,
+   "peak_a": 3.0,
+   "basis": "Molex CLIK-Mate 502578 class: 3 A per contact"
+  },
+  "Molex PicoBlade 1.25 mm 10-pin (Ground Control FTDI-style cable)": {
+   "cont_a": 1.0,
+   "peak_a": 1.0,
+   "basis": "Molex PicoBlade: 1 A per contact"
+  },
+  "NTC 10k thermistor leads, soldered": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "P- solder pad (8 AWG)": {
+   "cont_a": 100,
+   "peak_a": 200,
+   "basis": "direct solder joint, limited by the wire"
+  },
+  "PM02D HV solder pad": {
+   "cont_a": 60,
+   "peak_a": 100,
+   "basis": "Holybro: 60 A continuous, 100 A < 60 s"
+  },
+  "RJ45 (Holybro Pixhawk ETH cable, 4-pin GH to RJ45)": {
+   "cont_a": 0.5,
+   "peak_a": 0.5,
+   "basis": "data"
+  },
+  "RP-SMA female": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "RP-SMA male": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "SMA female": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "SMA male": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "U.FL": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "U.FL plug on the 1.13 mm lead": {
+   "cont_a": 0.0,
+   "peak_a": 0.0,
+   "basis": "RF"
+  },
+  "USB 3.2 type-A": {
+   "cont_a": 0.9,
+   "peak_a": 3.0,
+   "basis": "USB 3.2 port: 900 mA (Jetson ports can source more)"
+  },
+  "USB mini-B": {
+   "cont_a": 0.9,
+   "peak_a": 3.0,
+   "basis": "USB 3.2 port: 900 mA (Jetson ports can source more)"
+  },
+  "USB-A plug lead (adapter)": {
+   "cont_a": 0.9,
+   "peak_a": 3.0,
+   "basis": "USB 3.2 port: 900 mA (Jetson ports can source more)"
+  },
+  "XT60H male on the ESC lead": {
+   "cont_a": 30,
+   "peak_a": 60,
+   "basis": "AMASS datasheet: 30 A rated, 60 A instantaneous"
+  },
+  "XT90-S female (pack side)": {
+   "cont_a": 45,
+   "peak_a": 90,
+   "basis": "AMASS datasheet: 45 A rated (10 AWG, dT <= 85 K), 90 A instantaneous"
+  },
+  "XT90-S male (bus side)": {
+   "cont_a": 45,
+   "peak_a": 90,
+   "basis": "AMASS datasheet: 45 A rated (10 AWG, dT <= 85 K), 90 A instantaneous"
+  },
+  "screw terminal (12 V, GND)": {
+   "cont_a": 10,
+   "peak_a": 15,
+   "basis": "2-pole PCB screw terminal, 10 A class"
+  },
+  "screw terminal (LOAD+, LOAD- switched)": {
+   "cont_a": 10,
+   "peak_a": 15,
+   "basis": "2-pole PCB screw terminal, 10 A class"
+  },
+  "solder pads": {
+   "cont_a": 5.0,
+   "peak_a": 9.0,
+   "basis": "Matek BEC12S-PRO: 5 A continuous, 9 A peak"
+  },
+  "solder pads (20 AWG pair)": {
+   "cont_a": 5.0,
+   "peak_a": 9.0,
+   "basis": "Matek BEC12S-PRO: 5 A continuous, 9 A peak"
+  },
+  "solder pads (5V, DIN, GND)": {
+   "cont_a": 5.0,
+   "peak_a": 9.0,
+   "basis": "Matek BEC12S-PRO: 5 A continuous, 9 A peak"
+  },
+  "solder pads (5V, DOUT, GND)": {
+   "cont_a": 5.0,
+   "peak_a": 9.0,
+   "basis": "Matek BEC12S-PRO: 5 A continuous, 9 A peak"
+  }
+ },
+ "insulated_od_mm": {
+  "8": 6.6,
+  "10": 5.2,
+  "12": 4.0,
+  "14": 3.3,
+  "16": 2.6,
+  "18": 2.2,
+  "20": 1.8,
+  "22": 1.6,
+  "24": 1.4,
+  "26": 1.15,
+  "28": 0.95
+ },
+ "cables": {
+  "RG316": {
+   "od_mm": 2.5,
+   "note": "50 ohm FEP coax, SMA/RP-SMA pigtails"
+  },
+  "1.13mm": {
+   "od_mm": 1.13,
+   "note": "50 ohm micro-coax on U.FL/IPEX leads"
+  }
+ },
+ "structure": {
+  "deck": {
+   "name": "Avionics deck, 2 mm carbon plate on four shelf bosses",
+   "x_m": [-0.15, 0.15],
+   "y_m": [-0.115, 0.115],
+   "z_bottom_m": -0.1455,
+   "thickness_m": 0.002,
+   "corner_r_m": 0.012
+  },
+  "tray": {
+   "name": "Upper rear tray, 1.5 mm carbon on four 34 mm standoffs",
+   "x_m": [-0.15, -0.08],
+   "y_m": [-0.066, 0.058],
+   "z_bottom_m": -0.1075,
+   "thickness_m": 0.0015,
+   "corner_r_m": 0.008
+  },
+  "hatch": {
+   "name": "Rear service hatch (closes the old battery slot; status light lens)",
+   "x_m": [-0.279, -0.274],
+   "y_m": [-0.066, 0.066],
+   "z_m": [-0.204, -0.091]
+  }
+ },
+ "components": [
+  {
+   "id": "pack",
+   "name": "Ark-1 pack 12S4P, 48 x Samsung INR21700-50S",
+   "maker": "Samsung SDI (cells); pack built in-house",
+   "url": "https://www.samsungsdi.com/upload/download/product/INR21700-50S.pdf",
+   "role": "Main battery: 12 series groups of 4 cells, upright, nickel-strip bus, 3D-printed holders",
+   "pos": [-0.06, 0.0, -0.192],
+   "size": [0.2648, 0.0936, 0.0785],
+   "yaw_deg": 0,
+   "mass_g": 3809,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "pos",
+     "connector": "8 AWG soldered to the +12S nickel bus",
+     "pins": ["B+"],
+     "domain": "VBAT",
+     "at": [-0.1824, 0.03, -0.1507]
+    },
+    {
+     "id": "neg",
+     "connector": "8 AWG soldered to the -0 nickel bus",
+     "pins": ["B-"],
+     "domain": "VBAT",
+     "at": [-0.1824, -0.03, -0.1507]
+    },
+    {
+     "id": "bal",
+     "connector": "22 AWG taps soldered to each series bus",
+     "pins": ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"],
+     "domain": "BALANCE",
+     "at": [-0.1884, 0.0, -0.1588]
+    },
+    {
+     "id": "ntc",
+     "connector": "NTC 10k thermistor leads, soldered",
+     "pins": ["NTC1a", "NTC1b", "NTC2a", "NTC2b"],
+     "domain": "NTC",
+     "at": [-0.1884, -0.014, -0.1588]
+    }
+   ]
+  },
+  {
+   "id": "bms",
+   "name": "JBD SP16S020 smart BMS (12S configuration, 100 A, isolated UART)",
+   "maker": "Jiabaida (JBD)",
+   "url": "https://cdn.shopify.com/s/files/1/0606/5199/5298/files/JBD-SP16S020.pdf",
+   "role": "Low-side protection (over/under-voltage, over-current, short, temperature), passive balancing, state of charge",
+   "pos": [-0.2019, 0.0, -0.192],
+   "size": [0.012, 0.085, 0.066],
+   "yaw_deg": 0,
+   "mass_g": 95,
+   "location": "internal",
+   "estimated": ["size_m", "mass_g"],
+   "ports": [
+    {
+     "id": "b_neg",
+     "connector": "B- solder pad (8 AWG)",
+     "pins": ["B-"],
+     "domain": "VBAT",
+     "at": [-0.1974, -0.03, -0.157]
+    },
+    {
+     "id": "p_neg",
+     "connector": "P- solder pad (8 AWG)",
+     "pins": ["P-"],
+     "domain": "VBAT",
+     "at": [-0.2089, -0.036, -0.157]
+    },
+    {
+     "id": "bal",
+     "connector": "JST-XH 13-pin balance header (2 x 7-pin housings)",
+     "pins": ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"],
+     "domain": "BALANCE",
+     "at": [-0.1974, 0.0, -0.157]
+    },
+    {
+     "id": "ntc",
+     "connector": "JST-PH 2.0 4-pin NTC header",
+     "pins": ["NTC1a", "NTC1b", "NTC2a", "NTC2b"],
+     "domain": "NTC",
+     "at": [-0.1974, -0.014, -0.157]
+    },
+    {
+     "id": "uart",
+     "connector": "JST-PH 2.0 4-pin isolated UART",
+     "pins": ["GND", "RX", "TX", "VCC"],
+     "domain": "UART",
+     "at": [-0.2089, -0.022, -0.157]
+    }
+   ]
+  },
+  {
+   "id": "xt90",
+   "name": "AMASS XT90-S anti-spark connector, mated pair (arming plug)",
+   "maker": "AMASS",
+   "url": "https://www.china-amass.net/uploads/XT90-2+2-F-SPEC.pdf",
+   "role": "Main power disconnect; the pack side is plugged in last through the rear hatch (anti-spark resistor pre-charges the bus)",
+   "pos": [-0.245, 0.0, -0.163],
+   "size": [0.0109, 0.047, 0.0216],
+   "yaw_deg": 0,
+   "mass_g": 18,
+   "location": "internal",
+   "estimated": ["size_m"],
+   "ports": [
+    {
+     "id": "pack_pos",
+     "connector": "XT90-S female (pack side)",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.245, -0.0235, -0.158]
+    },
+    {
+     "id": "pack_neg",
+     "connector": "XT90-S female (pack side)",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.245, -0.0235, -0.168]
+    },
+    {
+     "id": "bus_pos",
+     "connector": "XT90-S male (bus side)",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.245, 0.0235, -0.158]
+    },
+    {
+     "id": "bus_neg",
+     "connector": "XT90-S male (bus side)",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.245, 0.0235, -0.168]
+    }
+   ]
+  },
+  {
+   "id": "caps",
+   "name": "Bulk capacitor bank, 4 x Panasonic EEU-FS1J471 (470 uF, 63 V, 16 x 25 mm)",
+   "maker": "Panasonic",
+   "url": "https://industrial.panasonic.com/ww/products/pt/aluminum-cap-lead/models/EEUFS1J471",
+   "role": "2 mF across the 12S bus at the distribution board (SPICE model value), absorbs the ESCs' ripple and lead inductance",
+   "pos": [-0.1365, 0.0, -0.135],
+   "size": [0.025, 0.066, 0.017],
+   "yaw_deg": 0,
+   "mass_g": 36,
+   "location": "internal",
+   "estimated": ["mass_g"],
+   "ports": [
+    {
+     "id": "bus",
+     "connector": "12 AWG pair soldered to the capacitor leads",
+     "pins": ["+", "-"],
+     "domain": "VBAT",
+     "at": [-0.124, 0.0, -0.131]
+    }
+   ]
+  },
+  {
+   "id": "pm",
+   "name": "Holybro PM02D HV digital power module (2-12S, I2C, INA228)",
+   "maker": "Holybro",
+   "url": "https://holybro.com/products/pm02d-power-module",
+   "role": "Measures pack voltage/current for the Pixhawk 6X over I2C and powers it (5.2 V, 3 A); XT60s replaced by 8 AWG",
+   "pos": [-0.1, 0.0, -0.1355],
+   "size": [0.036, 0.026, 0.01],
+   "yaw_deg": 0,
+   "mass_g": 20,
+   "location": "internal",
+   "estimated": ["size_m"],
+   "ports": [
+    {
+     "id": "in_pos",
+     "connector": "PM02D HV solder pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.118, 0.006, -0.1325]
+    },
+    {
+     "id": "in_neg",
+     "connector": "PM02D HV solder pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.118, -0.006, -0.1325]
+    },
+    {
+     "id": "out_pos",
+     "connector": "PM02D HV solder pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.082, 0.006, -0.1325]
+    },
+    {
+     "id": "out_neg",
+     "connector": "PM02D HV solder pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.082, -0.006, -0.1325]
+    },
+    {
+     "id": "fc",
+     "connector": "Molex CLIK-Mate 2.00 mm 6-pin",
+     "pins": ["VDD5V", "VDD5V", "SCL", "SDA", "GND", "GND"],
+     "domain": "PM",
+     "at": [-0.096, 0.013, -0.1335]
+    }
+   ]
+  },
+  {
+   "id": "bec_jet",
+   "name": "Matek BEC12S-PRO (9-55 V in, set to 12 V out, 5 A)",
+   "maker": "Mateksys",
+   "url": "https://www.mateksys.com/?portfolio=bec12s-pro",
+   "role": "12 V, 5 A for the Jetson Orin Nano carrier (9-20 V input)",
+   "pos": [-0.122, -0.046, -0.1377],
+   "size": [0.035, 0.024, 0.0055],
+   "yaw_deg": 0,
+   "mass_g": 5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "vin",
+     "connector": "solder pads (20 AWG pair)",
+     "pins": ["VIN", "GND"],
+     "domain": "VBAT",
+     "at": [-0.1395, -0.046, -0.1357]
+    },
+    {
+     "id": "vout",
+     "connector": "solder pads",
+     "pins": ["VOUT", "GND"],
+     "domain": "12V",
+     "at": [-0.1045, -0.046, -0.1357]
+    }
+   ]
+  },
+  {
+   "id": "bec_fc",
+   "name": "Matek BEC12S-PRO (9-55 V in, set to 5.2 V out, 5 A)",
+   "maker": "Mateksys",
+   "url": "https://www.mateksys.com/?portfolio=bec12s-pro",
+   "role": "5.2 V backup supply into the Pixhawk's POWER2",
+   "pos": [-0.122, 0.046, -0.1377],
+   "size": [0.035, 0.024, 0.0055],
+   "yaw_deg": 0,
+   "mass_g": 5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "vin",
+     "connector": "solder pads (20 AWG pair)",
+     "pins": ["VIN", "GND"],
+     "domain": "VBAT",
+     "at": [-0.1395, 0.046, -0.1357]
+    },
+    {
+     "id": "vout",
+     "connector": "solder pads",
+     "pins": ["VOUT", "GND"],
+     "domain": "5V",
+     "at": [-0.1045, 0.046, -0.1357]
+    }
+   ]
+  },
+  {
+   "id": "pdb",
+   "name": "Matek FCHUB-12S V2 power distribution board (4 x 70 A, 440 A sensor, 5 V/12 V BECs)",
+   "maker": "Mateksys",
+   "url": "https://www.mateksys.com/?portfolio=fchub-12s",
+   "role": "12S distribution to the four ESCs and the BECs; on-board 5.1 V 5 A BEC feeds the servo rail, 12 V 4 A feeds the inflator drivers",
+   "pos": [-0.02, 0.0, -0.1375],
+   "size": [0.05, 0.055, 0.006],
+   "yaw_deg": 0,
+   "mass_g": 21,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "bat_pos",
+     "connector": "FCHUB-12S battery pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.045, 0.006, -0.1345]
+    },
+    {
+     "id": "bat_neg",
+     "connector": "FCHUB-12S battery pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.045, -0.006, -0.1345]
+    },
+    {
+     "id": "cap",
+     "connector": "FCHUB-12S battery pad",
+     "pins": ["+", "-"],
+     "domain": "VBAT",
+     "at": [-0.041, 0.0, -0.1345],
+     "wires": 1
+    },
+    {
+     "id": "aux_vbat",
+     "connector": "FCHUB-12S VBAT/GND pads",
+     "pins": ["VBAT", "GND"],
+     "domain": "VBAT",
+     "at": [-0.038, 0.02, -0.1345],
+     "wires": 2
+    },
+    {
+     "id": "v5",
+     "connector": "FCHUB-12S 5V/GND pads",
+     "pins": ["5V", "GND"],
+     "domain": "5V",
+     "at": [-0.032, -0.022, -0.1345]
+    },
+    {
+     "id": "v12",
+     "connector": "FCHUB-12S 12V/GND pads",
+     "pins": ["12V", "GND"],
+     "domain": "12V",
+     "at": [-0.008, 0.022, -0.1345]
+    },
+    {
+     "id": "v12sw",
+     "connector": "FCHUB-12S 12VSW pad (PINIO switched)",
+     "pins": ["12VSW"],
+     "domain": "12V",
+     "at": [-0.004, 0.022, -0.1345],
+     "spare": true
+    },
+    {
+     "id": "curr",
+     "connector": "FCHUB-12S CURR/VBAT sense pads",
+     "pins": ["CURR", "VBAT_SENSE"],
+     "domain": "ADC",
+     "at": [-0.02, 0.025, -0.1345],
+     "spare": true
+    },
+    {
+     "id": "esc1_pos",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [0.002, -0.0235, -0.1345]
+    },
+    {
+     "id": "esc1_neg",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.0045, -0.0235, -0.1345]
+    },
+    {
+     "id": "esc2_pos",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.042, 0.0235, -0.1345]
+    },
+    {
+     "id": "esc2_neg",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.0355, 0.0235, -0.1345]
+    },
+    {
+     "id": "esc3_pos",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [0.002, 0.0235, -0.1345]
+    },
+    {
+     "id": "esc3_neg",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.0045, 0.0235, -0.1345]
+    },
+    {
+     "id": "esc4_pos",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.042, -0.0235, -0.1345]
+    },
+    {
+     "id": "esc4_neg",
+     "connector": "FCHUB-12S ESC pad",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.0355, -0.0235, -0.1345]
+    }
+   ]
+  },
+  {
+   "id": "fc",
+   "name": "Holybro Pixhawk 6X (standard baseboard v2B, FMUv6X)",
+   "maker": "Holybro",
+   "url": "https://docs.holybro.com/autopilot/pixhawk-6x/pixhawk-baseboard-pinout",
+   "role": "Flight controller (ArduPilot): attitude, navigation, failsafes, mission logic; on 4 vibration isolators on 20 mm standoffs",
+   "pos": [-0.02, 0.0, -0.106],
+   "size": [0.1034, 0.0524, 0.031],
+   "yaw_deg": 0,
+   "mass_g": 74,
+   "location": "internal",
+   "estimated": ["port_positions"],
+   "note": "31 mm box = 16.7 mm baseboard + FC module standing proud; JST-GH ports on the long sides, servo headers at the rear",
+   "ports": [
+    {
+     "id": "POWER1",
+     "connector": "Molex CLIK-Mate 2.00 mm 6-pin",
+     "pins": ["VDD5V_BRICK1", "VDD5V_BRICK1", "SCL1", "SDA1", "GND", "GND"],
+     "domain": "PM",
+     "at": [-0.06, 0.0282, -0.112]
+    },
+    {
+     "id": "POWER2",
+     "connector": "Molex CLIK-Mate 2.00 mm 6-pin",
+     "pins": ["VDD5V_BRICK2", "VDD5V_BRICK2", "SCL2", "SDA2", "GND", "GND"],
+     "domain": "5V",
+     "at": [-0.046, 0.0282, -0.112]
+    },
+    {
+     "id": "TELEM1",
+     "connector": "JST-GH 1.25 mm 6-pin",
+     "pins": ["VCC", "TX7", "RX7", "CTS7", "RTS7", "GND"],
+     "domain": "UART",
+     "at": [-0.032, 0.0282, -0.112]
+    },
+    {
+     "id": "TELEM2",
+     "connector": "JST-GH 1.25 mm 6-pin",
+     "pins": ["VCC", "TX5", "RX5", "CTS5", "RTS5", "GND"],
+     "domain": "UART",
+     "at": [-0.02, 0.0282, -0.112]
+    },
+    {
+     "id": "TELEM3",
+     "connector": "JST-GH 1.25 mm 6-pin",
+     "pins": ["VCC", "TX2", "RX2", "CTS2", "RTS2", "GND"],
+     "domain": "UART",
+     "at": [-0.008, 0.0282, -0.112]
+    },
+    {
+     "id": "ETH",
+     "connector": "JST-GH 1.25 mm 4-pin",
+     "pins": ["RXN", "RXP", "TXN", "TXP"],
+     "domain": "ETH",
+     "at": [0.004, 0.0282, -0.112]
+    },
+    {
+     "id": "I2C",
+     "connector": "JST-GH 1.25 mm 4-pin",
+     "pins": ["VCC", "SCL3", "SDA3", "GND"],
+     "domain": "I2C",
+     "at": [0.016, 0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "GPS1",
+     "connector": "JST-GH 1.25 mm 10-pin",
+     "pins": ["VCC", "TX1", "RX1", "SCL1", "SDA1", "SAFETY_SW", "SAFETY_SW_LED", "VDD_3V3", "BUZZER-", "GND"],
+     "domain": "GPS",
+     "at": [-0.06, -0.0282, -0.112]
+    },
+    {
+     "id": "GPS2",
+     "connector": "JST-GH 1.25 mm 6-pin",
+     "pins": ["VCC", "TX8", "RX8", "SCL2", "SDA2", "GND"],
+     "domain": "UART",
+     "at": [-0.046, -0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "CAN1",
+     "connector": "JST-GH 1.25 mm 4-pin",
+     "pins": ["VCC", "CANH1", "CANL1", "GND"],
+     "domain": "CAN",
+     "at": [-0.034, -0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "CAN2",
+     "connector": "JST-GH 1.25 mm 4-pin",
+     "pins": ["VCC", "CANH2", "CANL2", "GND"],
+     "domain": "CAN",
+     "at": [-0.024, -0.0282, -0.112]
+    },
+    {
+     "id": "RC_IN",
+     "connector": "JST-GH 1.25 mm 3-pin",
+     "pins": ["SBUS/PPM", "VDD_5V_RC", "GND"],
+     "domain": "SBUS",
+     "at": [-0.014, -0.0282, -0.112]
+    },
+    {
+     "id": "DSM_RC",
+     "connector": "JST-ZH 1.5 mm 3-pin",
+     "pins": ["VDD_3V3_SPEKTRUM", "GND", "DSM_IN"],
+     "domain": "DSM",
+     "at": [-0.006, -0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "UART4_I2C",
+     "connector": "JST-GH 1.25 mm 7-pin",
+     "pins": ["VCC", "TX4", "RX4", "SCL3", "SDA3", "NFC_GPIO", "GND"],
+     "domain": "UART",
+     "at": [0.004, -0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "AD_IO",
+     "connector": "JST-GH 1.25 mm 8-pin",
+     "pins": ["VCC", "FMU_CAP1", "FMU_BOOT", "FMU_RST_REQ", "NARMED", "ADC1_3V3", "ADC1_6V6", "GND"],
+     "domain": "ADC",
+     "at": [0.014, -0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "USB",
+     "connector": "JST-GH 1.25 mm 4-pin",
+     "pins": ["VBUS", "DM", "DP", "GND"],
+     "domain": "USB",
+     "at": [0.024, -0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "SPI",
+     "connector": "JST-GH 1.25 mm 11-pin",
+     "pins": ["VCC", "SCK", "MISO", "MOSI", "CS1", "CS2", "SYNC", "DRDY1", "DRDY2", "nRESET", "GND"],
+     "domain": "SPI",
+     "at": [0.026, 0.0282, -0.112],
+     "spare": true
+    },
+    {
+     "id": "IO_PWM_1",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH1", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, 0.0089, -0.106]
+    },
+    {
+     "id": "FMU_PWM_1",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH1", "VDD_SERVO", "GND"],
+     "domain": "SERVO",
+     "at": [-0.0737, 0.0089, -0.113]
+    },
+    {
+     "id": "IO_PWM_2",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH2", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, 0.0064, -0.106]
+    },
+    {
+     "id": "FMU_PWM_2",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH2", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, 0.0064, -0.113],
+     "spare": true
+    },
+    {
+     "id": "IO_PWM_3",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH3", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, 0.0038, -0.106]
+    },
+    {
+     "id": "FMU_PWM_3",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH3", "VDD_SERVO", "GND"],
+     "domain": "RELAY",
+     "at": [-0.0737, 0.0038, -0.113]
+    },
+    {
+     "id": "IO_PWM_4",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH4", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, 0.0013, -0.106]
+    },
+    {
+     "id": "FMU_PWM_4",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH4", "VDD_SERVO", "GND"],
+     "domain": "RELAY",
+     "at": [-0.0737, 0.0013, -0.113]
+    },
+    {
+     "id": "IO_PWM_5",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH5", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, -0.0013, -0.106],
+     "spare": true
+    },
+    {
+     "id": "FMU_PWM_5",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH5", "VDD_SERVO", "GND"],
+     "domain": "RELAY",
+     "at": [-0.0737, -0.0013, -0.113]
+    },
+    {
+     "id": "IO_PWM_6",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH6", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, -0.0038, -0.106],
+     "spare": true
+    },
+    {
+     "id": "FMU_PWM_6",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH6", "VDD_SERVO", "GND"],
+     "domain": "GPIO",
+     "at": [-0.0737, -0.0038, -0.113]
+    },
+    {
+     "id": "IO_PWM_7",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH7", "VDD_SERVO", "GND"],
+     "domain": "PWM",
+     "at": [-0.0737, -0.0063, -0.106],
+     "spare": true
+    },
+    {
+     "id": "FMU_PWM_7",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH7", "VDD_SERVO", "GND"],
+     "domain": "GPIO",
+     "at": [-0.0737, -0.0063, -0.113]
+    },
+    {
+     "id": "IO_PWM_8",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["IO_CH8", "VDD_SERVO", "GND"],
+     "domain": "5V",
+     "at": [-0.0737, -0.0089, -0.106]
+    },
+    {
+     "id": "FMU_PWM_8",
+     "connector": "2.54 mm servo header (signal, VDD_SERVO, GND)",
+     "pins": ["FMU_CH8", "VDD_SERVO", "GND"],
+     "domain": "LED",
+     "at": [-0.0737, -0.0089, -0.113]
+    }
+   ]
+  },
+  {
+   "id": "rfd",
+   "name": "RFDesign RFD900x telemetry modem (900 MHz, 1 W, 2 x RP-SMA diversity)",
+   "maker": "RFDesign",
+   "url": "https://files.rfdesign.com.au/Files/documents/RFD900x%20DataSheet%20V1.2.pdf",
+   "role": "MAVLink telemetry to the ground station on TELEM1",
+   "pos": [-0.02, 0.09, -0.1341],
+   "size": [0.057, 0.03, 0.0128],
+   "yaw_deg": 0,
+   "mass_g": 15,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "uart",
+     "connector": "2.54 mm 16-pin header (Holybro RFD900x-to-Pixhawk GH cable)",
+     "pins": ["GND", "CTS", "5V", "RX", "TX", "RTS"],
+     "domain": "UART",
+     "at": [0.0085, 0.09, -0.1321]
+    },
+    {
+     "id": "ant1",
+     "connector": "RP-SMA female",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.0485, 0.0825, -0.1341]
+    },
+    {
+     "id": "ant2",
+     "connector": "RP-SMA female",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.0485, 0.0975, -0.1341]
+    }
+   ]
+  },
+  {
+   "id": "ftdi",
+   "name": "FTDI FT4232H-56Q Mini Module (4 x UART over USB)",
+   "maker": "FTDI",
+   "url": "https://ftdichip.com/products/ft4232h-56q-mini-md/",
+   "role": "Reads the four ALPHA ESCs' telemetry lines (19200 baud) into the Jetson, which logs them and forwards ESC_STATUS over MAVLink",
+   "pos": [-0.035, -0.09, -0.1345],
+   "size": [0.033, 0.026, 0.012],
+   "yaw_deg": 0,
+   "mass_g": 8,
+   "location": "internal",
+   "estimated": ["size_m", "mass_g"],
+   "ports": [
+    {
+     "id": "usb",
+     "connector": "USB mini-B",
+     "pins": ["VBUS", "D-", "D+", "GND"],
+     "domain": "USB",
+     "at": [-0.0185, -0.084, -0.1345]
+    },
+    {
+     "id": "rx1",
+     "connector": "2.54 mm header pin",
+     "pins": ["RXDA"],
+     "domain": "TELEM",
+     "at": [-0.047, -0.077, -0.1305]
+    },
+    {
+     "id": "rx2",
+     "connector": "2.54 mm header pin",
+     "pins": ["RXDB"],
+     "domain": "TELEM",
+     "at": [-0.0415, -0.077, -0.1305]
+    },
+    {
+     "id": "rx3",
+     "connector": "2.54 mm header pin",
+     "pins": ["RXDC"],
+     "domain": "TELEM",
+     "at": [-0.036, -0.077, -0.1305]
+    },
+    {
+     "id": "rx4",
+     "connector": "2.54 mm header pin",
+     "pins": ["RXDD"],
+     "domain": "TELEM",
+     "at": [-0.0305, -0.077, -0.1305]
+    }
+   ]
+  },
+  {
+   "id": "rx",
+   "name": "FrSky R-XSR receiver (2.4 GHz ACCST, SBUS out)",
+   "maker": "FrSky",
+   "url": "https://www.frsky-rc.com/product/r-xsr/",
+   "role": "Manual-override RC link (pilot takeover in VLOS); SBUS into RC IN",
+   "pos": [0.012, -0.098, -0.1378],
+   "size": [0.016, 0.011, 0.0054],
+   "yaw_deg": 0,
+   "mass_g": 1.5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "sbus",
+     "connector": "JST-SH 1.0 mm 5-pin (SBUS, 5V, GND used)",
+     "pins": ["SBUS_OUT", "5V", "GND"],
+     "domain": "SBUS",
+     "at": [0.004, -0.098, -0.1378]
+    },
+    {
+     "id": "ant1",
+     "connector": "IPEX (U.FL)",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [0.02, -0.095, -0.1358]
+    },
+    {
+     "id": "ant2",
+     "connector": "IPEX (U.FL)",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [0.02, -0.101, -0.1358]
+    }
+   ]
+  },
+  {
+   "id": "rockblock",
+   "name": "Ground Control RockBLOCK 9603 (Iridium SBD, external-antenna SMA variant)",
+   "maker": "Ground Control",
+   "url": "https://docs.groundcontrol.com/iot/rockblock/specification/dimensions",
+   "role": "Satellite fallback link (ArduPilot rockblock.lua) on TELEM2 when neither radio nor LTE reaches",
+   "pos": [-0.115, 0.025, -0.0985],
+   "size": [0.045, 0.045, 0.015],
+   "yaw_deg": 0,
+   "mass_g": 36,
+   "location": "internal",
+   "estimated": ["sma_variant"],
+   "ports": [
+    {
+     "id": "serial",
+     "connector": "Molex PicoBlade 1.25 mm 10-pin (Ground Control FTDI-style cable)",
+     "pins": ["5V", "GND", "TX", "RX", "RTS", "CTS"],
+     "domain": "UART",
+     "at": [-0.0925, 0.035, -0.0985]
+    },
+    {
+     "id": "ant",
+     "connector": "SMA female",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.0925, 0.013, -0.0985]
+    }
+   ]
+  },
+  {
+   "id": "lte",
+   "name": "Quectel EG25-G LTE Cat 4 mini PCIe module on a mPCIe-to-USB adapter (nano-SIM)",
+   "maker": "Quectel",
+   "url": "https://quectel.com/content/uploads/2024/03/Quectel_EG25-G_Mini_PCIe_LTE_Standard_Specification_V1.7-1-1.pdf",
+   "role": "4G link for the cloud brain (AWS IoT Core) via the Jetson",
+   "pos": [-0.115, -0.033, -0.101],
+   "size": [0.062, 0.034, 0.01],
+   "yaw_deg": 90,
+   "mass_g": 25,
+   "location": "internal",
+   "estimated": ["adapter size_m", "mass_g"],
+   "ports": [
+    {
+     "id": "usb",
+     "connector": "USB-A plug lead (adapter)",
+     "pins": ["VBUS", "D-", "D+", "GND"],
+     "domain": "USB",
+     "at": [-0.115, -0.002, -0.101]
+    },
+    {
+     "id": "main",
+     "connector": "U.FL",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.125, -0.045, -0.095]
+    },
+    {
+     "id": "div",
+     "connector": "U.FL",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.105, -0.045, -0.095]
+    }
+   ]
+  },
+  {
+   "id": "jetson",
+   "name": "NVIDIA Jetson Orin Nano 8GB Developer Kit (P3768 carrier, active heatsink, NVMe)",
+   "maker": "NVIDIA",
+   "url": "https://developer.nvidia.com/embedded/learn/jetson-orin-nano-devkit-user-guide/hardware_spec.html",
+   "role": "Companion computer: edge AI, offload manager, Greengrass, MAVLink router; Wi-Fi card removed (2.4 GHz kept clear for RC)",
+   "pos": [0.105, 0.0, -0.12],
+   "size": [0.079, 0.1, 0.035],
+   "yaw_deg": 0,
+   "mass_g": 176,
+   "location": "internal",
+   "estimated": ["height incl. heatsink"],
+   "ports": [
+    {
+     "id": "dc_in",
+     "connector": "DC barrel jack 5.5 x 2.5 mm (9-20 V)",
+     "pins": ["+12V", "GND"],
+     "domain": "12V",
+     "at": [0.0655, -0.04, -0.1304]
+    },
+    {
+     "id": "rj45",
+     "connector": "RJ45 (Holybro Pixhawk ETH cable, 4-pin GH to RJ45)",
+     "pins": ["TX+", "TX-", "RX+", "RX-"],
+     "domain": "ETH",
+     "at": [0.0655, 0.03, -0.1291]
+    },
+    {
+     "id": "usb1",
+     "connector": "USB 3.2 type-A",
+     "pins": ["VBUS", "D-", "D+", "GND"],
+     "domain": "USB",
+     "at": [0.0655, 0.004, -0.132]
+    },
+    {
+     "id": "usb2",
+     "connector": "USB 3.2 type-A",
+     "pins": ["VBUS", "D-", "D+", "GND"],
+     "domain": "USB",
+     "at": [0.0655, 0.004, -0.124]
+    },
+    {
+     "id": "usb3",
+     "connector": "USB 3.2 type-A",
+     "pins": ["VBUS", "D-", "D+", "GND"],
+     "domain": "USB",
+     "at": [0.0655, -0.02, -0.132],
+     "spare": true
+    },
+    {
+     "id": "usb4",
+     "connector": "USB 3.2 type-A",
+     "pins": ["VBUS", "D-", "D+", "GND"],
+     "domain": "USB",
+     "at": [0.0655, -0.02, -0.124],
+     "spare": true
+    },
+    {
+     "id": "uart1",
+     "connector": "40-pin 2.54 mm header pins 6/8/10 (UART1)",
+     "pins": ["GND", "TXD", "RXD"],
+     "domain": "UART",
+     "at": [0.115, -0.046, -0.132]
+    }
+   ]
+  },
+  {
+   "id": "fire",
+   "name": "Ark firing driver: 3 x Infineon IRLML6344 logic-level N-MOSFETs (ARM in series with FIRE L / FIRE R)",
+   "maker": "Ark-1 (in-house PCB)",
+   "url": "https://www.infineon.com/cms/en/product/power/mosfet/n-channel/irlml6344/",
+   "role": "Switches 12 V into each pontoon's latch solenoid (0.5 A x 300 ms); a channel fires only when AUX3 ARM and its AUX4/AUX5 FIRE are both on",
+   "pos": [0.124, 0.082, -0.1365],
+   "size": [0.032, 0.022, 0.008],
+   "yaw_deg": 0,
+   "mass_g": 6,
+   "location": "internal",
+   "estimated": ["size_m", "mass_g"],
+   "ports": [
+    {
+     "id": "arm_in",
+     "connector": "2.54 mm 3-pin header",
+     "pins": ["ARM", "V+", "GND"],
+     "domain": "RELAY",
+     "at": [0.108, 0.088, -0.1365]
+    },
+    {
+     "id": "fire_L_in",
+     "connector": "2.54 mm 3-pin header",
+     "pins": ["FIRE_L", "V+", "GND"],
+     "domain": "RELAY",
+     "at": [0.108, 0.082, -0.1365]
+    },
+    {
+     "id": "fire_R_in",
+     "connector": "2.54 mm 3-pin header",
+     "pins": ["FIRE_R", "V+", "GND"],
+     "domain": "RELAY",
+     "at": [0.108, 0.076, -0.1365]
+    },
+    {
+     "id": "supply",
+     "connector": "screw terminal (12 V, GND)",
+     "pins": ["12V", "GND"],
+     "domain": "12V",
+     "at": [0.12, 0.071, -0.1345]
+    },
+    {
+     "id": "out_L",
+     "connector": "screw terminal (LOAD+, LOAD- switched)",
+     "pins": ["LOAD+", "LOAD-"],
+     "domain": "FIRE",
+     "at": [0.14, 0.087, -0.1345]
+    },
+    {
+     "id": "out_R",
+     "connector": "screw terminal (LOAD+, LOAD- switched)",
+     "pins": ["LOAD+", "LOAD-"],
+     "domain": "FIRE",
+     "at": [0.14, 0.077, -0.1345]
+    }
+   ]
+  },
+  {
+   "id": "esc1",
+   "name": "T-Motor ALPHA 80A 12S ESC (FOC, sealed)",
+   "maker": "T-Motor",
+   "url": "https://uav-en.tmotor.com/Multirotor/ESC/alpha",
+   "role": "Drives motor 1 (front-right); 12 AWG feed with XT60, 3-wire signal lead (PWM, GND, telemetry)",
+   "pos": [0.1591, -0.1591, -0.085],
+   "size": [0.0885, 0.0366, 0.019],
+   "yaw_deg": -45.0,
+   "mass_g": 110,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "pos",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [0.128, -0.1195, -0.085]
+    },
+    {
+     "id": "neg",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [0.1195, -0.128, -0.085]
+    },
+    {
+     "id": "signal",
+     "connector": "JR 3-pin servo plug (white PWM, black GND)",
+     "pins": ["PWM", "GND"],
+     "domain": "PWM",
+     "at": [0.1237, -0.1237, -0.079]
+    },
+    {
+     "id": "telem",
+     "connector": "JR 3-pin servo plug, yellow lead (ALPHA telemetry, 19200 baud)",
+     "pins": ["TELEM"],
+     "domain": "TELEM",
+     "at": [0.1237, -0.1237, -0.0765]
+    },
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [0.1881, -0.1959, -0.085]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [0.192, -0.192, -0.085]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [0.1959, -0.1881, -0.085]
+    }
+   ]
+  },
+  {
+   "id": "motor1",
+   "name": "T-Motor MN801-S KV120",
+   "maker": "T-Motor",
+   "url": "https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html",
+   "role": "Motor 1, 3 phase leads (14 AWG, 150 mm stock, extended in the arm)",
+   "pos": [0.3912, -0.3912, -0.0837],
+   "size": [0.089, 0.089, 0.0394],
+   "yaw_deg": -45.0,
+   "mass_g": 470,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer_template.html (GEO_Base parts)",
+   "ports": [
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [0.3413, -0.3491, -0.107]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [0.3452, -0.3452, -0.107]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [0.3491, -0.3413, -0.107]
+    }
+   ]
+  },
+  {
+   "id": "esc2",
+   "name": "T-Motor ALPHA 80A 12S ESC (FOC, sealed)",
+   "maker": "T-Motor",
+   "url": "https://uav-en.tmotor.com/Multirotor/ESC/alpha",
+   "role": "Drives motor 2 (rear-left); 12 AWG feed with XT60, 3-wire signal lead (PWM, GND, telemetry)",
+   "pos": [-0.1591, 0.1591, -0.085],
+   "size": [0.0885, 0.0366, 0.019],
+   "yaw_deg": 135.0,
+   "mass_g": 110,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "pos",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.128, 0.1195, -0.085]
+    },
+    {
+     "id": "neg",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.1195, 0.128, -0.085]
+    },
+    {
+     "id": "signal",
+     "connector": "JR 3-pin servo plug (white PWM, black GND)",
+     "pins": ["PWM", "GND"],
+     "domain": "PWM",
+     "at": [-0.1237, 0.1237, -0.079]
+    },
+    {
+     "id": "telem",
+     "connector": "JR 3-pin servo plug, yellow lead (ALPHA telemetry, 19200 baud)",
+     "pins": ["TELEM"],
+     "domain": "TELEM",
+     "at": [-0.1237, 0.1237, -0.0765]
+    },
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [-0.1881, 0.1959, -0.085]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [-0.192, 0.192, -0.085]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [-0.1959, 0.1881, -0.085]
+    }
+   ]
+  },
+  {
+   "id": "motor2",
+   "name": "T-Motor MN801-S KV120",
+   "maker": "T-Motor",
+   "url": "https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html",
+   "role": "Motor 2, 3 phase leads (14 AWG, 150 mm stock, extended in the arm)",
+   "pos": [-0.3912, 0.3912, -0.0837],
+   "size": [0.089, 0.089, 0.0394],
+   "yaw_deg": 135.0,
+   "mass_g": 470,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer_template.html (GEO_Base parts)",
+   "ports": [
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [-0.3413, 0.3491, -0.107]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [-0.3452, 0.3452, -0.107]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [-0.3491, 0.3413, -0.107]
+    }
+   ]
+  },
+  {
+   "id": "esc3",
+   "name": "T-Motor ALPHA 80A 12S ESC (FOC, sealed)",
+   "maker": "T-Motor",
+   "url": "https://uav-en.tmotor.com/Multirotor/ESC/alpha",
+   "role": "Drives motor 3 (front-left); 12 AWG feed with XT60, 3-wire signal lead (PWM, GND, telemetry)",
+   "pos": [0.1591, 0.1591, -0.085],
+   "size": [0.0885, 0.0366, 0.019],
+   "yaw_deg": 45.0,
+   "mass_g": 110,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "pos",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [0.1195, 0.128, -0.085]
+    },
+    {
+     "id": "neg",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [0.128, 0.1195, -0.085]
+    },
+    {
+     "id": "signal",
+     "connector": "JR 3-pin servo plug (white PWM, black GND)",
+     "pins": ["PWM", "GND"],
+     "domain": "PWM",
+     "at": [0.1237, 0.1237, -0.079]
+    },
+    {
+     "id": "telem",
+     "connector": "JR 3-pin servo plug, yellow lead (ALPHA telemetry, 19200 baud)",
+     "pins": ["TELEM"],
+     "domain": "TELEM",
+     "at": [0.1237, 0.1237, -0.0765]
+    },
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [0.1959, 0.1881, -0.085]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [0.192, 0.192, -0.085]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [0.1881, 0.1959, -0.085]
+    }
+   ]
+  },
+  {
+   "id": "motor3",
+   "name": "T-Motor MN801-S KV120",
+   "maker": "T-Motor",
+   "url": "https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html",
+   "role": "Motor 3, 3 phase leads (14 AWG, 150 mm stock, extended in the arm)",
+   "pos": [0.3912, 0.3912, -0.0837],
+   "size": [0.089, 0.089, 0.0394],
+   "yaw_deg": 45.0,
+   "mass_g": 470,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer_template.html (GEO_Base parts)",
+   "ports": [
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [0.3491, 0.3413, -0.107]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [0.3452, 0.3452, -0.107]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [0.3413, 0.3491, -0.107]
+    }
+   ]
+  },
+  {
+   "id": "esc4",
+   "name": "T-Motor ALPHA 80A 12S ESC (FOC, sealed)",
+   "maker": "T-Motor",
+   "url": "https://uav-en.tmotor.com/Multirotor/ESC/alpha",
+   "role": "Drives motor 4 (rear-right); 12 AWG feed with XT60, 3-wire signal lead (PWM, GND, telemetry)",
+   "pos": [-0.1591, -0.1591, -0.085],
+   "size": [0.0885, 0.0366, 0.019],
+   "yaw_deg": -135.0,
+   "mass_g": 110,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "pos",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["+"],
+     "domain": "VBAT",
+     "at": [-0.1195, -0.128, -0.085]
+    },
+    {
+     "id": "neg",
+     "connector": "XT60H male on the ESC lead",
+     "pins": ["-"],
+     "domain": "VBAT",
+     "at": [-0.128, -0.1195, -0.085]
+    },
+    {
+     "id": "signal",
+     "connector": "JR 3-pin servo plug (white PWM, black GND)",
+     "pins": ["PWM", "GND"],
+     "domain": "PWM",
+     "at": [-0.1237, -0.1237, -0.079]
+    },
+    {
+     "id": "telem",
+     "connector": "JR 3-pin servo plug, yellow lead (ALPHA telemetry, 19200 baud)",
+     "pins": ["TELEM"],
+     "domain": "TELEM",
+     "at": [-0.1237, -0.1237, -0.0765]
+    },
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [-0.1959, -0.1881, -0.085]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [-0.192, -0.192, -0.085]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (female on the ESC)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [-0.1881, -0.1959, -0.085]
+    }
+   ]
+  },
+  {
+   "id": "motor4",
+   "name": "T-Motor MN801-S KV120",
+   "maker": "T-Motor",
+   "url": "https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html",
+   "role": "Motor 4, 3 phase leads (14 AWG, 150 mm stock, extended in the arm)",
+   "pos": [-0.3912, -0.3912, -0.0837],
+   "size": [0.089, 0.089, 0.0394],
+   "yaw_deg": -135.0,
+   "mass_g": 470,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer_template.html (GEO_Base parts)",
+   "ports": [
+    {
+     "id": "phase_a",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["A"],
+     "domain": "PHASE",
+     "at": [-0.3491, -0.3413, -0.107]
+    },
+    {
+     "id": "phase_b",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["B"],
+     "domain": "PHASE",
+     "at": [-0.3452, -0.3452, -0.107]
+    },
+    {
+     "id": "phase_c",
+     "connector": "4.0 mm gold bullet (male on the motor lead)",
+     "pins": ["C"],
+     "domain": "PHASE",
+     "at": [-0.3413, -0.3491, -0.107]
+    }
+   ]
+  },
+  {
+   "id": "nav_RL",
+   "name": "Adafruit NeoPixel Mini Button PCB (WS2812B), red nav light",
+   "maker": "Adafruit",
+   "url": "https://www.adafruit.com/product/1612",
+   "role": "Rear-left navigation light (red; ArduPilot NeoPixel chain on AUX8), behind a clear window in the arm floor",
+   "pos": [-0.3217, 0.3217, -0.123],
+   "size": [0.01, 0.01, 0.003],
+   "yaw_deg": 135.0,
+   "mass_g": 0.5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "din",
+     "connector": "solder pads (5V, DIN, GND)",
+     "pins": ["5V", "DIN", "GND"],
+     "domain": "LED",
+     "at": [-0.3189, 0.3189, -0.1215]
+    },
+    {
+     "id": "dout",
+     "connector": "solder pads (5V, DOUT, GND)",
+     "pins": ["5V", "DOUT", "GND"],
+     "domain": "LED",
+     "at": [-0.3245, 0.3245, -0.1215],
+     "spare": false
+    }
+   ]
+  },
+  {
+   "id": "nav_FL",
+   "name": "Adafruit NeoPixel Mini Button PCB (WS2812B), red nav light",
+   "maker": "Adafruit",
+   "url": "https://www.adafruit.com/product/1612",
+   "role": "Front-left navigation light (red; ArduPilot NeoPixel chain on AUX8), behind a clear window in the arm floor",
+   "pos": [0.3217, 0.3217, -0.123],
+   "size": [0.01, 0.01, 0.003],
+   "yaw_deg": 45.0,
+   "mass_g": 0.5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "din",
+     "connector": "solder pads (5V, DIN, GND)",
+     "pins": ["5V", "DIN", "GND"],
+     "domain": "LED",
+     "at": [0.3189, 0.3189, -0.1215]
+    },
+    {
+     "id": "dout",
+     "connector": "solder pads (5V, DOUT, GND)",
+     "pins": ["5V", "DOUT", "GND"],
+     "domain": "LED",
+     "at": [0.3245, 0.3245, -0.1215],
+     "spare": false
+    }
+   ]
+  },
+  {
+   "id": "nav_FR",
+   "name": "Adafruit NeoPixel Mini Button PCB (WS2812B), green nav light",
+   "maker": "Adafruit",
+   "url": "https://www.adafruit.com/product/1612",
+   "role": "Front-right navigation light (green; ArduPilot NeoPixel chain on AUX8), behind a clear window in the arm floor",
+   "pos": [0.3217, -0.3217, -0.123],
+   "size": [0.01, 0.01, 0.003],
+   "yaw_deg": -45.0,
+   "mass_g": 0.5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "din",
+     "connector": "solder pads (5V, DIN, GND)",
+     "pins": ["5V", "DIN", "GND"],
+     "domain": "LED",
+     "at": [0.3189, -0.3189, -0.1215]
+    },
+    {
+     "id": "dout",
+     "connector": "solder pads (5V, DOUT, GND)",
+     "pins": ["5V", "DOUT", "GND"],
+     "domain": "LED",
+     "at": [0.3245, -0.3245, -0.1215],
+     "spare": false
+    }
+   ]
+  },
+  {
+   "id": "nav_RR",
+   "name": "Adafruit NeoPixel Mini Button PCB (WS2812B), green nav light",
+   "maker": "Adafruit",
+   "url": "https://www.adafruit.com/product/1612",
+   "role": "Rear-right navigation light (green; ArduPilot NeoPixel chain on AUX8), behind a clear window in the arm floor",
+   "pos": [-0.3217, -0.3217, -0.123],
+   "size": [0.01, 0.01, 0.003],
+   "yaw_deg": -135.0,
+   "mass_g": 0.5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "din",
+     "connector": "solder pads (5V, DIN, GND)",
+     "pins": ["5V", "DIN", "GND"],
+     "domain": "LED",
+     "at": [-0.3189, -0.3189, -0.1215]
+    },
+    {
+     "id": "dout",
+     "connector": "solder pads (5V, DOUT, GND)",
+     "pins": ["5V", "DOUT", "GND"],
+     "domain": "LED",
+     "at": [-0.3245, -0.3245, -0.1215],
+     "spare": true
+    }
+   ]
+  },
+  {
+   "id": "status_led",
+   "name": "Adafruit NeoPixel Mini Button PCB (WS2812B), status light",
+   "maker": "Adafruit",
+   "url": "https://www.adafruit.com/product/1612",
+   "role": "Arming / link state, first pixel of the chain; shines through the green lens on the rear hatch",
+   "pos": [-0.267, -0.045, -0.147],
+   "size": [0.003, 0.01, 0.01],
+   "yaw_deg": 0,
+   "mass_g": 0.5,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "din",
+     "connector": "solder pads (5V, DIN, GND)",
+     "pins": ["5V", "DIN", "GND"],
+     "domain": "LED",
+     "at": [-0.2655, -0.045, -0.144]
+    },
+    {
+     "id": "dout",
+     "connector": "solder pads (5V, DOUT, GND)",
+     "pins": ["5V", "DOUT", "GND"],
+     "domain": "LED",
+     "at": [-0.2655, -0.045, -0.15]
+    }
+   ]
+  },
+  {
+   "id": "lte_ant_main",
+   "name": "Taoglas FXUB63 flexible LTE antenna (698-3000 MHz, U.FL, 100 mm lead)",
+   "maker": "Taoglas",
+   "url": "https://www.taoglas.com/product/fxub63-ultra-wide-band-flex-antenna/",
+   "role": "LTE main antenna bonded to a printed holder on the hub's left wall",
+   "pos": [0.0, 0.183, -0.11],
+   "size": [0.096, 0.003, 0.021],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "internal",
+   "estimated": ["holder offset"],
+   "ports": [
+    {
+     "id": "ufl",
+     "connector": "U.FL plug on the 1.13 mm lead",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.048, 0.183, -0.116]
+    }
+   ]
+  },
+  {
+   "id": "lte_ant_div",
+   "name": "Taoglas FXUB63 flexible LTE antenna (698-3000 MHz, U.FL, 100 mm lead)",
+   "maker": "Taoglas",
+   "url": "https://www.taoglas.com/product/fxub63-ultra-wide-band-flex-antenna/",
+   "role": "LTE diversity antenna bonded to a printed holder on the hub's right wall",
+   "pos": [0.0, -0.183, -0.11],
+   "size": [0.096, 0.003, 0.021],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "internal",
+   "estimated": ["holder offset"],
+   "ports": [
+    {
+     "id": "ufl",
+     "connector": "U.FL plug on the 1.13 mm lead",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.048, -0.183, -0.116]
+    }
+   ]
+  },
+  {
+   "id": "rx_ant1",
+   "name": "FrSky R-XSR antenna element (exposed 31 mm dipole end)",
+   "maker": "FrSky",
+   "url": "https://www.frsky-rc.com/product/r-xsr/",
+   "role": "RC receive antenna; the two elements sit at 90 degrees to each other on the hub's right wall",
+   "pos": [0.06, -0.15, -0.115],
+   "size": [0.031, 0.0015, 0.0015],
+   "yaw_deg": 0,
+   "mass_g": 0.3,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "coax",
+     "connector": "IPEX lead (1.13 mm coax, 150 mm)",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [0.0445, -0.15, -0.115]
+    }
+   ]
+  },
+  {
+   "id": "rx_ant2",
+   "name": "FrSky R-XSR antenna element (exposed 31 mm dipole end)",
+   "maker": "FrSky",
+   "url": "https://www.frsky-rc.com/product/r-xsr/",
+   "role": "RC receive antenna; the two elements sit at 90 degrees to each other on the hub's right wall",
+   "pos": [0.085, -0.125, -0.115],
+   "size": [0.031, 0.0015, 0.0015],
+   "yaw_deg": 90,
+   "mass_g": 0.3,
+   "location": "internal",
+   "estimated": [],
+   "ports": [
+    {
+     "id": "coax",
+     "connector": "IPEX lead (1.13 mm coax, 150 mm)",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [0.085, -0.1405, -0.115]
+    }
+   ]
+  },
+  {
+   "id": "g_mast",
+   "name": "GNSS mast base gland (cable up the carbon mast)",
+   "maker": "",
+   "url": "",
+   "role": "GPS cable into the mast",
+   "pos": [-0.06, 0.0, 0.02],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_iridium",
+   "name": "SMA bulkhead (roof)",
+   "maker": "",
+   "url": "",
+   "role": "RockBLOCK antenna feed",
+   "pos": [0.1, 0.0, 0.0115],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_rfd_L",
+   "name": "RP-SMA bulkhead (shelf underside, left)",
+   "maker": "",
+   "url": "",
+   "role": "RFD900x antenna 1",
+   "pos": [-0.13, 0.13, -0.151],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_rfd_R",
+   "name": "RP-SMA bulkhead (shelf underside, right)",
+   "maker": "",
+   "url": "",
+   "role": "RFD900x antenna 2",
+   "pos": [-0.13, -0.13, -0.151],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_radar",
+   "name": "M12 IP68 cable gland (belly)",
+   "maker": "",
+   "url": "",
+   "role": "radar altimeter cable",
+   "pos": [-0.11, 0.07, -0.2388],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_cargo",
+   "name": "M12 IP68 cable gland (belly)",
+   "maker": "",
+   "url": "",
+   "role": "cargo latch servo + CAN contacts",
+   "pos": [0.04, 0.064, -0.2388],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_infl_L",
+   "name": "M8 IP68 cable gland (left front leg, above the skid)",
+   "maker": "",
+   "url": "",
+   "role": "left inflator firing + pressure leads",
+   "pos": [0.2362, 0.2509, -0.52],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "g_infl_R",
+   "name": "M8 IP68 cable gland (right front leg, above the skid)",
+   "maker": "",
+   "url": "",
+   "role": "right inflator firing + pressure leads",
+   "pos": [0.2362, -0.2509, -0.52],
+   "size": [0.012, 0.012, 0.004],
+   "yaw_deg": 0,
+   "mass_g": 3,
+   "location": "wall",
+   "estimated": [],
+   "passthrough": true,
+   "ports": []
+  },
+  {
+   "id": "gps",
+   "name": "Holybro M10 GPS (u-blox M10, IST8310 compass, safety switch, buzzer, RGB LED)",
+   "maker": "Holybro",
+   "url": "https://holybro.com/products/m10-gps",
+   "role": "GNSS + compass on the mast; its safety switch and buzzer are built in",
+   "pos": [-0.06, 0.0, 0.0958],
+   "size": [0.05, 0.05, 0.015],
+   "yaw_deg": 0,
+   "mass_g": 33,
+   "location": "external",
+   "estimated": ["size_m"],
+   "drawn_by": "viewer/15_mounts.js",
+   "ports": [
+    {
+     "id": "gps1",
+     "connector": "JST-GH 1.25 mm 10-pin",
+     "pins": ["VCC", "TX", "RX", "SCL", "SDA", "SAFETY_SW", "SAFETY_SW_LED", "VDD_3V3", "BUZZER-", "GND"],
+     "domain": "GPS",
+     "at": [-0.06, 0.0, 0.0898]
+    }
+   ]
+  },
+  {
+   "id": "radar",
+   "name": "Ainstein US-D1 radar altimeter (24 GHz)",
+   "maker": "Ainstein",
+   "url": "https://docs.px4.io/main/en/sensor/ulanding_radar",
+   "role": "Height above ground/water for landing and terrain following; UART on TELEM3",
+   "pos": [-0.11, 0.0, -0.2514],
+   "size": [0.079, 0.108, 0.02],
+   "yaw_deg": 0,
+   "mass_g": 110,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer/15_mounts.js",
+   "ports": [
+    {
+     "id": "uart",
+     "connector": "JST-GH 1.25 mm 4-pin (Ainstein Pixhawk cable)",
+     "pins": ["VCC", "TX", "RX", "GND"],
+     "domain": "UART",
+     "at": [-0.11, 0.054, -0.2514]
+    }
+   ]
+  },
+  {
+   "id": "cargo",
+   "name": "Cargo connector: servo latch + 4 pogo contacts (CAN2 pass-through)",
+   "maker": "Ark-1 (in-house)",
+   "url": "",
+   "role": "Holds and releases the smart cargo pod; the pod reads ID/sensors and confirms release over DroneCAN",
+   "pos": [0.04, 0.0, -0.2464],
+   "size": [0.06, 0.06, 0.014],
+   "yaw_deg": 0,
+   "mass_g": 120,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer/15_mounts.js",
+   "ports": [
+    {
+     "id": "latch",
+     "connector": "JR 3-pin servo plug (IP67 micro servo inside the housing)",
+     "pins": ["PWM", "5V", "GND"],
+     "domain": "SERVO",
+     "at": [0.036, 0.03, -0.2464]
+    },
+    {
+     "id": "contacts",
+     "connector": "JST-GH 1.25 mm 4-pin to the pogo block (VCC, CANH, CANL, GND)",
+     "pins": ["VCC", "CANH", "CANL", "GND"],
+     "domain": "CAN",
+     "at": [0.044, 0.03, -0.2464]
+    }
+   ]
+  },
+  {
+   "id": "inflator_L",
+   "name": "Left inflator: 12 V latch solenoid releasing a Halkey-Roberts CO2 inflator head",
+   "maker": "pontoon system",
+   "url": "",
+   "role": "Owned by the pontoon system; fixed interface point at the inflator head",
+   "pos": [0.24, 0.2509, -0.535],
+   "size": [0.09, 0.022, 0.022],
+   "yaw_deg": 0,
+   "mass_g": 0,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer/30_pontoons.js",
+   "ports": [
+    {
+     "id": "fire",
+     "connector": "2-pin sealed connector (Deutsch DTM06-2S class)",
+     "pins": ["FIRE+", "FIRE-"],
+     "domain": "FIRE",
+     "at": [0.24, 0.2509, -0.535]
+    }
+   ]
+  },
+  {
+   "id": "pontoon_L",
+   "name": "Left pontoon pressure switch, Multicomp PSF102 (N.O., closes at 12 kPa)",
+   "maker": "pontoon system",
+   "url": "",
+   "role": "Owned by the pontoon system; confirms inflation to the flight controller",
+   "pos": [0.24, 0.2509, -0.535],
+   "size": [0.02, 0.02, 0.02],
+   "yaw_deg": 0,
+   "mass_g": 0,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer/30_pontoons.js",
+   "ports": [
+    {
+     "id": "pressure_ok",
+     "connector": "2-pin sealed connector (Deutsch DTM06-2S class)",
+     "pins": ["SW", "GND"],
+     "domain": "GPIO",
+     "at": [0.24, 0.2509, -0.535]
+    }
+   ]
+  },
+  {
+   "id": "inflator_R",
+   "name": "Right inflator: 12 V latch solenoid releasing a Halkey-Roberts CO2 inflator head",
+   "maker": "pontoon system",
+   "url": "",
+   "role": "Owned by the pontoon system; fixed interface point at the inflator head",
+   "pos": [0.24, -0.2509, -0.535],
+   "size": [0.09, 0.022, 0.022],
+   "yaw_deg": 0,
+   "mass_g": 0,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer/30_pontoons.js",
+   "ports": [
+    {
+     "id": "fire",
+     "connector": "2-pin sealed connector (Deutsch DTM06-2S class)",
+     "pins": ["FIRE+", "FIRE-"],
+     "domain": "FIRE",
+     "at": [0.24, -0.2509, -0.535]
+    }
+   ]
+  },
+  {
+   "id": "pontoon_R",
+   "name": "Right pontoon pressure switch, Multicomp PSF102 (N.O., closes at 12 kPa)",
+   "maker": "pontoon system",
+   "url": "",
+   "role": "Owned by the pontoon system; confirms inflation to the flight controller",
+   "pos": [0.24, -0.2509, -0.535],
+   "size": [0.02, 0.02, 0.02],
+   "yaw_deg": 0,
+   "mass_g": 0,
+   "location": "external",
+   "estimated": [],
+   "drawn_by": "viewer/30_pontoons.js",
+   "ports": [
+    {
+     "id": "pressure_ok",
+     "connector": "2-pin sealed connector (Deutsch DTM06-2S class)",
+     "pins": ["SW", "GND"],
+     "domain": "GPIO",
+     "at": [0.24, -0.2509, -0.535]
+    }
+   ]
+  },
+  {
+   "id": "iridium_ant",
+   "name": "Maxtena M1621HCT-P-SMA passive Iridium helix antenna",
+   "maker": "Maxtena",
+   "url": "https://maxtena.com/products/m1621hct-p-sma/",
+   "role": "RockBLOCK antenna on the roof, 16 cm from the GNSS antenna",
+   "pos": [0.1, 0.0, 0.0476],
+   "size": [0.022, 0.022, 0.07],
+   "yaw_deg": 0,
+   "mass_g": 28,
+   "location": "external",
+   "estimated": ["size_m", "mass_g"],
+   "ports": [
+    {
+     "id": "sma",
+     "connector": "SMA male",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [0.1, 0.0, 0.0126]
+    }
+   ]
+  },
+  {
+   "id": "rfd_ant_L",
+   "name": "RFDesign 900 MHz half-wave dipole (RP-SMA, 90 degree knuckle)",
+   "maker": "RFDesign",
+   "url": "https://store.rfdesign.com.au/",
+   "role": "RFD900x diversity antenna 1, hanging vertically under the shelf",
+   "pos": [-0.13, 0.13, -0.2065],
+   "size": [0.0188, 0.01, 0.105],
+   "yaw_deg": 0,
+   "mass_g": 12,
+   "location": "external",
+   "estimated": ["length"],
+   "ports": [
+    {
+     "id": "sma",
+     "connector": "RP-SMA male",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.13, 0.13, -0.154]
+    }
+   ]
+  },
+  {
+   "id": "rfd_ant_R",
+   "name": "RFDesign 900 MHz half-wave dipole (RP-SMA, 90 degree knuckle)",
+   "maker": "RFDesign",
+   "url": "https://store.rfdesign.com.au/",
+   "role": "RFD900x diversity antenna 2, hanging vertically under the shelf",
+   "pos": [-0.13, -0.13, -0.2065],
+   "size": [0.0188, 0.01, 0.105],
+   "yaw_deg": 0,
+   "mass_g": 12,
+   "location": "external",
+   "estimated": ["length"],
+   "ports": [
+    {
+     "id": "sma",
+     "connector": "RP-SMA male",
+     "pins": ["RF"],
+     "domain": "RF",
+     "at": [-0.13, -0.13, -0.154]
+    }
+   ]
+  }
+ ],
+ "wires": [
+  {
+   "id": "pw_pack_pos",
+   "from": "pack.pos",
+   "to": "xt90.pack_pos",
+   "function": "Pack + to the arming plug",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "pack",
+   "route": [
+    [-0.1824, 0.03, -0.1507],
+    [-0.2, 0.035, -0.143],
+    [-0.235, 0.0, -0.14],
+    [-0.245, -0.035, -0.152],
+    [-0.245, -0.0235, -0.158]
+   ]
+  },
+  {
+   "id": "pw_pack_neg",
+   "from": "bms.p_neg",
+   "to": "xt90.pack_neg",
+   "function": "BMS P- (pack -) to the arming plug",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "pack",
+   "route": [
+    [-0.2089, -0.036, -0.157],
+    [-0.212, -0.03, -0.152],
+    [-0.235, -0.04, -0.168],
+    [-0.245, -0.035, -0.168],
+    [-0.245, -0.0235, -0.168]
+   ]
+  },
+  {
+   "id": "pw_pack_b",
+   "from": "pack.neg",
+   "to": "bms.b_neg",
+   "function": "Pack - (B-) into the BMS",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "pack",
+   "route": [
+    [-0.1824, -0.03, -0.1507],
+    [-0.187, -0.03, -0.146],
+    [-0.1974, -0.03, -0.157]
+   ]
+  },
+  {
+   "id": "pw_bus_pos",
+   "from": "xt90.bus_pos",
+   "to": "pm.in_pos",
+   "function": "Arming plug + to the power module",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "pack",
+   "route": [
+    [-0.245, 0.0235, -0.158],
+    [-0.245, 0.04, -0.152],
+    [-0.215, 0.03, -0.125],
+    [-0.15, 0.006, -0.124],
+    [-0.125, 0.006, -0.128],
+    [-0.118, 0.006, -0.1325]
+   ]
+  },
+  {
+   "id": "pw_bus_neg",
+   "from": "xt90.bus_neg",
+   "to": "pm.in_neg",
+   "function": "Arming plug - to the power module",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "pack",
+   "route": [
+    [-0.245, 0.0235, -0.168],
+    [-0.245, 0.04, -0.17],
+    [-0.22, 0.02, -0.132],
+    [-0.15, -0.006, -0.124],
+    [-0.125, -0.006, -0.128],
+    [-0.118, -0.006, -0.1325]
+   ]
+  },
+  {
+   "id": "pw_pdb_pos",
+   "from": "pm.out_pos",
+   "to": "pdb.bat_pos",
+   "function": "Power module + to the distribution board",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "pack",
+   "route": [
+    [-0.082, 0.006, -0.1325],
+    [-0.075, 0.006, -0.1325],
+    [-0.045, 0.006, -0.1345]
+   ]
+  },
+  {
+   "id": "pw_pdb_neg",
+   "from": "pm.out_neg",
+   "to": "pdb.bat_neg",
+   "function": "Power module - to the distribution board",
+   "domain": "VBAT",
+   "awg": 8,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "pack",
+   "route": [
+    [-0.082, -0.006, -0.1325],
+    [-0.075, -0.006, -0.1325],
+    [-0.045, -0.006, -0.1345]
+   ]
+  },
+  {
+   "id": "pw_caps",
+   "from": "caps.bus",
+   "to": "pdb.cap",
+   "function": "Bulk capacitor bank across the bus (twisted pair)",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 2,
+   "colour": "#c0262d",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 2.1,
+   "peak_a": 2.1,
+   "note": "ripple current from the SPICE run (icap_rms_peak)",
+   "route": [
+    [-0.124, 0.0, -0.131],
+    [-0.118, 0.0, -0.1385],
+    [-0.06, 0.0, -0.1385],
+    [-0.041, 0.0, -0.1345]
+   ]
+  },
+  {
+   "id": "esc1_pos",
+   "from": "pdb.esc1_pos",
+   "to": "esc1.pos",
+   "function": "ESC 1 + feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "esc",
+   "route": [
+    [0.002, -0.0235, -0.1345],
+    [0.006, -0.0295, -0.131],
+    [0.0634, -0.0792, -0.128],
+    [0.1174, -0.1089, -0.092],
+    [0.128, -0.1195, -0.085]
+   ]
+  },
+  {
+   "id": "esc1_neg",
+   "from": "pdb.esc1_neg",
+   "to": "esc1.neg",
+   "function": "ESC 1 - feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "esc",
+   "route": [
+    [-0.0045, -0.0235, -0.1345],
+    [-0.0005, -0.0295, -0.131],
+    [0.0592, -0.0834, -0.128],
+    [0.1089, -0.1174, -0.092],
+    [0.1195, -0.128, -0.085]
+   ]
+  },
+  {
+   "id": "esc1_sig",
+   "from": "fc.IO_PWM_1",
+   "to": "esc1.signal",
+   "function": "ESC 1 throttle PWM (I/O PWM OUT 1) + ground",
+   "domain": "PWM",
+   "awg": 26,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, 0.0089, -0.106],
+    [-0.0877, 0.0089, -0.106],
+    [-0.088, 0.0089, -0.122],
+    [-0.084, -0.04, -0.135],
+    [-0.01, -0.046, -0.1375],
+    [0.0684, -0.0742, -0.125],
+    [0.1209, -0.1054, -0.088],
+    [0.1237, -0.1237, -0.079]
+   ]
+  },
+  {
+   "id": "esc1_tlm",
+   "from": "esc1.telem",
+   "to": "ftdi.rx1",
+   "function": "ESC 1 telemetry (ALPHA data line, same JR plug) to the FTDI UART A",
+   "domain": "TELEM",
+   "awg": 26,
+   "conductors": 1,
+   "colour": "#e2b007",
+   "current_a": 0.01,
+   "route": [
+    [0.1237, -0.1237, -0.0765],
+    [0.1209, -0.1054, -0.0855],
+    [0.0684, -0.0742, -0.1225],
+    [-0.01, -0.046, -0.135],
+    [-0.084, -0.04, -0.1325],
+    [-0.088, -0.012, -0.125],
+    [-0.08, -0.0565, -0.136],
+    [-0.051, -0.0585, -0.137],
+    [-0.047, -0.071, -0.1275],
+    [-0.047, -0.077, -0.1305]
+   ]
+  },
+  {
+   "id": "esc1_pha",
+   "from": "esc1.phase_a",
+   "to": "motor1.phase_a",
+   "function": "Motor 1 phase A",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [0.1881, -0.1959, -0.085],
+    [0.1976, -0.2054, -0.088],
+    [0.2507, -0.2584, -0.106],
+    [0.3159, -0.3205, -0.109],
+    [0.3413, -0.3491, -0.107]
+   ]
+  },
+  {
+   "id": "esc1_phb",
+   "from": "esc1.phase_b",
+   "to": "motor1.phase_b",
+   "function": "Motor 1 phase B",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [0.192, -0.192, -0.085],
+    [0.2015, -0.2015, -0.088],
+    [0.2546, -0.2546, -0.106],
+    [0.3182, -0.3182, -0.109],
+    [0.3452, -0.3452, -0.107]
+   ]
+  },
+  {
+   "id": "esc1_phc",
+   "from": "esc1.phase_c",
+   "to": "motor1.phase_c",
+   "function": "Motor 1 phase C",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [0.1959, -0.1881, -0.085],
+    [0.2054, -0.1976, -0.088],
+    [0.2584, -0.2507, -0.106],
+    [0.3205, -0.3159, -0.109],
+    [0.3491, -0.3413, -0.107]
+   ]
+  },
+  {
+   "id": "esc2_pos",
+   "from": "pdb.esc2_pos",
+   "to": "esc2.pos",
+   "function": "ESC 2 + feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "esc",
+   "route": [
+    [-0.042, 0.0235, -0.1345],
+    [-0.046, 0.0295, -0.131],
+    [-0.1034, 0.0792, -0.128],
+    [-0.1174, 0.1089, -0.092],
+    [-0.128, 0.1195, -0.085]
+   ]
+  },
+  {
+   "id": "esc2_neg",
+   "from": "pdb.esc2_neg",
+   "to": "esc2.neg",
+   "function": "ESC 2 - feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "esc",
+   "route": [
+    [-0.0355, 0.0235, -0.1345],
+    [-0.0395, 0.0295, -0.131],
+    [-0.0992, 0.0834, -0.128],
+    [-0.1089, 0.1174, -0.092],
+    [-0.1195, 0.128, -0.085]
+   ]
+  },
+  {
+   "id": "esc2_sig",
+   "from": "fc.IO_PWM_2",
+   "to": "esc2.signal",
+   "function": "ESC 2 throttle PWM (I/O PWM OUT 2) + ground",
+   "domain": "PWM",
+   "awg": 26,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, 0.0064, -0.106],
+    [-0.0877, 0.0064, -0.106],
+    [-0.088, 0.0064, -0.122],
+    [-0.088, 0.03, -0.128],
+    [-0.1084, 0.0742, -0.125],
+    [-0.1209, 0.1054, -0.088],
+    [-0.1237, 0.1237, -0.079]
+   ]
+  },
+  {
+   "id": "esc2_tlm",
+   "from": "esc2.telem",
+   "to": "ftdi.rx2",
+   "function": "ESC 2 telemetry (ALPHA data line, same JR plug) to the FTDI UART B",
+   "domain": "TELEM",
+   "awg": 26,
+   "conductors": 1,
+   "colour": "#e2b007",
+   "current_a": 0.01,
+   "route": [
+    [-0.1237, 0.1237, -0.0765],
+    [-0.1209, 0.1054, -0.0855],
+    [-0.1084, 0.0742, -0.1225],
+    [-0.088, 0.03, -0.1255],
+    [-0.088, 0.02, -0.125],
+    [-0.08, -0.055, -0.136],
+    [-0.0455, -0.057, -0.137],
+    [-0.0415, -0.071, -0.1275],
+    [-0.0415, -0.077, -0.1305]
+   ]
+  },
+  {
+   "id": "esc2_pha",
+   "from": "esc2.phase_a",
+   "to": "motor2.phase_a",
+   "function": "Motor 2 phase A",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [-0.1881, 0.1959, -0.085],
+    [-0.1976, 0.2054, -0.088],
+    [-0.2507, 0.2584, -0.106],
+    [-0.3159, 0.3205, -0.109],
+    [-0.3413, 0.3491, -0.107]
+   ]
+  },
+  {
+   "id": "esc2_phb",
+   "from": "esc2.phase_b",
+   "to": "motor2.phase_b",
+   "function": "Motor 2 phase B",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [-0.192, 0.192, -0.085],
+    [-0.2015, 0.2015, -0.088],
+    [-0.2546, 0.2546, -0.106],
+    [-0.3182, 0.3182, -0.109],
+    [-0.3452, 0.3452, -0.107]
+   ]
+  },
+  {
+   "id": "esc2_phc",
+   "from": "esc2.phase_c",
+   "to": "motor2.phase_c",
+   "function": "Motor 2 phase C",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [-0.1959, 0.1881, -0.085],
+    [-0.2054, 0.1976, -0.088],
+    [-0.2584, 0.2507, -0.106],
+    [-0.3205, 0.3159, -0.109],
+    [-0.3491, 0.3413, -0.107]
+   ]
+  },
+  {
+   "id": "esc3_pos",
+   "from": "pdb.esc3_pos",
+   "to": "esc3.pos",
+   "function": "ESC 3 + feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "esc",
+   "route": [
+    [0.002, 0.0235, -0.1345],
+    [0.006, 0.0295, -0.131],
+    [0.0592, 0.0834, -0.128],
+    [0.1089, 0.1174, -0.092],
+    [0.1195, 0.128, -0.085]
+   ]
+  },
+  {
+   "id": "esc3_neg",
+   "from": "pdb.esc3_neg",
+   "to": "esc3.neg",
+   "function": "ESC 3 - feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "esc",
+   "route": [
+    [-0.0045, 0.0235, -0.1345],
+    [-0.0005, 0.0295, -0.131],
+    [0.0634, 0.0792, -0.128],
+    [0.1174, 0.1089, -0.092],
+    [0.128, 0.1195, -0.085]
+   ]
+  },
+  {
+   "id": "esc3_sig",
+   "from": "fc.IO_PWM_3",
+   "to": "esc3.signal",
+   "function": "ESC 3 throttle PWM (I/O PWM OUT 3) + ground",
+   "domain": "PWM",
+   "awg": 26,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, 0.0038, -0.106],
+    [-0.0877, 0.0038, -0.106],
+    [-0.088, 0.0038, -0.122],
+    [-0.084, 0.04, -0.135],
+    [-0.01, 0.046, -0.1375],
+    [0.0542, 0.0884, -0.125],
+    [0.1054, 0.1209, -0.088],
+    [0.1237, 0.1237, -0.079]
+   ]
+  },
+  {
+   "id": "esc3_tlm",
+   "from": "esc3.telem",
+   "to": "ftdi.rx3",
+   "function": "ESC 3 telemetry (ALPHA data line, same JR plug) to the FTDI UART C",
+   "domain": "TELEM",
+   "awg": 26,
+   "conductors": 1,
+   "colour": "#e2b007",
+   "current_a": 0.01,
+   "route": [
+    [0.1237, 0.1237, -0.0765],
+    [0.1054, 0.1209, -0.0855],
+    [0.0542, 0.0884, -0.1225],
+    [-0.01, 0.046, -0.135],
+    [-0.084, 0.04, -0.1325],
+    [-0.088, 0.012, -0.125],
+    [-0.08, -0.0535, -0.136],
+    [-0.04, -0.0555, -0.137],
+    [-0.036, -0.071, -0.1275],
+    [-0.036, -0.077, -0.1305]
+   ]
+  },
+  {
+   "id": "esc3_pha",
+   "from": "esc3.phase_a",
+   "to": "motor3.phase_a",
+   "function": "Motor 3 phase A",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [0.1959, 0.1881, -0.085],
+    [0.2054, 0.1976, -0.088],
+    [0.2584, 0.2507, -0.106],
+    [0.3205, 0.3159, -0.109],
+    [0.3491, 0.3413, -0.107]
+   ]
+  },
+  {
+   "id": "esc3_phb",
+   "from": "esc3.phase_b",
+   "to": "motor3.phase_b",
+   "function": "Motor 3 phase B",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [0.192, 0.192, -0.085],
+    [0.2015, 0.2015, -0.088],
+    [0.2546, 0.2546, -0.106],
+    [0.3182, 0.3182, -0.109],
+    [0.3452, 0.3452, -0.107]
+   ]
+  },
+  {
+   "id": "esc3_phc",
+   "from": "esc3.phase_c",
+   "to": "motor3.phase_c",
+   "function": "Motor 3 phase C",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [0.1881, 0.1959, -0.085],
+    [0.1976, 0.2054, -0.088],
+    [0.2507, 0.2584, -0.106],
+    [0.3159, 0.3205, -0.109],
+    [0.3413, 0.3491, -0.107]
+   ]
+  },
+  {
+   "id": "esc4_pos",
+   "from": "pdb.esc4_pos",
+   "to": "esc4.pos",
+   "function": "ESC 4 + feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#c0262d",
+   "current": "esc",
+   "route": [
+    [-0.042, -0.0235, -0.1345],
+    [-0.046, -0.0295, -0.131],
+    [-0.0992, -0.0834, -0.128],
+    [-0.1089, -0.1174, -0.092],
+    [-0.1195, -0.128, -0.085]
+   ]
+  },
+  {
+   "id": "esc4_neg",
+   "from": "pdb.esc4_neg",
+   "to": "esc4.neg",
+   "function": "ESC 4 - feed",
+   "domain": "VBAT",
+   "awg": 12,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "esc",
+   "route": [
+    [-0.0355, -0.0235, -0.1345],
+    [-0.0395, -0.0295, -0.131],
+    [-0.1034, -0.0792, -0.128],
+    [-0.1174, -0.1089, -0.092],
+    [-0.128, -0.1195, -0.085]
+   ]
+  },
+  {
+   "id": "esc4_sig",
+   "from": "fc.IO_PWM_4",
+   "to": "esc4.signal",
+   "function": "ESC 4 throttle PWM (I/O PWM OUT 4) + ground",
+   "domain": "PWM",
+   "awg": 26,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, 0.0013, -0.106],
+    [-0.0877, 0.0013, -0.106],
+    [-0.088, 0.0013, -0.122],
+    [-0.088, -0.03, -0.128],
+    [-0.0942, -0.0884, -0.125],
+    [-0.1054, -0.1209, -0.088],
+    [-0.1237, -0.1237, -0.079]
+   ]
+  },
+  {
+   "id": "esc4_tlm",
+   "from": "esc4.telem",
+   "to": "ftdi.rx4",
+   "function": "ESC 4 telemetry (ALPHA data line, same JR plug) to the FTDI UART D",
+   "domain": "TELEM",
+   "awg": 26,
+   "conductors": 1,
+   "colour": "#e2b007",
+   "current_a": 0.01,
+   "route": [
+    [-0.1237, -0.1237, -0.0765],
+    [-0.1054, -0.1209, -0.0855],
+    [-0.0942, -0.0884, -0.1225],
+    [-0.088, -0.03, -0.1255],
+    [-0.088, -0.02, -0.125],
+    [-0.08, -0.052, -0.136],
+    [-0.0345, -0.054, -0.137],
+    [-0.0305, -0.071, -0.1275],
+    [-0.0305, -0.077, -0.1305]
+   ]
+  },
+  {
+   "id": "esc4_pha",
+   "from": "esc4.phase_a",
+   "to": "motor4.phase_a",
+   "function": "Motor 4 phase A",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [-0.1959, -0.1881, -0.085],
+    [-0.2054, -0.1976, -0.088],
+    [-0.2584, -0.2507, -0.106],
+    [-0.3205, -0.3159, -0.109],
+    [-0.3491, -0.3413, -0.107]
+   ]
+  },
+  {
+   "id": "esc4_phb",
+   "from": "esc4.phase_b",
+   "to": "motor4.phase_b",
+   "function": "Motor 4 phase B",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [-0.192, -0.192, -0.085],
+    [-0.2015, -0.2015, -0.088],
+    [-0.2546, -0.2546, -0.106],
+    [-0.3182, -0.3182, -0.109],
+    [-0.3452, -0.3452, -0.107]
+   ]
+  },
+  {
+   "id": "esc4_phc",
+   "from": "esc4.phase_c",
+   "to": "motor4.phase_c",
+   "function": "Motor 4 phase C",
+   "domain": "PHASE",
+   "awg": 14,
+   "conductors": 1,
+   "colour": "#17181a",
+   "current": "phase",
+   "route": [
+    [-0.1881, -0.1959, -0.085],
+    [-0.1976, -0.2054, -0.088],
+    [-0.2507, -0.2584, -0.106],
+    [-0.3159, -0.3205, -0.109],
+    [-0.3413, -0.3491, -0.107]
+   ]
+  },
+  {
+   "id": "fc_power1",
+   "from": "pm.fc",
+   "to": "fc.POWER1",
+   "function": "Power module to POWER1: 5.2 V supply + I2C voltage/current (INA228)",
+   "domain": "PM",
+   "awg": 26,
+   "conductors": 6,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#c0262d", "#e2b007", "#2f9e44", "#17181a", "#17181a"],
+   "current_a": 1.5,
+   "peak_a": 3.0,
+   "contacts_per_conductor": 2,
+   "route": [
+    [-0.096, 0.013, -0.1335],
+    [-0.098, 0.03, -0.128],
+    [-0.065, 0.034, -0.118],
+    [-0.06, 0.0282, -0.112]
+   ]
+  },
+  {
+   "id": "fc_power2",
+   "from": "bec_fc.vout",
+   "to": "fc.POWER2",
+   "function": "BEC 5.2 V backup into POWER2 (VDD + GND only)",
+   "domain": "5V",
+   "awg": 24,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 1.5,
+   "peak_a": 3.0,
+   "contacts_per_conductor": 2,
+   "route": [
+    [-0.1045, 0.046, -0.1357],
+    [-0.098, 0.046, -0.132],
+    [-0.052, 0.04, -0.118],
+    [-0.046, 0.0282, -0.112]
+   ]
+  },
+  {
+   "id": "bec_fc_in",
+   "from": "pdb.aux_vbat",
+   "to": "bec_fc.vin",
+   "function": "12S into the FC backup BEC",
+   "domain": "VBAT",
+   "awg": 20,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 0.3,
+   "peak_a": 0.6,
+   "route": [
+    [-0.038, 0.02, -0.1345],
+    [-0.04, 0.04, -0.138],
+    [-0.145, 0.046, -0.136],
+    [-0.1395, 0.046, -0.1357]
+   ]
+  },
+  {
+   "id": "bec_jet_in",
+   "from": "pdb.aux_vbat",
+   "to": "bec_jet.vin",
+   "function": "12S into the Jetson BEC",
+   "domain": "VBAT",
+   "awg": 20,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 0.8,
+   "peak_a": 1.2,
+   "route": [
+    [-0.038, 0.02, -0.1345],
+    [-0.042, 0.03, -0.1385],
+    [-0.07, -0.0, -0.1385],
+    [-0.145, -0.046, -0.136],
+    [-0.1395, -0.046, -0.1357]
+   ]
+  },
+  {
+   "id": "jet_power",
+   "from": "bec_jet.vout",
+   "to": "jetson.dc_in",
+   "function": "12 V into the Jetson's DC jack",
+   "domain": "12V",
+   "awg": 18,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 2.1,
+   "peak_a": 3.0,
+   "route": [
+    [-0.1045, -0.046, -0.1357],
+    [-0.097, -0.046, -0.1375],
+    [-0.078, -0.054, -0.1375],
+    [0.03, -0.054, -0.1375],
+    [0.052, -0.04, -0.131],
+    [0.0655, -0.04, -0.1304]
+   ]
+  },
+  {
+   "id": "servo_rail",
+   "from": "pdb.v5",
+   "to": "fc.IO_PWM_8",
+   "function": "5.1 V into the servo rail (VDD_SERVO) for the latch servo, nav lights and RC switches",
+   "domain": "5V",
+   "awg": 22,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 1.2,
+   "peak_a": 3.0,
+   "note": "peak: latch servo stall 2.5 A + 5 NeoPixels 0.3 A + logic 0.1 A",
+   "route": [
+    [-0.032, -0.022, -0.1345],
+    [-0.035, -0.035, -0.135],
+    [-0.08, -0.02, -0.12],
+    [-0.0737, -0.0089, -0.106]
+   ]
+  },
+  {
+   "id": "telem1_rfd",
+   "from": "fc.TELEM1",
+   "to": "rfd.uart",
+   "function": "TELEM1 <-> RFD900x (MAVLink, 57600 baud)",
+   "domain": "UART",
+   "awg": 28,
+   "conductors": 6,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#e2b007", "#2f9e44", "#2b59c3", "#e6e6e2", "#17181a"],
+   "current_a": 0.8,
+   "peak_a": 1.0,
+   "route": [
+    [-0.032, 0.0282, -0.112],
+    [-0.032, 0.04, -0.128],
+    [0.015, 0.075, -0.125],
+    [0.0085, 0.09, -0.1321]
+   ]
+  },
+  {
+   "id": "rfd_ant1",
+   "from": "rfd.ant1",
+   "to": "rfd_ant_L.sma",
+   "function": "RFD900x antenna 1 feed (RP-SMA pigtail to the left bulkhead)",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#b98a5a",
+   "cable": "RG316",
+   "route": [
+    [-0.0485, 0.0825, -0.1341],
+    [-0.0605, 0.0975, -0.1341],
+    [-0.11, 0.115, -0.13],
+    [-0.13, 0.13, -0.142],
+    [-0.13, 0.13, -0.1508],
+    [-0.13, 0.13, -0.154]
+   ]
+  },
+  {
+   "id": "rfd_ant2",
+   "from": "rfd.ant2",
+   "to": "rfd_ant_R.sma",
+   "function": "RFD900x antenna 2 feed (around the rear of the deck to the right bulkhead)",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#b98a5a",
+   "cable": "RG316",
+   "route": [
+    [-0.0485, 0.0975, -0.1341],
+    [-0.0565, 0.0825, -0.1261],
+    [-0.07, 0.075, -0.12],
+    [-0.155, 0.05, -0.118],
+    [-0.155, -0.08, -0.118],
+    [-0.13, -0.13, -0.142],
+    [-0.13, -0.13, -0.1508],
+    [-0.13, -0.13, -0.154]
+   ]
+  },
+  {
+   "id": "telem2_rockblock",
+   "from": "fc.TELEM2",
+   "to": "rockblock.serial",
+   "function": "TELEM2 <-> RockBLOCK 9603 (19200 baud, RTS/CTS)",
+   "domain": "UART",
+   "awg": 28,
+   "conductors": 6,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a", "#e2b007", "#2f9e44", "#2b59c3", "#e6e6e2"],
+   "current_a": 0.45,
+   "peak_a": 1.0,
+   "route": [
+    [-0.02, 0.0282, -0.112],
+    [-0.02, 0.036, -0.113],
+    [-0.06, 0.04, -0.106],
+    [-0.084, 0.035, -0.0985],
+    [-0.0925, 0.035, -0.0985]
+   ]
+  },
+  {
+   "id": "iridium_feed",
+   "from": "rockblock.ant",
+   "to": "iridium_ant.sma",
+   "function": "RockBLOCK SMA to the roof Iridium antenna (taped along the roof)",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#b98a5a",
+   "cable": "RG316",
+   "route": [
+    [-0.0925, 0.013, -0.0985],
+    [-0.0805, 0.013, -0.0965],
+    [-0.08, -0.012, -0.06],
+    [-0.075, 0.0, -0.01],
+    [0.0, 0.0, 0.01],
+    [0.08, 0.0, 0.0],
+    [0.1, 0.0, 0.0115],
+    [0.1, 0.0, 0.0126]
+   ]
+  },
+  {
+   "id": "telem3_radar",
+   "from": "fc.TELEM3",
+   "to": "radar.uart",
+   "function": "TELEM3 <-> Ainstein US-D1 radar (UART), down the belly loom",
+   "domain": "UART",
+   "awg": 28,
+   "conductors": 4,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#e2b007", "#2f9e44", "#17181a"],
+   "current_a": 0.3,
+   "route": [
+    [-0.008, 0.0282, -0.112],
+    [0.0, 0.04, -0.128],
+    [-0.03, 0.06, -0.137],
+    [-0.16, 0.07, -0.135],
+    [-0.175, 0.075, -0.17],
+    [-0.14, 0.078, -0.226],
+    [-0.11, 0.075, -0.232],
+    [-0.11, 0.07, -0.233],
+    [-0.11, 0.07, -0.246],
+    [-0.11, 0.062, -0.252],
+    [-0.11, 0.054, -0.2514]
+   ]
+  },
+  {
+   "id": "eth_jetson",
+   "from": "fc.ETH",
+   "to": "jetson.rj45",
+   "function": "Pixhawk 6X Ethernet <-> Jetson (MAVLink over UDP, 100 Mbit)",
+   "domain": "ETH",
+   "awg": 28,
+   "conductors": 4,
+   "colour": "#17181a",
+   "colours": ["#e8761c", "#e6e6e2", "#2f9e44", "#e6e6e2"],
+   "current_a": 0.05,
+   "route": [
+    [0.004, 0.0282, -0.112],
+    [0.004, 0.034, -0.126],
+    [0.04, 0.034, -0.13],
+    [0.058, 0.03, -0.1335],
+    [0.0655, 0.03, -0.1291]
+   ]
+  },
+  {
+   "id": "gps1",
+   "from": "fc.GPS1",
+   "to": "gps.gps1",
+   "function": "GPS1: M10 GNSS + compass + safety switch + buzzer, up through the mast",
+   "domain": "GPS",
+   "awg": 28,
+   "conductors": 10,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#e2b007", "#2f9e44", "#2b59c3", "#e6e6e2", "#e8761c", "#7a4cc2", "#8a8f94", "#a0704a", "#17181a"],
+   "current_a": 0.25,
+   "route": [
+    [-0.06, -0.0282, -0.112],
+    [-0.06, -0.036, -0.127],
+    [-0.075, -0.036, -0.09],
+    [-0.065, 0.0, -0.075],
+    [-0.06, 0.0, -0.02],
+    [-0.06, 0.0, 0.02],
+    [-0.06, 0.0, 0.035],
+    [-0.06, 0.0, 0.0898]
+   ]
+  },
+  {
+   "id": "rc_sbus",
+   "from": "rx.sbus",
+   "to": "fc.RC_IN",
+   "function": "R-XSR SBUS into RC IN (powered from the FC's 5 V RC pin)",
+   "domain": "SBUS",
+   "awg": 28,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#c0262d", "#17181a"],
+   "current_a": 0.1,
+   "route": [
+    [0.004, -0.098, -0.1378],
+    [0.0, -0.098, -0.137],
+    [0.004, -0.036, -0.13],
+    [-0.014, -0.0282, -0.112]
+   ]
+  },
+  {
+   "id": "rx_rx_ant1",
+   "from": "rx.ant1",
+   "to": "rx_ant1.coax",
+   "function": "R-XSR antenna lead 1",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#8a8f94",
+   "cable": "1.13mm",
+   "route": [
+    [0.02, -0.095, -0.1358],
+    [0.03, -0.13, -0.12],
+    [0.0445, -0.15, -0.115]
+   ]
+  },
+  {
+   "id": "rx_rx_ant2",
+   "from": "rx.ant2",
+   "to": "rx_ant2.coax",
+   "function": "R-XSR antenna lead 2",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#8a8f94",
+   "cable": "1.13mm",
+   "route": [
+    [0.02, -0.101, -0.1358],
+    [0.025, -0.13, -0.125],
+    [0.085, -0.1405, -0.115]
+   ]
+  },
+  {
+   "id": "lte_usb",
+   "from": "lte.usb",
+   "to": "jetson.usb1",
+   "function": "LTE modem USB to the Jetson (down off the tray, along the right deck lane)",
+   "domain": "USB",
+   "awg": 28,
+   "conductors": 4,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#e6e6e2", "#2f9e44", "#17181a"],
+   "current_a": 0.9,
+   "peak_a": 2.0,
+   "route": [
+    [-0.115, -0.002, -0.101],
+    [-0.119, 0.01, -0.101],
+    [-0.084, -0.02, -0.112],
+    [-0.078, -0.05, -0.1365],
+    [0.03, -0.05, -0.1365],
+    [0.05, 0.0, -0.1335],
+    [0.0655, 0.004, -0.132]
+   ]
+  },
+  {
+   "id": "lte_main",
+   "from": "lte.main",
+   "to": "lte_ant_main.ufl",
+   "function": "LTE main antenna lead",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#8a8f94",
+   "cable": "1.13mm",
+   "route": [
+    [-0.125, -0.045, -0.095],
+    [-0.115, -0.045, -0.091],
+    [-0.09, 0.07, -0.095],
+    [-0.06, 0.16, -0.112],
+    [-0.048, 0.183, -0.116]
+   ]
+  },
+  {
+   "id": "lte_div",
+   "from": "lte.div",
+   "to": "lte_ant_div.ufl",
+   "function": "LTE diversity antenna lead",
+   "domain": "RF",
+   "awg": null,
+   "conductors": 1,
+   "colour": "#8a8f94",
+   "cable": "1.13mm",
+   "route": [
+    [-0.105, -0.045, -0.095],
+    [-0.095, -0.045, -0.091],
+    [-0.09, -0.08, -0.098],
+    [-0.06, -0.16, -0.112],
+    [-0.048, -0.183, -0.116]
+   ]
+  },
+  {
+   "id": "ftdi_usb",
+   "from": "ftdi.usb",
+   "to": "jetson.usb2",
+   "function": "FTDI quad UART USB to the Jetson",
+   "domain": "USB",
+   "awg": 28,
+   "conductors": 4,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#e6e6e2", "#2f9e44", "#17181a"],
+   "current_a": 0.1,
+   "route": [
+    [-0.0185, -0.084, -0.1345],
+    [-0.0085, -0.084, -0.1345],
+    [0.012, -0.072, -0.131],
+    [0.04, -0.046, -0.13],
+    [0.052, 0.004, -0.1255],
+    [0.0655, 0.004, -0.124]
+   ]
+  },
+  {
+   "id": "bms_uart",
+   "from": "bms.uart",
+   "to": "jetson.uart1",
+   "function": "BMS isolated UART to the Jetson (state of charge, cell voltages, temperatures for Ark Care)",
+   "domain": "UART",
+   "awg": 28,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#17181a", "#e2b007", "#2f9e44"],
+   "current_a": 0.02,
+   "route": [
+    [-0.2089, -0.022, -0.157],
+    [-0.212, -0.03, -0.14],
+    [-0.165, -0.09, -0.137],
+    [-0.1, -0.109, -0.137],
+    [0.06, -0.109, -0.137],
+    [0.11, -0.062, -0.134],
+    [0.115, -0.054, -0.131],
+    [0.115, -0.046, -0.132]
+   ]
+  },
+  {
+   "id": "bms_balance",
+   "from": "pack.bal",
+   "to": "bms.bal",
+   "function": "13 balance taps (B0..B12) to the BMS",
+   "domain": "BALANCE",
+   "awg": 22,
+   "conductors": 13,
+   "colour": "#17181a",
+   "colours": ["#17181a", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d", "#c0262d"],
+   "current_a": 0.1,
+   "route": [
+    [-0.1884, 0.0, -0.1588],
+    [-0.1974, 0.0, -0.157]
+   ]
+  },
+  {
+   "id": "bms_ntc",
+   "from": "pack.ntc",
+   "to": "bms.ntc",
+   "function": "Two pack thermistors to the BMS",
+   "domain": "NTC",
+   "awg": 28,
+   "conductors": 4,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#e6e6e2", "#e6e6e2", "#e6e6e2"],
+   "current_a": 0.001,
+   "route": [
+    [-0.1884, -0.014, -0.1588],
+    [-0.1974, -0.014, -0.157]
+   ]
+  },
+  {
+   "id": "cargo_latch",
+   "from": "fc.FMU_PWM_1",
+   "to": "cargo.latch",
+   "function": "Cargo latch servo (FMU PWM OUT 1, 5 V servo rail)",
+   "domain": "SERVO",
+   "awg": 24,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#e8761c", "#c0262d", "#a0704a"],
+   "current_a": 0.6,
+   "peak_a": 2.5,
+   "route": [
+    [-0.0737, 0.0089, -0.113],
+    [-0.0857, 0.0089, -0.113],
+    [-0.09, 0.03, -0.128],
+    [-0.155, 0.066, -0.13],
+    [-0.174, 0.08, -0.14],
+    [-0.174, 0.082, -0.2],
+    [-0.124, 0.084, -0.228],
+    [0.016, 0.07, -0.228],
+    [0.036, 0.064, -0.23],
+    [0.036, 0.064, -0.246],
+    [0.036, 0.036, -0.246],
+    [0.036, 0.03, -0.2464]
+   ]
+  },
+  {
+   "id": "cargo_can",
+   "from": "fc.CAN2",
+   "to": "cargo.contacts",
+   "function": "CAN2 to the 4 pogo contacts (smart cargo: ID, sensors, release confirm over DroneCAN)",
+   "domain": "CAN",
+   "awg": 26,
+   "conductors": 4,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#e2b007", "#2f9e44", "#17181a"],
+   "current_a": 0.3,
+   "route": [
+    [-0.024, -0.0282, -0.112],
+    [-0.024, -0.0362, -0.112],
+    [-0.03, -0.045, -0.12],
+    [-0.09, -0.02, -0.13],
+    [-0.155, 0.07, -0.132],
+    [-0.166, 0.08, -0.14],
+    [-0.166, 0.082, -0.2],
+    [-0.116, 0.084, -0.228],
+    [0.024, 0.07, -0.228],
+    [0.044, 0.064, -0.23],
+    [0.044, 0.064, -0.246],
+    [0.044, 0.036, -0.246],
+    [0.044, 0.03, -0.2464]
+   ]
+  },
+  {
+   "id": "fire_cmd_arm",
+   "from": "fc.FMU_PWM_3",
+   "to": "fire.arm_in",
+   "function": "ARM relay output to the firing driver (FMU PWM OUT 3 = AUX3)",
+   "domain": "RELAY",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#c0262d", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, 0.0038, -0.113],
+    [-0.0877, 0.0038, -0.113],
+    [-0.088, 0.0038, -0.122],
+    [-0.084, 0.047, -0.1365],
+    [0.05, 0.049, -0.1365],
+    [0.09, 0.073, -0.1365],
+    [0.1, 0.088, -0.1335],
+    [0.108, 0.088, -0.1365]
+   ]
+  },
+  {
+   "id": "fire_cmd_fire_L",
+   "from": "fc.FMU_PWM_4",
+   "to": "fire.fire_L_in",
+   "function": "FIRE L relay output to the firing driver (FMU PWM OUT 4 = AUX4)",
+   "domain": "RELAY",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#c0262d", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, 0.0013, -0.113],
+    [-0.0877, 0.0013, -0.113],
+    [-0.088, 0.0013, -0.122],
+    [-0.084, 0.05, -0.1365],
+    [0.05, 0.052, -0.1365],
+    [0.09, 0.076, -0.1365],
+    [0.1, 0.082, -0.1335],
+    [0.108, 0.082, -0.1365]
+   ]
+  },
+  {
+   "id": "fire_cmd_fire_R",
+   "from": "fc.FMU_PWM_5",
+   "to": "fire.fire_R_in",
+   "function": "FIRE R relay output to the firing driver (FMU PWM OUT 5 = AUX5)",
+   "domain": "RELAY",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#e6e6e2", "#c0262d", "#17181a"],
+   "current_a": 0.02,
+   "route": [
+    [-0.0737, -0.0013, -0.113],
+    [-0.0877, -0.0013, -0.113],
+    [-0.088, -0.0013, -0.122],
+    [-0.084, 0.053, -0.1365],
+    [0.05, 0.055, -0.1365],
+    [0.09, 0.079, -0.1365],
+    [0.1, 0.076, -0.1335],
+    [0.108, 0.076, -0.1365]
+   ]
+  },
+  {
+   "id": "fire_pwr",
+   "from": "pdb.v12",
+   "to": "fire.supply",
+   "function": "12 V supply to the firing driver (FCHUB 12 V BEC)",
+   "domain": "12V",
+   "awg": 20,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 0.0,
+   "peak_a": 1.0,
+   "route": [
+    [-0.008, 0.022, -0.1345],
+    [-0.004, 0.028, -0.137],
+    [0.03, 0.05, -0.137],
+    [0.07, 0.062, -0.135],
+    [0.12, 0.067, -0.1305],
+    [0.12, 0.071, -0.1345]
+   ]
+  },
+  {
+   "id": "fire_L",
+   "from": "fire.out_L",
+   "to": "inflator_L.fire",
+   "function": "Left inflator latch solenoid lead (12 V, 0.5 A x 300 ms), down the front leg",
+   "domain": "FIRE",
+   "awg": 22,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 0.0,
+   "peak_a": 0.5,
+   "route": [
+    [0.14, 0.087, -0.1345],
+    [0.148, 0.087, -0.1305],
+    [0.15, 0.13, -0.135],
+    [0.172, 0.172, -0.155],
+    [0.175, 0.177, -0.2],
+    [0.18, 0.19, -0.22],
+    [0.19, 0.215, -0.24],
+    [0.203, 0.238, -0.26],
+    [0.212, 0.252, -0.28],
+    [0.214, 0.254, -0.4],
+    [0.216, 0.252, -0.5],
+    [0.226, 0.2509, -0.518],
+    [0.2362, 0.2509, -0.52],
+    [0.2405, 0.2509, -0.524],
+    [0.24, 0.2509, -0.535]
+   ]
+  },
+  {
+   "id": "press_L",
+   "from": "pontoon_L.pressure_ok",
+   "to": "fc.FMU_PWM_6",
+   "function": "Left pontoon pressure switch (Multicomp PSF102, N.O., 12 kPa) to AUX6, digital input with 10 k pull-up to 3.3 V",
+   "domain": "GPIO",
+   "awg": 26,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#2b59c3", "#17181a"],
+   "current_a": 0.005,
+   "route": [
+    [0.24, 0.2509, -0.535],
+    [0.2405, 0.2509, -0.524],
+    [0.2362, 0.2509, -0.52],
+    [0.222, 0.2479, -0.518],
+    [0.212, 0.249, -0.5],
+    [0.21, 0.251, -0.4],
+    [0.208, 0.249, -0.28],
+    [0.199, 0.235, -0.26],
+    [0.186, 0.212, -0.24],
+    [0.176, 0.187, -0.22],
+    [0.171, 0.174, -0.2],
+    [0.168, 0.169, -0.155],
+    [0.145, 0.125, -0.133],
+    [0.095, 0.07, -0.1365],
+    [0.05, 0.058, -0.1365],
+    [-0.084, 0.056, -0.1365],
+    [-0.088, -0.0038, -0.122],
+    [-0.0877, -0.0038, -0.113],
+    [-0.0737, -0.0038, -0.113]
+   ]
+  },
+  {
+   "id": "fire_R",
+   "from": "fire.out_R",
+   "to": "inflator_R.fire",
+   "function": "Right inflator latch solenoid lead (12 V, 0.5 A x 300 ms), down the front leg",
+   "domain": "FIRE",
+   "awg": 22,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#17181a"],
+   "current_a": 0.0,
+   "peak_a": 0.5,
+   "route": [
+    [0.14, 0.077, -0.1345],
+    [0.148, 0.077, -0.1305],
+    [0.155, 0.06, -0.138],
+    [0.165, 0.0, -0.138],
+    [0.16, -0.12, -0.137],
+    [0.172, -0.172, -0.155],
+    [0.175, -0.177, -0.2],
+    [0.18, -0.19, -0.22],
+    [0.19, -0.215, -0.24],
+    [0.203, -0.238, -0.26],
+    [0.212, -0.252, -0.28],
+    [0.214, -0.254, -0.4],
+    [0.216, -0.252, -0.5],
+    [0.226, -0.2509, -0.518],
+    [0.2362, -0.2509, -0.52],
+    [0.2405, -0.2509, -0.524],
+    [0.24, -0.2509, -0.535]
+   ]
+  },
+  {
+   "id": "press_R",
+   "from": "pontoon_R.pressure_ok",
+   "to": "fc.FMU_PWM_7",
+   "function": "Right pontoon pressure switch (Multicomp PSF102, N.O., 12 kPa) to AUX7, digital input with 10 k pull-up to 3.3 V",
+   "domain": "GPIO",
+   "awg": 26,
+   "conductors": 2,
+   "colour": "#17181a",
+   "colours": ["#2b59c3", "#17181a"],
+   "current_a": 0.005,
+   "route": [
+    [0.24, -0.2509, -0.535],
+    [0.2405, -0.2509, -0.524],
+    [0.2362, -0.2509, -0.52],
+    [0.222, -0.2479, -0.518],
+    [0.212, -0.249, -0.5],
+    [0.21, -0.251, -0.4],
+    [0.208, -0.249, -0.28],
+    [0.199, -0.235, -0.26],
+    [0.186, -0.212, -0.24],
+    [0.176, -0.187, -0.22],
+    [0.171, -0.174, -0.2],
+    [0.168, -0.169, -0.155],
+    [0.16, -0.124, -0.133],
+    [0.168, 0.0, -0.133],
+    [0.152, 0.064, -0.1365],
+    [0.095, 0.068, -0.1365],
+    [0.05, 0.061, -0.1365],
+    [-0.084, 0.059, -0.1365],
+    [-0.088, -0.0063, -0.122],
+    [-0.0877, -0.0063, -0.113],
+    [-0.0737, -0.0063, -0.113]
+   ]
+  },
+  {
+   "id": "nav_fc_status",
+   "from": "fc.FMU_PWM_8",
+   "to": "status_led.din",
+   "function": "NeoPixel data from FMU PWM OUT 8 (AUX8) to the status light",
+   "domain": "LED",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#2f9e44", "#17181a"],
+   "current_a": 0.3,
+   "route": [
+    [-0.0737, -0.0089, -0.113],
+    [-0.0857, -0.0089, -0.113],
+    [-0.09, -0.02, -0.124],
+    [-0.16, -0.06, -0.128],
+    [-0.22, -0.05, -0.13],
+    [-0.26, -0.045, -0.142],
+    [-0.2655, -0.045, -0.144]
+   ]
+  },
+  {
+   "id": "nav_status_RL",
+   "from": "status_led.dout",
+   "to": "nav_RL.din",
+   "function": "NeoPixel chain status_led -> nav_RL (5 V, data, GND)",
+   "domain": "LED",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#2f9e44", "#17181a"],
+   "current_a": 0.25,
+   "route": [
+    [-0.2655, -0.045, -0.15],
+    [-0.255, -0.04, -0.152],
+    [-0.215, 0.06, -0.12],
+    [-0.18, 0.18, -0.115],
+    [-0.2551, 0.2551, -0.115],
+    [-0.3189, 0.3189, -0.1215]
+   ]
+  },
+  {
+   "id": "nav_RL_FL",
+   "from": "nav_RL.dout",
+   "to": "nav_FL.din",
+   "function": "NeoPixel chain nav_RL -> nav_FL (5 V, data, GND)",
+   "domain": "LED",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#2f9e44", "#17181a"],
+   "current_a": 0.25,
+   "route": [
+    [-0.3245, 0.3245, -0.1215],
+    [-0.2596, 0.2596, -0.115],
+    [-0.15, 0.15, -0.11],
+    [0.0, 0.17, -0.098],
+    [0.15, 0.15, -0.11],
+    [0.2551, 0.2551, -0.115],
+    [0.3189, 0.3189, -0.1215]
+   ]
+  },
+  {
+   "id": "nav_FL_FR",
+   "from": "nav_FL.dout",
+   "to": "nav_FR.din",
+   "function": "NeoPixel chain nav_FL -> nav_FR (5 V, data, GND)",
+   "domain": "LED",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#2f9e44", "#17181a"],
+   "current_a": 0.25,
+   "route": [
+    [0.3245, 0.3245, -0.1215],
+    [0.2596, 0.2596, -0.115],
+    [0.2, 0.1, -0.1],
+    [0.2, -0.1, -0.1],
+    [0.2551, -0.2551, -0.115],
+    [0.3189, -0.3189, -0.1215]
+   ]
+  },
+  {
+   "id": "nav_FR_RR",
+   "from": "nav_FR.dout",
+   "to": "nav_RR.din",
+   "function": "NeoPixel chain nav_FR -> nav_RR (5 V, data, GND)",
+   "domain": "LED",
+   "awg": 26,
+   "conductors": 3,
+   "colour": "#17181a",
+   "colours": ["#c0262d", "#2f9e44", "#17181a"],
+   "current_a": 0.25,
+   "route": [
+    [0.3245, -0.3245, -0.1215],
+    [0.2596, -0.2596, -0.115],
+    [0.15, -0.15, -0.11],
+    [0.0, -0.17, -0.098],
+    [-0.15, -0.15, -0.11],
+    [-0.2551, -0.2551, -0.115],
+    [-0.3189, -0.3189, -0.1215]
+   ]
+  }
+ ],
+ "checks": {
+  "ok": true,
+  "errors": [],
+  "fit_checked": true,
+  "components": 51,
+  "ports": 166,
+  "wires": 75,
+  "conductors": 166,
+  "total_length_m": 18.74,
+  "copper_kg": 0.187,
+  "longest_run": {
+   "wire": "press_R",
+   "length_m": 1.002
+  },
+  "component_mass_kg": 4.876,
+  "design_currents_a": {
+   "pack": 27.2,
+   "pack_peak": 75.0,
+   "esc": 6.8,
+   "esc_peak": 18.7,
+   "phase": 11.9,
+   "phase_peak": 22.0
+  },
+  "wire_lengths_m": {
+   "pw_pack_pos": 0.121,
+   "pw_pack_neg": 0.061,
+   "pw_pack_b": 0.022,
+   "pw_bus_pos": 0.162,
+   "pw_bus_neg": 0.175,
+   "pw_pdb_pos": 0.037,
+   "pw_pdb_neg": 0.037,
+   "pw_caps": 0.087,
+   "esc1_pos": 0.172,
+   "esc1_neg": 0.175,
+   "esc1_sig": 0.331,
+   "esc1_tlm": 0.378,
+   "esc1_pha": 0.219,
+   "esc1_phb": 0.219,
+   "esc1_phc": 0.219,
+   "esc2_pos": 0.149,
+   "esc2_neg": 0.156,
+   "esc2_sig": 0.174,
+   "esc2_tlm": 0.264,
+   "esc2_pha": 0.219,
+   "esc2_phb": 0.219,
+   "esc2_phc": 0.219,
+   "esc3_pos": 0.171,
+   "esc3_neg": 0.177,
+   "esc3_sig": 0.313,
+   "esc3_tlm": 0.405,
+   "esc3_pha": 0.219,
+   "esc3_phb": 0.219,
+   "esc3_phc": 0.219,
+   "esc4_pos": 0.151,
+   "esc4_neg": 0.154,
+   "esc4_sig": 0.192,
+   "esc4_tlm": 0.247,
+   "esc4_pha": 0.219,
+   "esc4_phb": 0.219,
+   "esc4_phc": 0.219,
+   "fc_power1": 0.062,
+   "fc_power2": 0.07,
+   "bec_fc_in": 0.131,
+   "bec_jet_in": 0.146,
+   "jet_power": 0.177,
+   "servo_rail": 0.082,
+   "telem1_rfd": 0.096,
+   "rfd_ant1": 0.112,
+   "rfd_ant2": 0.327,
+   "telem2_rockblock": 0.083,
+   "iridium_feed": 0.29,
+   "telem3_radar": 0.36,
+   "eth_jetson": 0.079,
+   "gps1": 0.262,
+   "rc_sbus": 0.093,
+   "rx_rx_ant1": 0.065,
+   "rx_rx_ant2": 0.093,
+   "lte_usb": 0.277,
+   "lte_main": 0.251,
+   "lte_div": 0.16,
+   "ftdi_usb": 0.137,
+   "bms_uart": 0.41,
+   "bms_balance": 0.009,
+   "bms_ntc": 0.009,
+   "cargo_latch": 0.467,
+   "cargo_can": 0.544,
+   "fire_cmd_arm": 0.276,
+   "fire_cmd_fire_L": 0.275,
+   "fire_cmd_fire_R": 0.279,
+   "fire_pwr": 0.146,
+   "fire_L": 0.534,
+   "press_L": 0.829,
+   "fire_R": 0.696,
+   "press_R": 1.002,
+   "nav_fc_status": 0.218,
+   "nav_status_RL": 0.446,
+   "nav_RL_FL": 0.79,
+   "nav_FL_FR": 0.719,
+   "nav_FR_RR": 0.79
+  }
+ }
+}

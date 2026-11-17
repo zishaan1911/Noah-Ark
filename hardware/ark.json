@@ -790,14 +790,17 @@
         "GEO_Propeller_03",
         "GEO_Propeller_04",
         "Green_Light",
-        "Legs"
+        "Legs",
+        "Rear_Hatch"
       ],
-      "triangles": 209652,
+      "triangles": 238400,
       "body_area_m2": 1.6187,
       "structure_kg": 2.428,
       "auw_estimate_kg": 13.747,
       "battery": {
         "pack": "12S4P",
+        "pack_kg": 3.809,
+        "pack_wh": 864.0,
         "location": "belly well, inside the hub",
         "grid": [
           12,
@@ -848,6 +851,65 @@
     "shell_density": 1500,
     "belly_floor_below_m": -0.22,
     "deck_gap_m": 0.006,
-    "deck_max_z_m": -0.12
+    "deck_max_z_m": -0.12,
+    "mission": {
+      "cd_body": 0.9,
+      "result": {
+        "frontal_area_m2": 0.1822,
+        "cd_body": 0.9,
+        "cda_m2": 0.166,
+        "cda_payload_m2": 0.0144,
+        "auw_kg": 13.747,
+        "12S4P": {
+          "mission_wh": 838.6,
+          "needed_with_reserve_wh": 1048.3,
+          "usable_wh": 777.6,
+          "energy_margin": 0.7418,
+          "cruise_mps": [
+            16.0,
+            15.0
+          ],
+          "twr": 3.046,
+          "auw_kg": 13.747
+        },
+        "12S5P": {
+          "mission_wh": 904.8,
+          "needed_with_reserve_wh": 1131.0,
+          "usable_wh": 972.0,
+          "energy_margin": 0.8594,
+          "cruise_mps": [
+            16.0,
+            15.0
+          ],
+          "twr": 2.849,
+          "auw_kg": 14.699
+        },
+        "12S6P": {
+          "mission_wh": 972.0,
+          "needed_with_reserve_wh": 1215.0,
+          "usable_wh": 1166.4,
+          "energy_margin": 0.96,
+          "cruise_mps": [
+            17.0,
+            16.0
+          ],
+          "twr": 2.676,
+          "auw_kg": 15.651
+        },
+        "12S7P": {
+          "mission_wh": 1039.4,
+          "needed_with_reserve_wh": 1299.3,
+          "usable_wh": 1360.8,
+          "energy_margin": 1.0473,
+          "cruise_mps": [
+            17.0,
+            16.0
+          ],
+          "twr": 2.522,
+          "auw_kg": 16.604
+        },
+        "closes_with": "12S7P"
+      }
+    }
   }
 }

@@ -93,6 +93,9 @@ def main() -> int:
     motor_c = raw["GEO_Base_01"][0].mean(axis=0)
     scale = ch["geometry_m"]["arm_radius"] / math.hypot(motor_c[0], motor_c[1])
     parts = {n: (transform(v, scale), f) for n, (v, f) in raw.items() if not n.startswith(GIMBAL)}
+    # the external battery leaves an open bay in the tail: its own shape becomes a sealed service hatch that
+    # closes the bay flush with the shell (rear bay: spare volume, status light on the hatch face)
+    parts["Rear_Hatch"] = (transform(raw["Battery"][0], scale), raw["Battery"][1])
     removed = sorted(n for n in raw if n.startswith(GIMBAL))
 
     body_v, body_f = parts["GEO_Main_Body"]
@@ -101,9 +104,15 @@ def main() -> int:
     structure_kg = body_area / 2 * idc["shell_wall_m"] * idc["shell_density"]
 
     # battery: inside the hub's belly well (the deep channel under the centre), cells upright, S along x and P along y
-    s, p = (int(x) for x in ch["pack"].removesuffix("P").split("S"))
+    # The pack can be overridden here: this airframe's own drag (mission_check.py) can need more cells than the
+    # hull-model sizing picked.
+    pack_name = idc.get("pack", ch["pack"])
+    s, p = (int(x) for x in pack_name.removesuffix("P").split("S"))
     cell, case = ark["mechanical"]["cell_21700_m"], ark["mechanical"]["pack_case_m"]
     pack_size = [s * cell["d"] + 2 * case, p * cell["d"] + 2 * case, cell["h"] + 2 * case]
+    cell_spec = next(c for c in ark["candidates"]["cells"] if c["name"] == ch["cell"])
+    pack_kg = s * p * cell_spec["kg"] * (1 + ark["candidates"]["pack_overhead_frac"])
+    pack_wh = s * p * cell_spec["ah"] * cell_spec["v_nom"]
     well = belly_well(body_v, idc["belly_floor_below_m"])
     inset = idc["shell_wall_m"] + ark["mechanical"]["clearance_m"]
     pack_floor = well["floor_z_m"] + inset
@@ -115,7 +124,7 @@ def main() -> int:
         and deck_z <= idc["deck_max_z_m"]
     )
     if not fits:
-        raise ValueError(f"{ch['pack']} pack {pack_size} does not fit the belly well {well}")
+        raise ValueError(f"{pack_name} pack {pack_size} does not fit the belly well {well}")
 
     # pontoons along the skid bars
     legs = body_v[body_v[:, 2] < idc["skid_z_below_m"]]
@@ -123,7 +132,19 @@ def main() -> int:
     skid_bottom = float(legs[:, 2].min())
     pt = idc["pontoon"]
     fixed_extra = sum(idc["added_mass_kg"].values())
-    auw = ch["mass_kg"]["all_up"] - ch["mass_kg"]["hull_shell"] - ch["mass_kg"]["arms"] + structure_kg + fixed_extra
+    auw = (
+        ch["mass_kg"]["all_up"]
+        - ch["mass_kg"]["hull_shell"]
+        - ch["mass_kg"]["arms"]
+        - ch["mass_kg"]["pack"]
+        + pack_kg
+        + structure_kg
+        + fixed_extra
+    )
+    # pontoon diameter: the smallest (5 mm steps, never below the configured size) that keeps the buoyancy reserve
+    need = ark["requirements"]["reserve_buoyancy_frac"]
+    while 2 * tube_volume(pt["d_m"], pt["length_m"]) * 1000 / auw - 1 < need:
+        pt["d_m"] = round(pt["d_m"] + 0.005, 3)
     each = tube_volume(pt["d_m"], pt["length_m"])
     draft = tube_draft(pt["d_m"], pt["length_m"], auw / 1000.0 / 2)
     tube_bottom = skid_bottom - pt["below_skid_m"]
@@ -140,7 +161,9 @@ def main() -> int:
         "structure_kg": round(structure_kg, 3),
         "auw_estimate_kg": round(auw, 3),
         "battery": {
-            "pack": ch["pack"],
+            "pack": pack_name,
+            "pack_kg": round(pack_kg, 3),
+            "pack_wh": round(pack_wh, 1),
             "location": "belly well, inside the hub",
             "grid": [s, p],
             "pack_size_m": [round(x, 4) for x in pack_size],

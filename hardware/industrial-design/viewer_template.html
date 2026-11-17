@@ -87,13 +87,14 @@ code { font: 0.92em var(--mono); }
         <button id="v-hero" aria-pressed="true">Hero</button>
         <button id="v-side" aria-pressed="false">Side</button>
         <button id="v-top" aria-pressed="false">Top</button>
-        <button id="v-under" aria-pressed="false">Underside</button>
+        <button id="v-under" aria-pressed="false">Under</button>
+        <button id="v-rear" aria-pressed="false">Rear</button>
         <span class="gap"></span>
-        <button id="t-float" aria-pressed="false">Inflate pontoons</button>
+        <button id="t-float" aria-pressed="false">Pontoons</button>
         <button id="t-water" aria-pressed="false">On water</button>
         <button id="t-cargo" aria-pressed="true">Cargo</button>
-        <button id="t-xray" aria-pressed="false">See inside</button>
-        <button id="t-spin" aria-pressed="false">Spin props</button>
+        <button id="t-xray" aria-pressed="false">Cutaway</button>
+        <button id="t-spin" aria-pressed="false">Spin</button>
       </div>
       <div class="hint">Drag to orbit · scroll to zoom · hover any part for its name and size</div>
     </div>
@@ -250,7 +251,7 @@ code { font: 0.92em var(--mono); }
     let mat = M.shell, label = ['Airframe', 'Moulded composite shell with integrated arms and skids'];
     if (name.startsWith('GEO_Propeller')) { mat = M.carbon; label = ['T-Motor G28×9.2 prop', 'Carbon, 711 mm'] ; }
     else if (name.startsWith('GEO_Base')) { mat = M.pod; label = ['T-Motor MN801-S KV120', 'Ø89 × 39.4 mm, 470 g, 24N28P, IP45']; }
-    else if (name === 'Battery') { mat = M.batt; label = ['Battery ' + C.pack, `${12 * P} × Samsung 50S, ${C.pack_kwh.toFixed(2)} kWh, slides in from the rear`]; }
+    else if (name === 'Rear_Hatch') { label = ['Rear service hatch', 'Closes the tail bay flush with the shell; O-ring sealed, two quarter-turn fasteners']; }
     else if (name === 'Green_Light') { mat = M.navG; label = ['Status light', 'Arming and link state']; }
     else if (name === 'Legs') { mat = M.rubber; label = ['Skid feet', 'Rubber pads']; }
     const m = tag(shadowed(new THREE.Mesh(partGeo(p), mat)), ...label);
@@ -278,7 +279,7 @@ code { font: 0.92em var(--mono); }
   water.position.z = W.waterline_z_m; water.visible = false; water.receiveShadow = true; ark.add(water);
 
   // ---- views, toggles, hover
-  const views = { hero: [1.45, 0.75, 1.65], side: [0, 0.05, 2.5], top: [0.001, 2.7, 0.001], under: [1.15, -1.0, 1.3] };
+  const views = { hero: [1.45, 0.75, 1.65], side: [0, 0.05, 2.5], top: [0.001, 2.7, 0.001], under: [1.15, -1.0, 1.3], rear: [-1.6, 0.3, 0.35] };
   function setView(k) {
     camera.position.set(...views[k]); controls.target.set(0, k === 'top' ? -0.1 : -0.18, 0); controls.update();
     Object.keys(views).forEach(v => document.getElementById('v-' + v).setAttribute('aria-pressed', String(v === k)));

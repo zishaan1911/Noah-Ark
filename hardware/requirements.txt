@@ -1,2 +1,3 @@
 pytest>=8
 ruff>=0.6
+lupa>=2.0  # runs the ArduPilot Lua scripts in tests (Lua 5.4 runtime; ArduPilot uses 5.3)
