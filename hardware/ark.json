@@ -286,72 +286,72 @@
   ],
   "power_chain": {
     "hover": {
-      "thrust_n": 30.8353,
-      "rpm": 2110.1974,
-      "wm_rad_s": 220.9794,
+      "thrust_n": 39.6324,
+      "rpm": 2392.3477,
+      "wm_rad_s": 250.5261,
       "ke_v_s_rad": 0.0796,
-      "p_shaft_w": 228.6634,
-      "p_target_w": 248.0069,
+      "p_shaft_w": 333.1964,
+      "p_target_w": 355.1262,
       "eta_drive_assumed": 0.85
     },
     "esc_hover_low_pack": {
-      "vbus_v": 39.9553,
-      "duty": 0.5099,
-      "p_mech_w": 247.6447,
-      "p_in_w": 266.0536,
-      "ibus_a": 6.6588,
-      "iph_rms_a": 11.9225,
-      "efficiency": 0.8595,
+      "vbus_v": 40.1348,
+      "duty": 0.5923,
+      "p_mech_w": 355.759,
+      "p_in_w": 386.6641,
+      "ibus_a": 9.6341,
+      "iph_rms_a": 14.962,
+      "efficiency": 0.8617,
       "sweep": [
         {
-          "duty": 0.4401,
-          "p_mech_w": 38.4447
+          "duty": 0.4967,
+          "p_mech_w": 51.5386
         },
         {
-          "duty": 0.4601,
-          "p_mech_w": 97.3579
+          "duty": 0.5167,
+          "p_mech_w": 113.6491
         },
         {
-          "duty": 0.4801,
-          "p_mech_w": 156.5328
+          "duty": 0.5367,
+          "p_mech_w": 176.7726
         },
         {
-          "duty": 0.5001,
-          "p_mech_w": 217.618
+          "duty": 0.5567,
+          "p_mech_w": 239.7222
         },
         {
-          "duty": 0.5201,
-          "p_mech_w": 279.3492
+          "duty": 0.5767,
+          "p_mech_w": 304.4809
         },
         {
-          "duty": 0.5401,
-          "p_mech_w": 342.4531
+          "duty": 0.5967,
+          "p_mech_w": 369.3003
         }
       ]
     },
     "bus": {
       "full": {
-        "vavg_hover": 47.5071,
-        "vmin_hover": 47.4405,
-        "vmin_peak": 45.1397,
-        "vavg_peak": 45.2023,
-        "ipack_hover": 22.5729,
-        "ipack_peak": 62.3084,
-        "icap_rms_peak": 1.7367,
+        "vavg_hover": 47.9821,
+        "vmin_hover": 47.9255,
+        "vmin_peak": 45.8651,
+        "vavg_peak": 45.9605,
+        "ipack_hover": 32.2503,
+        "ipack_peak": 90.245,
+        "icap_rms_peak": 2.5349,
         "vocv": 49.8,
-        "vcell_min_peak": 3.7616,
+        "vcell_min_peak": 3.8221,
         "cutoff_load_v": 2.8
       },
       "low": {
-        "vavg_hover": 38.8319,
-        "vmin_hover": 38.7997,
-        "vmin_peak": 35.9763,
-        "vavg_peak": 36.0594,
-        "ipack_hover": 27.1655,
-        "ipack_peak": 74.9664,
-        "icap_rms_peak": 2.0869,
+        "vavg_hover": 39.0145,
+        "vmin_hover": 38.8976,
+        "vmin_peak": 36.4559,
+        "vavg_peak": 36.5816,
+        "ipack_hover": 38.7931,
+        "ipack_peak": 108.5868,
+        "icap_rms_peak": 3.0432,
         "vocv": 41.4,
-        "vcell_min_peak": 2.998,
+        "vcell_min_peak": 3.038,
         "cutoff_load_v": 2.8
       }
     },
@@ -736,7 +736,7 @@
     "model": "industrial-design/drone-model/Drone.obj",
     "skid_z_below_m": -0.5,
     "pontoon": {
-      "d_m": 0.18,
+      "d_m": 0.19,
       "length_m": 0.66,
       "below_skid_m": 0.0,
       "stowed_d_m": 0.05,
@@ -749,7 +749,7 @@
       "radar_altimeter_us_d1": 0.11,
       "gnss_mast": 0.05
     },
-    "mass_note": "Kit and connector masses are estimates. AUW = sizing's AUW minus its old hull shell and arms, plus this body's shell and the added parts.",
+    "mass_note": "AUW is built from the real parts (ark_from_model.mass_budget): harness.json components + copper, props, pontoon_system.json kit, shell, payload and a 0.25 kg mounting-hardware allowance (estimate).",
     "result": {
       "scale": 0.77915,
       "removed_parts": [
@@ -796,19 +796,29 @@
       "triangles": 238400,
       "body_area_m2": 1.6187,
       "structure_kg": 2.428,
-      "auw_estimate_kg": 13.747,
+      "auw_estimate_kg": 16.16,
+      "mass_kg": {
+        "structure": 2.428,
+        "pack": 6.665,
+        "electrical_parts": 3.262,
+        "copper": 0.187,
+        "props": 0.24,
+        "pontoon_kit": 1.128,
+        "mounting_hardware": 0.25,
+        "payload": 2.0
+      },
       "battery": {
-        "pack": "12S4P",
-        "pack_kg": 3.809,
-        "pack_wh": 864.0,
+        "pack": "12S7P",
+        "pack_kg": 6.665,
+        "pack_wh": 1512.0,
         "location": "belly well, inside the hub",
         "grid": [
           12,
-          4
+          7
         ],
         "pack_size_m": [
           0.2648,
-          0.0936,
+          0.1578,
           0.0785
         ],
         "pack_centre_m": [
@@ -831,14 +841,14 @@
       },
       "deck_z_m": -0.1467,
       "pontoons": {
-        "volume_l_each": 15.27,
-        "reserve_buoyancy": 1.221,
-        "draft_m": 0.0832,
-        "waterline_z_m": -0.4968,
-        "prop_clearance_m": 0.433,
-        "hub_clearance_m": 0.2574,
+        "volume_l_each": 16.92,
+        "reserve_buoyancy": 1.094,
+        "draft_m": 0.0918,
+        "waterline_z_m": -0.4882,
+        "prop_clearance_m": 0.4244,
+        "hub_clearance_m": 0.2488,
         "skid_y_m": 0.2809,
-        "tube_centre_z_m": -0.49
+        "tube_centre_z_m": -0.485
       },
       "mounts": {
         "hub_bottom_z_m": -0.2394,
@@ -859,57 +869,24 @@
         "cd_body": 0.9,
         "cda_m2": 0.166,
         "cda_payload_m2": 0.0144,
-        "auw_kg": 13.747,
-        "12S4P": {
-          "mission_wh": 838.6,
-          "needed_with_reserve_wh": 1048.3,
-          "usable_wh": 777.6,
-          "energy_margin": 0.7418,
-          "cruise_mps": [
-            16.0,
-            15.0
-          ],
-          "twr": 3.046,
-          "auw_kg": 13.747
-        },
-        "12S5P": {
-          "mission_wh": 904.8,
-          "needed_with_reserve_wh": 1131.0,
-          "usable_wh": 972.0,
-          "energy_margin": 0.8594,
-          "cruise_mps": [
-            16.0,
-            15.0
-          ],
-          "twr": 2.849,
-          "auw_kg": 14.699
-        },
-        "12S6P": {
-          "mission_wh": 972.0,
-          "needed_with_reserve_wh": 1215.0,
-          "usable_wh": 1166.4,
-          "energy_margin": 0.96,
-          "cruise_mps": [
-            17.0,
-            16.0
-          ],
-          "twr": 2.676,
-          "auw_kg": 15.651
-        },
+        "auw_kg": 16.16,
         "12S7P": {
-          "mission_wh": 1039.4,
-          "needed_with_reserve_wh": 1299.3,
+          "mission_wh": 1007.6,
+          "needed_with_reserve_wh": 1259.5,
           "usable_wh": 1360.8,
-          "energy_margin": 1.0473,
+          "energy_margin": 1.0804,
           "cruise_mps": [
             17.0,
             16.0
           ],
-          "twr": 2.522,
-          "auw_kg": 16.604
+          "twr": 2.592,
+          "auw_kg": 16.16
         },
         "closes_with": "12S7P"
       }
-    }
+    },
+    "mounting_hardware_kg": 0.25,
+    "pack": "12S7P",
+    "pack_note": "12S7P: the smallest pack that flies the 20 km out / 20 km back mission with 20 % reserve on this airframe's own drag (mission_check.py). Overrides sizing's 12S4P, which assumed the old low-drag hull."
   }
 }

@@ -28,7 +28,8 @@ body {
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 20px 40px;
 }
-.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+.wrap > * { min-width: 0; }
 header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
 h1 { font: 700 clamp(36px, 5.5vw, 60px)/0.95 var(--display); letter-spacing: 0.01em; margin: 0; text-transform: uppercase; }
 h1 span { color: var(--accent); }
@@ -36,8 +37,8 @@ h1 span { color: var(--accent); }
 .tag { font: 12px var(--mono); color: var(--muted); }
 .main { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 960px) { .main { grid-template-columns: minmax(0, 1fr); } }
-.stage { background: var(--stage); border-radius: 8px; overflow: hidden; position: relative; display: grid; }
-#c { width: 100%; aspect-ratio: 16 / 11; max-width: 100%; display: block; touch-action: none; cursor: grab; }
+.stage { background: var(--stage); border-radius: 8px; overflow: hidden; position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+#c { width: 100%; min-width: 0; aspect-ratio: 16 / 11; max-width: 100%; display: block; touch-action: none; cursor: grab; }
 #c:active { cursor: grabbing; }
 .tip { position: absolute; pointer-events: none; background: rgba(12, 14, 15, 0.88); color: var(--stage-ink); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 4px; padding: 6px 9px; font: 12px/1.35 var(--body); max-width: 270px; transform: translate(12px, 12px); }
 .tip b { font: 600 13px var(--display); letter-spacing: 0.03em; display: block; }
@@ -113,14 +114,18 @@ code { font: 0.92em var(--mono); }
         <dl id="wstats"></dl>
       </section>
       <section>
+        <h2>Mission</h2>
+        <dl id="mstats"></dl>
+      </section>
+      <section>
         <h2>What changed from the base model</h2>
         <ul class="changes">
           <li><b>Scaled</b> so the motors sit on Ark's arm radius; the props come out at 28.6 in, the real G28.</li>
-          <li><b>Gimbal removed</b> with its damping mount and board.</li>
-          <li><b>Inflatable pontoons</b> on the skids, CO2-inflated for a water landing.</li>
-          <li><b>Cargo connector</b> under the hub, with a 2 kg drop pod.</li>
-          <li><b>Battery moved inside</b>, into the hub's belly well, with the avionics deck, ESCs and harness built around it; <b>motor pods</b> widened to the MN801-S.</li>
-          <li><b>Radar altimeter</b> and <b>GNSS mast</b> added.</li>
+          <li><b>Gimbal removed</b>; Ark carries cargo on a latch with smart contacts under the hub.</li>
+          <li><b>Battery inside</b> the hub's belly well, sized for the mission on this airframe's own drag; the old battery bay is a sealed service hatch.</li>
+          <li><b>Electronics built 1:1</b> from a netlist: every part, port and wire, checked for current, voltage and fit.</li>
+          <li><b>Inflatable pontoons</b> fired by the flight controller from the radar height during a water-landing descent.</li>
+          <li><b>Motor pods</b> widened to the MN801-S; radar altimeter, GNSS mast and livery added.</li>
         </ul>
       </section>
     </aside>
@@ -130,10 +135,22 @@ code { font: 0.92em var(--mono); }
     <h2>Real parts on board</h2>
     <div class="scroll">
       <table>
-        <thead><tr><th>Role</th><th>Product</th><th>Size (mm)</th><th>Mass</th><th>Source</th></tr></thead>
+        <thead><tr><th>Qty</th><th>Part</th><th>Role</th><th>Size (mm)</th><th>Mass</th><th>Source</th></tr></thead>
         <tbody id="parts"></tbody>
       </table>
     </div>
+  </section>
+
+  <section>
+    <details>
+      <summary><h2 style="display:inline">Every wire</h2> <small id="wsum"></small></summary>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Wire</th><th>Function</th><th>From</th><th>To</th><th>AWG</th><th>Cond.</th><th>Length</th></tr></thead>
+          <tbody id="wires"></tbody>
+        </table>
+      </div>
+    </details>
   </section>
 
   <footer>Airframe from the team's drone model, edited by <code>industrial-design/ark_from_model.py</code> and <code>build_viewer.py</code>. Electronics are modelled here from datasheet dimensions. Estimated masses are marked.</footer>
@@ -150,33 +167,56 @@ code { font: 0.92em var(--mono); }
 (function () {
   const A = window.ARK, R = A.id.result, PT = A.id.pontoon, C = A.chosen;
   const P = Number(C.pack.split('S')[1].replace('P', ''));
-  const PARTS = [
-    ['Motors ×4', 'T-Motor MN801-S KV120', 'Ø89 × 39.4', '470 g', 'https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html', 'T-Motor store'],
-    ['Props ×4', 'T-Motor G28×9.2 carbon', 'Ø711', '~60 g est.', 'https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html', 'T-Motor'],
-    ['ESCs ×4', 'T-Motor ALPHA 80A 12S', '88.5 × 36.6 × 19', '110 g', 'https://uav-en.tmotor.com/Multirotor/ESC/alpha', 'T-Motor'],
-    ['Battery', `${12 * P} × Samsung INR21700-50S, ${C.pack}`, `cells Ø21.4 × 70.5`, C.pack_kg.toFixed(1) + ' kg', '', 'cell datasheet'],
-    ['Flight controller', 'Holybro Pixhawk 6X, standard baseboard', '103.4 × 52.4 × 16.7', '74 g', 'https://docs.px4.io/main/en/flight_controller/pixhawk6x', 'PX4 docs'],
-    ['Companion computer', 'NVIDIA Jetson Orin Nano on carrier', 'module 69.6 × 45; carrier 100 × 79 × 21', '~176 g', 'https://developer.nvidia.com/embedded/jetson-orin', 'NVIDIA'],
-    ['Radar altimeter', 'Ainstein US-D1', '108 × 79 × 20', '110 g', 'https://docs.px4.io/main/en/sensor/ulanding_radar', 'PX4 docs'],
-    ['Satellite link', 'Ground Control RockBLOCK 9603', '45 × 45 × 15', '36 g', 'https://docs.groundcontrol.com/iot/rockblock/specification/dimensions', 'Ground Control'],
-    ['Telemetry radio', 'RFDesign RFD900x', '≈ 57 × 30 × 13', '≈ 15 g', '', 'size not yet verified'],
-    ['GNSS', 'Holybro M10 GPS', '≈ Ø50 × 15', '≈ 33 g', '', 'size not yet verified'],
-    ['Pontoons', 'Inflatable kit: 2 tubes + 2 × 60 g CO2', `Ø${PT.d_m * 1000} × ${PT.length_m * 1000} inflated`, (A.id.added_mass_kg.inflatable_pontoon_kit * 1000) + ' g est.', '', 'estimate'],
-    ['Cargo connector', 'Servo latch + 4-pin smart-cargo contacts', 'Ø60', (A.id.added_mass_kg.cargo_connector * 1000) + ' g est.', '', 'estimate'],
-  ];
+  // parts table: every component in the harness (grouped by product), the props, and the pontoon kit
+  const esc = v => String(v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const mm = sz => sz.map(v => (v * 1000).toFixed(v < 0.01 ? 1 : 0)).join(' × ');
+  const grams = g => g >= 1000 ? (g / 1000).toFixed(2) + ' kg' : (g >= 10 ? g.toFixed(0) : g.toFixed(1)) + ' g';
+  const groups = new Map();
+  (A.harness ? A.harness.components : []).forEach(c => {
+    const k = c.name; const g = groups.get(k) || { c, n: 0 }; g.n += 1; groups.set(k, g);
+  });
+  const rows = [...groups.values()].map(({ c, n }) => {
+    let role = (c.role || '').split(/[:;(]/)[0];
+    if (n > 1) role = role.replace(/\s*\d/, '');  // grouped: 'Drives motor 1' -> 'Drives motor'
+    const mass = c.mass_g ? grams(c.mass_g) + (c.estimated && c.estimated.some(e => e.startsWith('mass')) ? ' est.' : '') : 'in pontoon kit';
+    return [n, c.name, role, mm(c.size), mass, c.url, c.maker];
+  });
+  rows.push([4, 'T-Motor G28×9.2 carbon prop', 'Propeller', 'Ø711', '~60 g est.', 'https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html', 'T-Motor']);
+  // pontoon kit: one set per side
+  if (A.pontoon_system) A.pontoon_system.mass.parts.forEach(p => rows.push([2 * (p.per_side || 1), p.product, p.role, p.size_mm || '', grams(p.mass_kg * 1000) + ' each', p.source || '', 'pontoon kit']));
   const tb = document.getElementById('parts');
-  PARTS.forEach(p => {
+  rows.forEach(r => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td class="n">${p[2]}</td><td class="n">${p[3]}</td>` +
-      `<td>${p[4] ? `<a href="${p[4]}" target="_blank" rel="noopener">${p[5]}</a>` : `<small>${p[5]}</small>`}</td>`;
+    tr.innerHTML = `<td class="n">${r[0]}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td class="n">${esc(r[3])}</td><td class="n">${esc(r[4])}</td>` +
+      `<td>${r[5] ? `<a href="${esc(r[5])}" target="_blank" rel="noopener">${esc(r[6] || 'source')}</a>` : `<small>${esc(r[6] || '')}</small>`}</td>`;
     tb.appendChild(tr);
   });
+  // wiring table: every wire in the netlist with its computed length
+  if (A.harness) {
+    const lens = A.harness.checks.wire_lengths_m || {}, wb = document.getElementById('wires');
+    A.harness.wires.forEach(w => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="n"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${esc(w.colour)};margin-right:6px"></span>${esc(w.id)}</td>` +
+        `<td>${esc(w.function)}</td><td class="n">${esc(w.from)}</td><td class="n">${esc(w.to)}</td><td class="n">${w.awg}</td><td class="n">${w.conductors}</td><td class="n">${lens[w.id] ? (lens[w.id] * 1000).toFixed(0) + ' mm' : ''}</td>`;
+      wb.appendChild(tr);
+    });
+    const ck = A.harness.checks;
+    document.getElementById('wsum').textContent = `${ck.wires} wires, ${ck.conductors} conductors, ${ck.total_length_m.toFixed(1)} m, ${(ck.copper_kg * 1000).toFixed(0)} g copper`;
+  }
   document.getElementById('f-auw').textContent = R.auw_estimate_kg.toFixed(1) + ' kg';
   document.getElementById('f-float').textContent = Math.round(R.pontoons.reserve_buoyancy * 100) + ' %';
   [['Pontoons', `2 × ${R.pontoons.volume_l_each.toFixed(1)} L`], ['Draft', (R.pontoons.draft_m * 1000).toFixed(0) + ' mm'],
    ['Props above water', (R.pontoons.prop_clearance_m * 1000).toFixed(0) + ' mm'], ['Hub above water', (R.pontoons.hub_clearance_m * 1000).toFixed(0) + ' mm'],
-   ['Battery', `${C.pack}, ${C.pack_kwh.toFixed(2)} kWh`], ['Structure', R.structure_kg.toFixed(2) + ' kg shell']]
+   ['Structure', R.structure_kg.toFixed(2) + ' kg shell']]
     .forEach(([k, v]) => document.getElementById('wstats').insertAdjacentHTML('beforeend', `<dt>${k}</dt><dd>${v}</dd>`));
+  if (A.mission) {
+    const m = A.mission[C.pack] || {};
+    [['Route', '20 km out with 2 kg, 20 km back'], ['Battery', `${C.pack}, ${C.pack_kwh.toFixed(2)} kWh`],
+     ['Energy margin', m.energy_margin ? `${((m.energy_margin - 1) * 100).toFixed(1)} % over need + 20 % reserve` : '–'],
+     ['Cruise', m.cruise_mps ? `${m.cruise_mps[0]} / ${m.cruise_mps[1]} m/s` : '–'], ['Thrust : weight', m.twr ? m.twr.toFixed(2) : '–'],
+     ['Drag area', A.mission.cda_m2.toFixed(3) + ' m²']]
+      .forEach(([k, v]) => document.getElementById('mstats').insertAdjacentHTML('beforeend', `<dt>${k}</dt><dd>${v}</dd>`));
+  }
   document.getElementById('f-span').textContent = A.span_m.toFixed(2) + ' m';
 
   const canvas = document.getElementById('c');

@@ -65,6 +65,36 @@ def belly_well(v: np.ndarray, below: float, cell: float = 0.01) -> dict:
     }
 
 
+def mass_budget(ark: dict, structure_kg: float, pack_kg: float) -> dict[str, float]:
+    """All-up mass by group, from the real parts: the harness (every electrical part, with the pack swapped for the
+    chosen one), its copper, the props, the pontoon kit, the shell, the payload and a mounting-hardware allowance."""
+    idc = ark["industrial_design"]
+    prop = next(p for p in ark["candidates"]["propulsion"] if p["name"] == ark["chosen"]["propulsion"])
+    harness_file, pontoon_file = HERE / "harness.json", HERE / "pontoon_system.json"
+    if harness_file.exists():
+        h = json.loads(harness_file.read_text(encoding="utf-8"))
+        electrical = sum(c["mass_g"] for c in h["components"] if c["id"] != "pack") / 1000
+        copper = h["checks"]["copper_kg"]
+    else:  # before the harness existed: sizing's avionics budget
+        electrical = 4 * (prop["motor_kg"] + prop["esc_kg"]) + sum(ark["fixed_mass_kg"].values())
+        copper = 0.0
+    kit = (
+        json.loads(pontoon_file.read_text(encoding="utf-8"))["mass"]["kit_kg"]
+        if pontoon_file.exists()
+        else idc["added_mass_kg"]["inflatable_pontoon_kit"]
+    )
+    return {
+        "structure": structure_kg,
+        "pack": pack_kg,
+        "electrical_parts": electrical,
+        "copper": copper,
+        "props": 4 * prop["prop_kg"],
+        "pontoon_kit": kit,
+        "mounting_hardware": idc["mounting_hardware_kg"],  # shortcut: deck plates, standoffs, fasteners, sealant
+        "payload": ark["requirements"]["payload_kg"],
+    }
+
+
 def tube_volume(d: float, length: float) -> float:
     """Cylinder with hemispherical ends, overall length `length`."""
     return math.pi * d * d / 4 * (length - d) + math.pi * d**3 / 6
@@ -131,16 +161,8 @@ def main() -> int:
     skid_y = float(np.abs(legs[:, 1]).max())
     skid_bottom = float(legs[:, 2].min())
     pt = idc["pontoon"]
-    fixed_extra = sum(idc["added_mass_kg"].values())
-    auw = (
-        ch["mass_kg"]["all_up"]
-        - ch["mass_kg"]["hull_shell"]
-        - ch["mass_kg"]["arms"]
-        - ch["mass_kg"]["pack"]
-        + pack_kg
-        + structure_kg
-        + fixed_extra
-    )
+    mass = mass_budget(ark, structure_kg, pack_kg)
+    auw = sum(mass.values())
     # pontoon diameter: the smallest (5 mm steps, never below the configured size) that keeps the buoyancy reserve
     need = ark["requirements"]["reserve_buoyancy_frac"]
     while 2 * tube_volume(pt["d_m"], pt["length_m"]) * 1000 / auw - 1 < need:
@@ -160,6 +182,7 @@ def main() -> int:
         "body_area_m2": round(body_area, 4),
         "structure_kg": round(structure_kg, 3),
         "auw_estimate_kg": round(auw, 3),
+        "mass_kg": {k: round(v, 3) for k, v in mass.items()},
         "battery": {
             "pack": pack_name,
             "pack_kg": round(pack_kg, 3),

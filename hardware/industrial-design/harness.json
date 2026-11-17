@@ -1,10 +1,10 @@
 {
  "about": "Ark-1 electrical system, the single source of truth for the harness: every component with its real product, position (drone frame: x forward, y left, z up, metres; pos = box centre, yaw about z in degrees) and ports, and every wire from port to port with gauge, colour, connectors and route. Checked by harness.py; drawn by viewer/20_electronics.js. Fields listed in a component's `estimated` are not published by the maker.",
  "architecture": {
-  "power": ["Pack 12S4P (48 x INR21700-50S, 50.4 V full) -> JBD BMS (low side) -> XT90-S arming plug behind the rear hatch", "-> Holybro PM02D HV (I2C V/I sensing, 5.2 V to POWER1) -> 2 mF bulk bank -> Matek FCHUB-12S -> 4 x T-Motor ALPHA 80A (12 AWG, XT60)", "FCHUB-12S 5.1 V 5 A BEC -> Pixhawk servo rail (latch servo, NeoPixels, RC-switch logic); FCHUB 12 V 4 A -> pontoon firing driver", "Matek BEC12S-PRO @ 12 V -> Jetson Orin Nano DC jack; Matek BEC12S-PRO @ 5.2 V -> Pixhawk POWER2 (backup)"],
+  "power": ["Pack 12S4P (48 x INR21700-50S, 50.4 V full) -> JBD BMS (low side) -> AS150U arming plug behind the rear hatch", "-> Holybro PM08D (I2C V/I sensing, 5.2 V to POWER1) -> 2 mF bulk bank -> Matek FCHUB-12S -> 4 x T-Motor ALPHA 80A (12 AWG, XT60)", "FCHUB-12S 5.1 V 5 A BEC -> Pixhawk servo rail (latch servo, NeoPixels, RC-switch logic); FCHUB 12 V 4 A -> pontoon firing driver", "Matek BEC12S-PRO @ 12 V -> Jetson Orin Nano DC jack; Matek BEC12S-PRO @ 5.2 V -> Pixhawk POWER2 (backup)"],
   "data": ["ESCs: I/O PWM OUT 1-4 (PWM 400 Hz); ALPHA telemetry lines -> FTDI FT4232H -> Jetson USB", "Ethernet Pixhawk <-> Jetson (MAVLink/UDP); TELEM1 RFD900x; TELEM2 RockBLOCK 9603; TELEM3 Ainstein US-D1 radar", "GPS1 Holybro M10 (GNSS, compass, safety switch, buzzer); RC IN FrSky R-XSR SBUS; CAN2 -> cargo pogo contacts (DroneCAN)", "FMU PWM OUT (AUX): 1 latch servo, 3 firing ARM, 4/5 FIRE L/R, 6/7 pontoon pressure OK L/R (GPIO in, 10 k pull-ups), 8 NeoPixel status + nav chain", "LTE Quectel EG25-G (USB) and BMS UART into the Jetson"]
  },
- "decisions": ["Classic stack at the CG: FCHUB-12S on the deck, Pixhawk 6X on 20 mm standoffs and isolators above it; ESC feeds radiate along the arm diagonals.", "XT90-S anti-spark plug is the arming plug, reached through the rear service hatch that also closes the model's old battery slot.", "PM02D HV carries the full pack current (60 A continuous / 100 A < 60 s) with its XT60s replaced by 8 AWG; it is the 6X's digital power source.", "Bulk capacitance 4 x 470 uF / 63 V = 1.88 mF, matching the 2 mF in the SPICE bus model; 63 V parts for a 50.4 V bus.", "ALPHA telemetry is not a BLHeli protocol ArduPilot reads, so the four telemetry lines go to the Jetson through an FTDI quad UART.", "Jetson Wi-Fi card removed: the RC link uses 2.4 GHz and the Jetson talks through Ethernet/LTE.", "Pontoon pin plan from the pontoon system (its Lua hardcodes it): AUX3 ARM interlock, AUX4/AUX5 FIRE L/R into one in-house driver (3 x IRLML6344, ARM in series with each FIRE) on the FCHUB 12 V BEC; each 12 V latch solenoid (0.5 A x 300 ms) releases a Halkey-Roberts head; Multicomp PSF102 pressure switches confirm on AUX6/AUX7.", "Cargo pogo contacts carry CAN2 (VCC, CANH, CANL, GND): a smart pod is a DroneCAN node (ID, sensors, release confirm).", "LTE and RC antennas sit inside the glass-fibre shell (RF-transparent); RFD900x and Iridium antennas are outside on bulkheads; GNSS on the mast.", "Belly loom: radar and cargo cables run down the well beside the pack to IP68 glands in the floor; the inflator leads run down the front legs to glands above the skids."],
+ "decisions": ["Classic stack at the CG: FCHUB-12S on the deck, Pixhawk 6X on 20 mm standoffs and isolators above it; ESC feeds radiate along the arm diagonals.", "AS150U anti-spark plug is the arming plug, reached through the rear service hatch that also closes the model's old battery slot.", "PM08D carries the full pack current (60 A continuous / 100 A < 60 s) with its XT60s replaced by 8 AWG; it is the 6X's digital power source.", "Bulk capacitance 4 x 470 uF / 63 V = 1.88 mF, matching the 2 mF in the SPICE bus model; 63 V parts for a 50.4 V bus.", "ALPHA telemetry is not a BLHeli protocol ArduPilot reads, so the four telemetry lines go to the Jetson through an FTDI quad UART.", "Jetson Wi-Fi card removed: the RC link uses 2.4 GHz and the Jetson talks through Ethernet/LTE.", "Pontoon pin plan from the pontoon system (its Lua hardcodes it): AUX3 ARM interlock, AUX4/AUX5 FIRE L/R into one in-house driver (3 x IRLML6344, ARM in series with each FIRE) on the FCHUB 12 V BEC; each 12 V latch solenoid (0.5 A x 300 ms) releases a Halkey-Roberts head; Multicomp PSF102 pressure switches confirm on AUX6/AUX7.", "Cargo pogo contacts carry CAN2 (VCC, CANH, CANL, GND): a smart pod is a DroneCAN node (ID, sensors, release confirm).", "LTE and RC antennas sit inside the glass-fibre shell (RF-transparent); RFD900x and Iridium antennas are outside on bulkheads; GNSS on the mast.", "Belly loom: radar and cargo cables run down the well beside the pack to IP68 glands in the floor; the inflator leads run down the front legs to glands above the skids.", "12S7P (16.1 kg) raises the pack peak to ~108 A: the arming plug is an AMASS AS150U (70 A / 140 A peak) instead of an XT90-S (45 A / 90 A), and the power module is a Holybro PM08D (200 A, 2-14S) instead of a PM02D HV (60 A / 100 A)."],
  "connector_ratings": {
   "12 AWG pair soldered to the capacitor leads": {
    "cont_a": 100,
@@ -226,10 +226,10 @@
    "peak_a": 200,
    "basis": "direct solder joint, limited by the wire"
   },
-  "PM02D HV solder pad": {
-   "cont_a": 60,
-   "peak_a": 100,
-   "basis": "Holybro: 60 A continuous, 100 A < 60 s"
+  "PM08D solder pad": {
+   "cont_a": 200,
+   "peak_a": 200,
+   "basis": "Holybro digital PM docs: PM08D 2S-14S, 200 A continuous (peak not published: taken equal to continuous)"
   },
   "RJ45 (Holybro Pixhawk ETH cable, 4-pin GH to RJ45)": {
    "cont_a": 0.5,
@@ -286,15 +286,15 @@
    "peak_a": 60,
    "basis": "AMASS datasheet: 30 A rated, 60 A instantaneous"
   },
-  "XT90-S female (pack side)": {
-   "cont_a": 45,
-   "peak_a": 90,
-   "basis": "AMASS datasheet: 45 A rated (10 AWG, dT <= 85 K), 90 A instantaneous"
+  "AS150U female (pack side)": {
+   "cont_a": 70,
+   "peak_a": 140,
+   "basis": "AMASS AS150U: 70 A rated (8 AWG), 140 A instantaneous (reseller listings and the ArduPilot forum; AMASS's own spec PDF is Chinese-only)"
   },
-  "XT90-S male (bus side)": {
-   "cont_a": 45,
-   "peak_a": 90,
-   "basis": "AMASS datasheet: 45 A rated (10 AWG, dT <= 85 K), 90 A instantaneous"
+  "AS150U male (bus side)": {
+   "cont_a": 70,
+   "peak_a": 140,
+   "basis": "AMASS AS150U: 70 A rated (8 AWG), 140 A instantaneous (reseller listings and the ArduPilot forum; AMASS's own spec PDF is Chinese-only)"
   },
   "screw terminal (12 V, GND)": {
    "cont_a": 10,
@@ -377,14 +377,14 @@
  "components": [
   {
    "id": "pack",
-   "name": "Ark-1 pack 12S4P, 48 x Samsung INR21700-50S",
+   "name": "Ark-1 pack 12S7P, 84 x Samsung INR21700-50S",
    "maker": "Samsung SDI (cells); pack built in-house",
    "url": "https://www.samsungsdi.com/upload/download/product/INR21700-50S.pdf",
-   "role": "Main battery: 12 series groups of 4 cells, upright, nickel-strip bus, 3D-printed holders",
+   "role": "Main battery: 12 series groups of 7 cells, upright, nickel-strip bus, 3D-printed holders",
    "pos": [-0.06, 0.0, -0.192],
-   "size": [0.2648, 0.0936, 0.0785],
+   "size": [0.2648, 0.1578, 0.0785],
    "yaw_deg": 0,
-   "mass_g": 3809,
+   "mass_g": 6665,
    "location": "internal",
    "estimated": [],
    "ports": [
@@ -470,41 +470,41 @@
   },
   {
    "id": "xt90",
-   "name": "AMASS XT90-S anti-spark connector, mated pair (arming plug)",
+   "name": "AMASS AS150U anti-spark connector, mated pair (arming plug)",
    "maker": "AMASS",
-   "url": "https://www.china-amass.net/uploads/XT90-2+2-F-SPEC.pdf",
+   "url": "https://www.rotorama.com/product/amass-as150u-1-par",
    "role": "Main power disconnect; the pack side is plugged in last through the rear hatch (anti-spark resistor pre-charges the bus)",
    "pos": [-0.245, 0.0, -0.163],
-   "size": [0.0109, 0.047, 0.0216],
+   "size": [0.016, 0.056, 0.026],
    "yaw_deg": 0,
-   "mass_g": 18,
+   "mass_g": 30,
    "location": "internal",
-   "estimated": ["size_m"],
+   "estimated": ["size_m", "mass_g"],
    "ports": [
     {
      "id": "pack_pos",
-     "connector": "XT90-S female (pack side)",
+     "connector": "AS150U female (pack side)",
      "pins": ["+"],
      "domain": "VBAT",
      "at": [-0.245, -0.0235, -0.158]
     },
     {
      "id": "pack_neg",
-     "connector": "XT90-S female (pack side)",
+     "connector": "AS150U female (pack side)",
      "pins": ["-"],
      "domain": "VBAT",
      "at": [-0.245, -0.0235, -0.168]
     },
     {
      "id": "bus_pos",
-     "connector": "XT90-S male (bus side)",
+     "connector": "AS150U male (bus side)",
      "pins": ["+"],
      "domain": "VBAT",
      "at": [-0.245, 0.0235, -0.158]
     },
     {
      "id": "bus_neg",
-     "connector": "XT90-S male (bus side)",
+     "connector": "AS150U male (bus side)",
      "pins": ["-"],
      "domain": "VBAT",
      "at": [-0.245, 0.0235, -0.168]
@@ -535,41 +535,41 @@
   },
   {
    "id": "pm",
-   "name": "Holybro PM02D HV digital power module (2-12S, I2C, INA228)",
+   "name": "Holybro PM08D digital power module (2-14S, I2C, 200 A, two 5.2 V outputs)",
    "maker": "Holybro",
-   "url": "https://holybro.com/products/pm02d-power-module",
+   "url": "https://docs.holybro.com/power-module-and-pdb/power-module/digital-power-module-pm-setup",
    "role": "Measures pack voltage/current for the Pixhawk 6X over I2C and powers it (5.2 V, 3 A); XT60s replaced by 8 AWG",
    "pos": [-0.1, 0.0, -0.1355],
-   "size": [0.036, 0.026, 0.01],
+   "size": [0.045, 0.04, 0.016],
    "yaw_deg": 0,
-   "mass_g": 20,
+   "mass_g": 60,
    "location": "internal",
-   "estimated": ["size_m"],
+   "estimated": ["size_m", "mass_g"],
    "ports": [
     {
      "id": "in_pos",
-     "connector": "PM02D HV solder pad",
+     "connector": "PM08D solder pad",
      "pins": ["+"],
      "domain": "VBAT",
      "at": [-0.118, 0.006, -0.1325]
     },
     {
      "id": "in_neg",
-     "connector": "PM02D HV solder pad",
+     "connector": "PM08D solder pad",
      "pins": ["-"],
      "domain": "VBAT",
      "at": [-0.118, -0.006, -0.1325]
     },
     {
      "id": "out_pos",
-     "connector": "PM02D HV solder pad",
+     "connector": "PM08D solder pad",
      "pins": ["+"],
      "domain": "VBAT",
      "at": [-0.082, 0.006, -0.1325]
     },
     {
      "id": "out_neg",
-     "connector": "PM02D HV solder pad",
+     "connector": "PM08D solder pad",
      "pins": ["-"],
      "domain": "VBAT",
      "at": [-0.082, -0.006, -0.1325]
@@ -3873,14 +3873,14 @@
    "wire": "press_R",
    "length_m": 1.002
   },
-  "component_mass_kg": 4.876,
+  "component_mass_kg": 7.784,
   "design_currents_a": {
-   "pack": 27.2,
-   "pack_peak": 75.0,
-   "esc": 6.8,
-   "esc_peak": 18.7,
-   "phase": 11.9,
-   "phase_peak": 22.0
+   "pack": 38.8,
+   "pack_peak": 108.6,
+   "esc": 9.7,
+   "esc_peak": 27.1,
+   "phase": 15.0,
+   "phase_peak": 31.9
   },
   "wire_lengths_m": {
    "pw_pack_pos": 0.121,

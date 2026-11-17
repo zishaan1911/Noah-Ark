@@ -19,11 +19,32 @@ ARK_JSON = Path(__file__).resolve().parents[2] / "ark.json"
 ROTORS = 4
 
 
+def airframe(ark: dict) -> dict:
+    """Mass, pack and powers to simulate: the built airframe (industrial_design) when it exists, else sizing's pick.
+    Hover and peak power scale with mass^1.5 (momentum theory) from sizing's figures."""
+    ch = ark["chosen"]
+    built = ark.get("industrial_design", {}).get("result")
+    if not built:
+        return {
+            "all_up": ch["mass_kg"]["all_up"],
+            "pack": ch["pack"],
+            "hover_w": ch["power_w"]["hover_loaded"],
+            "peak_a": ch["pack_peak_current_a"],
+        }
+    k = (built["auw_estimate_kg"] / ch["mass_kg"]["all_up"]) ** 1.5
+    return {
+        "all_up": built["auw_estimate_kg"],
+        "pack": built["battery"]["pack"],
+        "hover_w": ch["power_w"]["hover_loaded"] * k,
+        "peak_a": ch["pack_peak_current_a"] * k,
+    }
+
+
 def hover_point(ark: dict) -> dict:
     """Rotor speed and shaft power per rotor at loaded hover, from the same momentum model sizing uses."""
     ch, env, el = ark["chosen"], ark["environment"], ark["electrical"]
     prop = next(p for p in ark["candidates"]["propulsion"] if p["name"] == ch["propulsion"])
-    t = ch["mass_kg"]["all_up"] * env["g"] / ROTORS
+    t = airframe(ark)["all_up"] * env["g"] / ROTORS
     d = ch["geometry_m"]["prop_d"]
     area = math.pi * d * d / 4
     p_shaft = t * math.sqrt(t / (2 * env["rho_air"] * area)) / prop["fm"]
@@ -42,7 +63,7 @@ def hover_point(ark: dict) -> dict:
 
 
 def pack(ark: dict) -> tuple[int, int, dict]:
-    s, p = (int(x) for x in ark["chosen"]["pack"].removesuffix("P").split("S"))
+    s, p = (int(x) for x in airframe(ark)["pack"].removesuffix("P").split("S"))
     cell = ark["electrical"]["cell"]
     return (
         s,
@@ -112,7 +133,7 @@ def bus(ark: dict, esc: dict, ocv_cell: float, name: str) -> dict:
     # Same shaft power at a different bus voltage: duty and current scale ~ 1/V.
     d0 = min(0.97, esc["duty"] * esc["vbus_v"] / vocv)
     i_esc = esc["ibus_a"] * esc["vbus_v"] / vocv
-    i_pk = ark["chosen"]["pack_peak_current_a"] * s * ark_cell(ark)["v_nom"] / vocv / ROTORS
+    i_pk = airframe(ark)["peak_a"] * s * ark_cell(ark)["v_nom"] / vocv / ROTORS
     params = pk | {
         "vocv": f"{vocv:.4g}",
         "rh": el["harness"]["r_ohm"],
@@ -139,7 +160,7 @@ def run_all(ark: dict) -> dict:
     s, _, pk = pack(ark)
     el = ark["electrical"]
     # Hover bus voltage on a 20 % pack: OCV minus the ohmic drop at the sizing hover current (worst case for duty).
-    i_hover = ark["chosen"]["power_w"]["hover_loaded"] / (s * ark_cell(ark)["v_nom"])
+    i_hover = airframe(ark)["hover_w"] / (s * ark_cell(ark)["v_nom"])
     v_low = s * el["cell"]["ocv_low_v"] - i_hover * (float(pk["rp0"]) + el["harness"]["r_ohm"])
     esc = esc_hover(ark, hp, v_low)
     buses = {k: bus(ark, esc, el["cell"][f"ocv_{k}_v"], k) for k in ("full", "low")}

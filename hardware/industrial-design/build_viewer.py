@@ -66,6 +66,7 @@ def main() -> int:
         if (HERE / f).exists()
     }
     data = {
+        "mission": idc.get("mission", {}).get("result"),
         "models": models,
         **extra,
         "livery": livery,

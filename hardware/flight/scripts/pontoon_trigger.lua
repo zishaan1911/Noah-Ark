@@ -24,12 +24,12 @@ local ENABLE    = p('ENABLE', 1, 1)
 local PLAN_WTR  = p('PLAN_WTR', 2, 0)     -- set by the mission planner (Ark Brain) for a planned water landing
 local OVERWTR   = p('OVERWTR', 3, 0)      -- companion water classifier: 1 = water under the drone
 local WTR_SEQ   = p('WTR_SEQ', 4, 0)      -- companion bumps this with every OVERWTR update (staleness check)
-local FIRE_ALT  = p('FIRE_ALT', 5, 6.0)   -- m, minimum firing height (skid to water)
-local INF_T     = p('INF_T', 6, 6.0)      -- s, fire to pressure-OK, cold case (pontoon_system.json)
+local FIRE_ALT  = p('FIRE_ALT', 5, 7.5)   -- m, minimum firing height (skid to water)
+local INF_T     = p('INF_T', 6, 7.4)      -- s, fire to pressure-OK, cold case (pontoon_system.json)
 local MARGIN    = p('MARGIN', 7, 1.5)
 local ABORT_ALT = p('ABORT_ALT', 8, 1.5)  -- m, lowest height at which a planned landing is still aborted
-local OK_TMO    = p('OK_TMO', 9, 11.9)    -- s, give up waiting for pressure
-local RETRY_T   = p('RETRY_T', 10, 7.0)   -- s, re-pulse a side with no pressure yet
+local OK_TMO    = p('OK_TMO', 9, 14.7)    -- s, give up waiting for pressure
+local RETRY_T   = p('RETRY_T', 10, 8.4)   -- s, re-pulse a side with no pressure yet
 local RNG_OFS   = p('RNG_OFS', 11, 0.34)  -- m, radar face to skid bottom
 local PULSE_MS  = p('PULSE_MS', 12, 300)
 local FIRED     = p('FIRED', 13, 0)       -- latch, saved: ground crew clears it after re-arming the kit
