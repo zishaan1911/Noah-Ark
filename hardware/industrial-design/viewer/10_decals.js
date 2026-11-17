@@ -258,7 +258,8 @@
     apply({ name: 'nose', from: [0.45, 0, zMid], dir: [-1, 0, 0], up: [0, 0, 1], w: 0.23, h: 0.07, tex: noseTex });
     // tail: only the strip between the roof edge and the battery bay opening (z -0.082 .. -0.045)
     apply({ name: 'tail', from: [-0.45, 0, -0.0635], dir: [1, 0, 0], up: [0, 0, 1], w: 0.2, h: 0.034, tex: tailTex });
-    // roof: forward of the GNSS mast, read from the right side (the hero and side views)
+    // roof: forward of the GNSS mast, read from the right side (the hero and side views). A roof mark reads upside
+    // down from one side whichever way it faces; the hero wins, so from behind it reads sideways (by design).
     apply({ name: 'roof', from: [0.058, 0, 0.3], dir: [0, 0, -1], up: [0, 1, 0], w: 0.19, h: 0.07, tex: roofTex });
     // arms, ArduPilot quad-X numbering: M1 front-right CCW, M2 rear-left CCW, M3 front-left CW, M4 rear-right CW
     [[1, -1, 1, true], [-1, 1, 2, true], [1, 1, 3, false], [-1, -1, 4, false]].forEach(([sx, sy, n, ccw]) => {
