@@ -7,6 +7,7 @@ One geometry edit happens here: the motor pods are widened to the real T-Motor M
 
 import base64
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -90,7 +91,8 @@ def main() -> int:
     # viewer/NN_*.js run inside the page's one function scope, in file-name order (they share its variables)
     modules = "\n".join(p.read_text(encoding="utf-8") for p in sorted((HERE / "viewer").glob("*.js")))
     html = html.replace("/*__MODULES__*/", modules)
-    out = OUT / "ark_viewer.html"
+    out = Path(sys.argv[sys.argv.index("--out") + 1]) if "--out" in sys.argv else OUT / "ark_viewer.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html.replace("__ARK_DATA__", json.dumps(data)), encoding="utf-8")
     print(f"Wrote {out} ({out.stat().st_size / 1e6:.1f} MB)")
     return 0
