@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+cdk.out/
+.DS_Store
+*.log
+ml/datasets/raw/
+*.ckpt
+*.pt
+*.onnx
+
+# parallel-sonnet agent briefs & run logs
+.agents/

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Telemetry",
+  "type": "object",
+  "required": [
+    "droneId",
+    "ts",
+    "position",
+    "batteryPct"
+  ],
+  "properties": {
+    "droneId": {
+      "type": "string"
+    },
+    "missionId": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        },
+        "altM": {
+          "type": "number"
+        }
+      }
+    },
+    "batteryPct": {
+      "type": "number"
+    },
+    "batteryTempC": {
+      "type": "number"
+    },
+    "motorTempC": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "vibration": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "rainIntensity": {
+      "type": "number"
+    },
+    "onWater": {
+      "type": "boolean"
+    },
+    "moistureDetected": {
+      "type": "boolean"
+    },
+    "linkType": {
+      "enum": [
+        "lte",
+        "lora",
+        "satellite",
+        "none"
+      ]
+    },
+    "linkQuality": {
+      "type": "number"
+    }
+  }
+}

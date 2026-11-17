@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mission",
+  "type": "object",
+  "required": [
+    "id",
+    "mode",
+    "droneId",
+    "origin",
+    "destination",
+    "payload"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "gdex",
+        "relief",
+        "military"
+      ]
+    },
+    "droneId": {
+      "type": "string"
+    },
+    "sosRequestIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "origin": {
+      "$ref": "sos-request.schema.json#/$defs/geo"
+    },
+    "destination": {
+      "$ref": "sos-request.schema.json#/$defs/geo"
+    },
+    "waypoints": {
+      "type": "array",
+      "items": {
+        "$ref": "sos-request.schema.json#/$defs/geo"
+      }
+    },
+    "landingType": {
+      "enum": [
+        "ground",
+        "water",
+        "winch",
+        "drop"
+      ]
+    },
+    "payload": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number"
+          },
+          "weightKg": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "aiRationale": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "in_flight",
+        "delivered",
+        "returned",
+        "aborted"
+      ]
+    }
+  }
+}
