@@ -12,9 +12,13 @@ Power model (per rotor, then x4):
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 from hull import float_check, hull_for_volume
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mechanical"))
+import mech
 
 ARK_JSON = Path(__file__).resolve().parent.parent / "ark.json"
 TIP_SPEED = 150.0  # shortcut: fixed rotor tip speed for the advance ratio, use the real rpm once a prop is chosen
@@ -65,32 +69,48 @@ def solve(ark: dict, prop: dict, cell: dict, parallel: int) -> dict:
     d = prop["prop_in"] * 0.0254
     area = math.pi * d * d / 4
     arm_r = (1 + frame["prop_gap_frac"]) * d / math.sqrt(2)  # adjacent rotors clear each other on a quad X
-    arms_kg = ROTORS * (arm_r * frame["arm_kg_per_m"] + frame["motor_mount_kg"])
     power_set_kg = ROTORS * (prop["motor_kg"] + prop["prop_kg"] + prop["esc_kg"])
     pack_kg = s * parallel * cell["kg"] * (1 + cand["pack_overhead_frac"])
     pack_wh = s * parallel * cell["ah"] * cell["v_nom"]
+    pack_size = mech.pack_box(ark, s, parallel)
     fixed_kg = sum(ark["fixed_mass_kg"].values())
     payload = req["payload_kg"]
 
-    # Hull mass depends on its size, which depends on the all-up mass: iterate to a fixed point.
-    shell_kg = 0.0
-    for _ in range(30):
+    # Hull size, arm tube and all-up mass depend on each other: iterate to a fixed point. Then pack the parts
+    # inside; if they do not fit, grow the hull and repeat (the shell is sized from what it holds).
+    vol_mult = 1.0
+    for _ in range(40):
+        shell_kg, arms_kg = 0.0, ROTORS * frame["motor_mount_kg"]
+        for _ in range(30):
+            auw = fixed_kg + arms_kg + power_set_kg + pack_kg + payload + shell_kg
+            volume = auw / env["rho_water"] * (1 + req["reserve_buoyancy_frac"]) * vol_mult
+            h = hull_for_volume(volume, hc["aspect_width"], hc["aspect_height"], hc["min_length_m"])
+            shell_kg = h.area * hc["shell_kg_per_m2"]
+            tube = mech.arm_tube(ark, prop, h, arm_r, auw)
+            arms_kg = ROTORS * (arm_r * tube["kg_per_m"] + frame["motor_mount_kg"])
         auw = fixed_kg + arms_kg + power_set_kg + pack_kg + payload + shell_kg
-        volume = auw / env["rho_water"] * (1 + req["reserve_buoyancy_frac"])
-        h = hull_for_volume(volume, hc["aspect_width"], hc["aspect_height"], hc["min_length_m"])
-        shell_kg = h.area * hc["shell_kg_per_m2"]
-    auw = fixed_kg + arms_kg + power_set_kg + pack_kg + payload + shell_kg
+        try:
+            layout = mech.packaging(ark, h, pack_size, pack_kg)
+            break
+        except mech.DoesNotFit:
+            vol_mult *= ark["mechanical"]["hull_grow_step"] ** 3
+    else:
+        raise ValueError("parts never fit in the hull")
 
     cda = (
         hc["cd_hull"] * h.frontal_area
-        + ROTORS * frame["cd_arm"] * frame["arm_tube_d_m"] * arm_r
+        # only the free length is in the airflow, and arms at 45 deg see (V cos 45)^2 (cross-flow principle)
+        + ROTORS * frame["cd_arm"] * tube["od_m"] * tube["free_length_m"] * 0.5
         + ROTORS * frame["motor_frontal_m2"]
         + frame["cda_extras_m2"]
     )
     w_out, w_back = auw * g, (auw - payload) * g
     fm, eta = prop["fm"], prop["eta_drive"]
 
-    e_out, v_out = best_cruise(w_out, req["range_out_km"] * 1e3, cda, area, prop, rho, req["cruise_speed_range_mps"])
+    cda_out = cda + req["payload_cda_m2"]  # the payload pod hangs under the hull until it is dropped
+    e_out, v_out = best_cruise(
+        w_out, req["range_out_km"] * 1e3, cda_out, area, prop, rho, req["cruise_speed_range_mps"]
+    )
     e_back, v_back = best_cruise(
         w_back, req["range_back_km"] * 1e3, cda, area, prop, rho, req["cruise_speed_range_mps"]
     )
@@ -108,11 +128,11 @@ def solve(ark: dict, prop: dict, cell: dict, parallel: int) -> dict:
 
     z_top = 2 * h.c
     lz = hc["layout_z_frac"]
-    prop_z = z_top + frame["motor_pylon_m"]
+    prop_z = lz["arms"] * z_top + frame["motor_pylon_m"]  # props on pylons above the arm line
     masses = [
-        (pack_kg, lz["battery"] * z_top),
-        (payload, lz["payload"] * z_top),
-        (fixed_kg, lz["fixed"] * z_top),
+        (pack_kg, layout["battery_z_m"]),
+        (payload, layout["payload_z_m"]),
+        (fixed_kg, layout["fixed_z_m"]),
         (shell_kg, lz["shell"] * z_top),
         (arms_kg, lz["arms"] * z_top),
         (power_set_kg, prop_z),
@@ -151,6 +171,7 @@ def solve(ark: dict, prop: dict, cell: dict, parallel: int) -> dict:
             "hull_height": 2 * h.c,
             "hull_volume_l": h.volume * 1e3,
             "cda_m2": cda,
+            "cda_out_m2": cda_out,
         },
         "power_w": {
             "hover_loaded": p_hover_out,
@@ -166,6 +187,9 @@ def solve(ark: dict, prop: dict, cell: dict, parallel: int) -> dict:
         "flight_time_min": (req["range_out_km"] * 1e3 / v_out + req["range_back_km"] * 1e3 / v_back) / 60
         + (req["hover_out_s"] + req["water_ops_s"] + req["hover_back_s"]) / 60,
         "float_loaded": fl,
+        "arm_tube": tube,
+        "layout_z_m": {k: layout[k] for k in ("battery_z_m", "payload_z_m", "fixed_z_m", "skid_bottom_z_m")},
+        "hull_grown_for_fit": vol_mult > 1,
     }
 
 

@@ -15,7 +15,8 @@
     "twr_min": 2.0,
     "reserve_buoyancy_frac": 1.0,
     "prop_clearance_min_m": 0.25,
-    "gm_min_m": 0.05
+    "gm_min_m": 0.05,
+    "payload_cda_m2": 0.016
   },
   "environment": {
     "rho_air": 1.16,
@@ -30,17 +31,17 @@
     "perception_radar_lidar_camera": 0.3,
     "payload_release": 0.25,
     "wiring_pdb_connectors": 0.35,
-    "hatch_and_seals": 0.2
+    "hatch_and_seals": 0.2,
+    "landing_skids": 0.3,
+    "flange_ring_and_arm_sockets": 0.15
   },
   "frame": {
-    "arm_kg_per_m": 0.15,
-    "motor_mount_kg": 0.05,
-    "arm_tube_d_m": 0.03,
+    "motor_mount_kg": 0.08,
     "prop_gap_frac": 0.1,
-    "motor_pylon_m": 0.15,
+    "motor_pylon_m": 0.26,
     "cd_arm": 1.0,
     "motor_frontal_m2": 0.004,
-    "cda_extras_m2": 0.01
+    "cda_extras_m2": 0.025
   },
   "hull": {
     "shape": "ellipsoid",
@@ -50,11 +51,8 @@
     "cd_hull": 0.3,
     "min_length_m": 0.45,
     "layout_z_frac": {
-      "battery": 0.25,
-      "payload": 0.35,
-      "fixed": 0.55,
       "shell": 0.5,
-      "arms": 1.0
+      "arms": 0.5
     }
   },
   "candidates": {
@@ -172,151 +170,172 @@
       "prop_clearance": true,
       "stability": true
     },
-    "energy_margin": 1.0146,
+    "energy_margin": 1.0052,
     "mass_kg": {
-      "all_up": 13.1507,
+      "all_up": 13.8969,
       "payload": 2.0,
       "pack": 5.7132,
       "power_set": 2.16,
-      "arms": 0.5082,
-      "hull_shell": 1.1993,
-      "fixed": 1.57
+      "arms": 0.7595,
+      "hull_shell": 1.2442,
+      "fixed": 2.02
     },
     "geometry_m": {
       "prop_d": 0.6604,
       "arm_radius": 0.5137,
       "span_tip_to_tip": 1.6877,
-      "hull_length": 0.564,
-      "hull_width": 0.3948,
-      "hull_height": 0.2256,
-      "hull_volume_l": 26.3013,
-      "cda_m2": 0.1086
+      "hull_length": 0.5745,
+      "hull_width": 0.4021,
+      "hull_height": 0.2298,
+      "hull_volume_l": 27.7937,
+      "cda_m2": 0.0841,
+      "cda_out_m2": 0.1001
     },
     "power_w": {
-      "hover_loaded": 1556.5581,
-      "hover_empty": 1215.332,
-      "cruise_out": 1474.995,
-      "cruise_back": 1180.6064,
-      "peak_at_twr_min": 4402.6111
+      "hover_loaded": 1690.9042,
+      "hover_empty": 1339.3453,
+      "cruise_out": 1590.4063,
+      "cruise_back": 1265.2681,
+      "peak_at_twr_min": 4782.5993
     },
     "cruise_speed_mps": {
-      "out": 19.0,
-      "back": 18.0
+      "out": 20.0,
+      "back": 20.0
     },
     "energy_wh": {
       "pack": 1296.0,
       "usable": 1166.4,
-      "mission": 919.6958,
-      "needed_with_reserve": 1149.6198
+      "mission": 928.2922,
+      "needed_with_reserve": 1160.3653
     },
-    "pack_peak_current_a": 101.9123,
-    "thrust_to_weight": 3.1938,
-    "flight_time_min": 41.0624,
+    "pack_peak_current_a": 110.7083,
+    "thrust_to_weight": 3.0223,
+    "flight_time_min": 38.3333,
     "float_loaded": {
-      "draft_m": 0.1128,
-      "kg_m": 0.132,
-      "gm_m": 0.068,
-      "prop_clearance_m": 0.2628
-    }
+      "draft_m": 0.1149,
+      "kg_m": 0.1044,
+      "gm_m": 0.0993,
+      "prop_clearance_m": 0.26
+    },
+    "arm_tube": {
+      "tube_mm": "38x1",
+      "od_m": 0.038,
+      "kg_per_m": 0.2139,
+      "mode_hz": 95.7257,
+      "sf": 21.739,
+      "hover_deflection_m": 0.0002,
+      "free_length_m": 0.2807,
+      "rotor_1p_band_hz": [
+        24.857065086382555,
+        91.66895530327847
+      ]
+    },
+    "layout_z_m": {
+      "battery_z_m": 0.0693,
+      "payload_z_m": -0.06,
+      "fixed_z_m": 0.0671,
+      "skid_bottom_z_m": -0.14
+    },
+    "hull_grown_for_fit": false
   },
   "runners_up": [
-    {
-      "propulsion": "6010-class 170KV + 22x7.2 in",
-      "cell": "21700 5.0 Ah high-energy (50S-class)",
-      "pack": "12S7P",
-      "energy_margin": 1.0035,
-      "all_up_kg": 13.4751
-    },
-    {
-      "propulsion": "8318-class 100KV + 28x9.2 in",
-      "cell": "21700 5.0 Ah high-energy (50S-class)",
-      "pack": "12S6P",
-      "energy_margin": 1.0162,
-      "all_up_kg": 13.6868
-    },
     {
       "propulsion": "7010-class 150KV + 24x8 in",
       "cell": "21700 5.0 Ah high-energy (50S-class)",
       "pack": "12S7P",
-      "energy_margin": 1.0386,
-      "all_up_kg": 13.7982
+      "energy_margin": 1.0408,
+      "all_up_kg": 14.4631
     },
     {
       "propulsion": "8108-class 120KV + 26x8.5 in",
       "cell": "21700 5.0 Ah high-energy (50S-class)",
       "pack": "12S7P",
-      "energy_margin": 1.0818,
-      "all_up_kg": 14.1637
+      "energy_margin": 1.0769,
+      "all_up_kg": 14.9088
+    },
+    {
+      "propulsion": "7010-class 150KV + 24x8 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S8P",
+      "energy_margin": 1.0889,
+      "all_up_kg": 15.4741
+    },
+    {
+      "propulsion": "8318-class 100KV + 28x9.2 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S7P",
+      "energy_margin": 1.0697,
+      "all_up_kg": 15.695
     }
   ],
   "power_chain": {
     "hover": {
-      "thrust_n": 32.2521,
-      "rpm": 2564.7325,
-      "wm_rad_s": 268.5782,
+      "thrust_n": 34.0821,
+      "rpm": 2636.4929,
+      "wm_rad_s": 276.0929,
       "ke_v_s_rad": 0.0796,
-      "p_shaft_w": 311.3127,
-      "p_target_w": 324.1364,
+      "p_shaft_w": 338.182,
+      "p_target_w": 351.3645,
       "eta_drive_assumed": 0.8
     },
     "esc_hover_low_pack": {
-      "vbus_v": 39.9587,
-      "duty": 0.6254,
-      "p_mech_w": 323.4991,
-      "p_in_w": 351.6151,
-      "ibus_a": 8.7995,
-      "iph_rms_a": 12.8315,
-      "efficiency": 0.8854,
+      "vbus_v": 39.8343,
+      "duty": 0.6487,
+      "p_mech_w": 351.2597,
+      "p_in_w": 381.5954,
+      "ibus_a": 9.5796,
+      "iph_rms_a": 13.361,
+      "efficiency": 0.8862,
       "sweep": [
         {
-          "duty": 0.5349,
-          "p_mech_w": 53.9208
+          "duty": 0.5516,
+          "p_mech_w": 56.6562
         },
         {
-          "duty": 0.5549,
-          "p_mech_w": 112.6247
+          "duty": 0.5716,
+          "p_mech_w": 116.2188
         },
         {
-          "duty": 0.5749,
-          "p_mech_w": 171.3744
+          "duty": 0.5916,
+          "p_mech_w": 176.8138
         },
         {
-          "duty": 0.5949,
-          "p_mech_w": 231.0975
+          "duty": 0.6116,
+          "p_mech_w": 236.633
         },
         {
-          "duty": 0.6149,
-          "p_mech_w": 291.7945
+          "duty": 0.6316,
+          "p_mech_w": 298.3332
         },
         {
-          "duty": 0.6349,
-          "p_mech_w": 353.5149
+          "duty": 0.6516,
+          "p_mech_w": 360.2876
         }
       ]
     },
     "bus": {
       "full": {
-        "vavg_hover": 47.582,
-        "vmin_hover": 47.4551,
-        "vmin_peak": 45.0689,
-        "vavg_peak": 45.1727,
-        "ipack_hover": 29.4016,
-        "ipack_peak": 89.6314,
-        "icap_rms_peak": 2.5146,
+        "vavg_hover": 47.4326,
+        "vmin_hover": 47.3065,
+        "vmin_peak": 44.7166,
+        "vavg_peak": 44.8181,
+        "ipack_hover": 31.8774,
+        "ipack_peak": 97.2356,
+        "icap_rms_peak": 2.7308,
         "vocv": 49.8,
-        "vcell_min_peak": 3.7557,
+        "vcell_min_peak": 3.7264,
         "cutoff_load_v": 2.8
       },
       "low": {
-        "vavg_hover": 38.9355,
-        "vmin_hover": 38.8455,
-        "vmin_peak": 35.9274,
-        "vavg_peak": 36.0399,
-        "ipack_hover": 35.4179,
-        "ipack_peak": 107.8042,
-        "icap_rms_peak": 3.0241,
+        "vavg_hover": 38.7687,
+        "vmin_hover": 38.6814,
+        "vmin_peak": 35.4977,
+        "vavg_peak": 35.6232,
+        "ipack_hover": 38.3267,
+        "ipack_peak": 116.9618,
+        "icap_rms_peak": 3.2785,
         "vocv": 41.4,
-        "vcell_min_peak": 2.9939,
+        "vcell_min_peak": 2.9581,
         "cutoff_load_v": 2.8
       }
     },
@@ -324,6 +343,376 @@
       "bus_above_cutoff": true,
       "duty_headroom": true,
       "efficiency_vs_sizing": true
+    }
+  },
+  "mechanical": {
+    "note": "Inputs for mechanical/mech.py, used by sizing for every candidate. Carbon tube properties are catalogue-class (roll-wrapped, quasi-isotropic).",
+    "tube": {
+      "e_pa": 70000000000.0,
+      "flex_strength_pa": 600000000.0,
+      "density": 1600,
+      "fitting_overhead_frac": 0.15,
+      "max_d_over_t": 40
+    },
+    "tubes_od_wall_mm": [
+      [
+        20,
+        1
+      ],
+      [
+        22,
+        1
+      ],
+      [
+        25,
+        1
+      ],
+      [
+        25,
+        1.5
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        28,
+        1.5
+      ],
+      [
+        30,
+        1
+      ],
+      [
+        30,
+        1.5
+      ],
+      [
+        32,
+        1
+      ],
+      [
+        32,
+        1.5
+      ],
+      [
+        35,
+        1
+      ],
+      [
+        35,
+        1.5
+      ],
+      [
+        38,
+        1
+      ],
+      [
+        38,
+        1.5
+      ],
+      [
+        40,
+        1
+      ],
+      [
+        40,
+        1.5
+      ]
+    ],
+    "arm_limits": {
+      "sf_min": 2.0,
+      "hover_deflection_max_m": 0.002,
+      "band_low": 0.8,
+      "band_high": 1.2,
+      "min_flight_thrust_frac": 0.5
+    },
+    "wall_m": 0.003,
+    "clearance_m": 0.005,
+    "hull_grow_step": 1.03,
+    "cell_21700_m": {
+      "d": 0.0214,
+      "h": 0.0705
+    },
+    "pack_case_m": 0.004,
+    "internal_parts": [
+      {
+        "name": "PDB + bulk capacitors",
+        "size_m": [
+          0.12,
+          0.08,
+          0.03
+        ],
+        "xy_m": [
+          0.0,
+          0.0
+        ],
+        "mass": "wiring_pdb_connectors"
+      },
+      {
+        "name": "flight controller + GNSS",
+        "size_m": [
+          0.06,
+          0.06,
+          0.03
+        ],
+        "xy_m": [
+          0.0,
+          0.0
+        ],
+        "mass": "flight_controller_gps"
+      },
+      {
+        "name": "perception: radar + lidar + camera",
+        "size_m": [
+          0.08,
+          0.07,
+          0.05
+        ],
+        "xy_m": [
+          0.19,
+          0.0
+        ],
+        "mass": "perception_radar_lidar_camera"
+      },
+      {
+        "name": "companion computer",
+        "size_m": [
+          0.1,
+          0.08,
+          0.04
+        ],
+        "xy_m": [
+          -0.19,
+          0.0
+        ],
+        "mass": "companion_computer"
+      },
+      {
+        "name": "comms: LTE + LoRa + satellite",
+        "size_m": [
+          0.08,
+          0.06,
+          0.03
+        ],
+        "xy_m": [
+          -0.08,
+          0.1
+        ],
+        "mass": "comms_lte_lora_sat"
+      }
+    ],
+    "pod": {
+      "size_m": [
+        0.25,
+        0.16,
+        0.1
+      ],
+      "gap_m": 0.01
+    },
+    "skids": {
+      "tube_d_m": 0.015,
+      "ground_gap_m": 0.03,
+      "track_m": 0.3
+    },
+    "shell_parts_z_frac": {
+      "hatch_and_seals": 0.5,
+      "payload_release": 0.0,
+      "flange_ring_and_arm_sockets": 0.5
+    },
+    "seal": {
+      "cord_d_mm": 3.53,
+      "squeeze_target": 0.25,
+      "squeeze_range": [
+        0.15,
+        0.3
+      ],
+      "fill_max": 0.85,
+      "flange_inset_m": 0.008,
+      "depth_m": 1.0,
+      "oring_force_n_per_mm": 3.0,
+      "bolt_preload_n": 3000,
+      "bolt_sf": 2.0,
+      "bolt_spacing_max_m": 0.06
+    },
+    "glands": [
+      {
+        "name": "motor phase leads (3 x 12 AWG)",
+        "qty": 4,
+        "cable_od_mm": 8.0,
+        "gland": "M16 IP68",
+        "range_mm": [
+          4.5,
+          10.0
+        ]
+      },
+      {
+        "name": "release servo lead",
+        "qty": 1,
+        "cable_od_mm": 4.0,
+        "gland": "M12 IP68",
+        "range_mm": [
+          3.0,
+          6.5
+        ]
+      }
+    ],
+    "release": {
+      "friction": 0.3,
+      "dynamic_factor": 2.0,
+      "horn_r_m": 0.01,
+      "servo_rated_nm": 2.45,
+      "sf_min": 3.0,
+      "servo": "IP67 metal-gear servo, 25 kg cm"
+    }
+  },
+  "mechanical_design": {
+    "arms": {
+      "tube_mm": "38x1",
+      "od_m": 0.038,
+      "kg_per_m": 0.2139,
+      "mode_hz": 95.7079,
+      "sf": 21.7363,
+      "hover_deflection_m": 0.0002,
+      "free_length_m": 0.2808,
+      "rotor_1p_band_hz": [
+        24.8571,
+        91.669
+      ]
+    },
+    "packaging": {
+      "parts": [
+        {
+          "name": "battery",
+          "size_m": [
+            0.2648,
+            0.1364,
+            0.0785
+          ],
+          "centre_m": [
+            0.0,
+            0.0,
+            0.0693
+          ],
+          "mass": "pack",
+          "kg": 5.7132
+        },
+        {
+          "name": "PDB + bulk capacitors",
+          "size_m": [
+            0.12,
+            0.08,
+            0.03
+          ],
+          "centre_m": [
+            0.0,
+            0.0,
+            0.1235
+          ],
+          "mass": "wiring_pdb_connectors",
+          "kg": 0.35
+        },
+        {
+          "name": "flight controller + GNSS",
+          "size_m": [
+            0.06,
+            0.06,
+            0.03
+          ],
+          "centre_m": [
+            0.0,
+            0.0,
+            0.1535
+          ],
+          "mass": "flight_controller_gps",
+          "kg": 0.15
+        },
+        {
+          "name": "perception: radar + lidar + camera",
+          "size_m": [
+            0.08,
+            0.07,
+            0.05
+          ],
+          "centre_m": [
+            0.19,
+            0.0,
+            0.083
+          ],
+          "mass": "perception_radar_lidar_camera",
+          "kg": 0.3
+        },
+        {
+          "name": "companion computer",
+          "size_m": [
+            0.1,
+            0.08,
+            0.04
+          ],
+          "centre_m": [
+            -0.19,
+            0.0,
+            0.086
+          ],
+          "mass": "companion_computer",
+          "kg": 0.2
+        },
+        {
+          "name": "comms: LTE + LoRa + satellite",
+          "size_m": [
+            0.08,
+            0.06,
+            0.03
+          ],
+          "centre_m": [
+            -0.08,
+            0.1,
+            0.067
+          ],
+          "mass": "comms_lte_lora_sat",
+          "kg": 0.12
+        }
+      ],
+      "battery_z_m": 0.0693,
+      "payload_z_m": -0.06,
+      "fixed_z_m": 0.0671,
+      "skid_bottom_z_m": -0.14
+    },
+    "seals": {
+      "oring_length_m": 1.4962,
+      "gland_depth_mm": 2.6475,
+      "gland_width_mm": 4.9288,
+      "squeeze": 0.25,
+      "fill": 0.75,
+      "clamp_force_n": 6149.8985,
+      "bolts": 25,
+      "glands": [
+        {
+          "name": "motor phase leads (3 x 12 AWG)",
+          "qty": 4,
+          "cable_od_mm": 8.0,
+          "gland": "M16 IP68",
+          "range_mm": [
+            4.5,
+            10.0
+          ],
+          "ok": true
+        },
+        {
+          "name": "release servo lead",
+          "qty": 1,
+          "cable_od_mm": 4.0,
+          "gland": "M12 IP68",
+          "range_mm": [
+            3.0,
+            6.5
+          ],
+          "ok": true
+        }
+      ],
+      "release_torque_nm": 0.1177,
+      "release_sf": 20.8121,
+      "ok": true
     }
   }
 }

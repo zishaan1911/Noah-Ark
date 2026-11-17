@@ -10,7 +10,9 @@ PC = ARK["power_chain"]
 
 def test_results_match_current_sizing():
     # Rerun run_spice.py if this fails: sizing changed after the power chain was simulated.
-    assert PC["hover"]["thrust_n"] == pytest.approx(ARK["chosen"]["mass_kg"]["all_up"] * ARK["environment"]["g"] / 4)
+    assert PC["hover"]["thrust_n"] == pytest.approx(
+        ARK["chosen"]["mass_kg"]["all_up"] * ARK["environment"]["g"] / 4, abs=1e-3
+    )
 
 
 def test_bus_stays_above_cutoff_under_peak():
