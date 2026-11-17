@@ -1,0 +1,67 @@
+* Ark-1 power distribution: 12S6P Li-ion pack, harness, bulk capacitance, four interleaved ESCs.
+* t < 2 ms: hover. 2-3 ms: all four ESCs ramp from hover to the peak current sizing found for thrust-to-weight 2.
+* Every .param is overwritten by run_spice.py from ark.json; the values here are only defaults.
+.param vocv=49.8
+.param rp0=36m
+.param rp1=24m
+.param cp1=1000
+.param rh=4m
+.param lh=150n
+.param cbulk=2m
+.param resr=15m
+.param cesc=1.32m
+.param irail=1.4
+.param iph0=10
+.param d0=0.7
+.param iphpk=26
+.param dpk=0.97
+.param fpwm=24k
+.param tp={1/fpwm}
+
+* --- pack: OCV + ohmic + one RC polarisation branch (cell values scaled to 12S6P)
+Vocv  b0 0 {vocv}
+R0    b0 b1 {rp0}
+R1    b1 b2 {rp1}
+C1    b1 b2 {cp1}
+
+* --- leads + connector
+Rlead b2 b3 {rh}
+Llead b3 bus {lh}
+
+* --- bulk capacitor bank on the PDB
+Cbulk bus nb1 {cbulk}
+Rbesr nb1 nb2 {resr}
+Lbesl nb2 0 8n
+
+* --- the four ESCs' own input capacitors, lumped: they absorb the PWM edges (without them the bus shows
+*     single-step spikes of 20 V that no real drone sees)
+Cesc  bus ne1 {cesc}
+Resc  ne1 0 10m
+
+* --- avionics rails, lumped
+Irail bus 0 {irail}
+
+* --- per-ESC phase current and duty (hover -> peak); each ESC pulls its phase current only while its
+*     high side conducts, carriers interleaved by a quarter period
+.func iph(t) { t<2m ? iph0 : (t<3m ? iph0+(t-2m)/1m*(iphpk-iph0) : iphpk) }
+.func dty(t) { t<2m ? d0 : (t<3m ? d0+(t-2m)/1m*(dpk-d0) : dpk) }
+.func pw(t,ph) { (t+ph*tp/4 - floor((t+ph*tp/4)/tp)*tp) < dty(t)*tp ? 1 : 0 }
+B1 bus 0 I = { pw(time,0)*iph(time) }
+B2 bus 0 I = { pw(time,1)*iph(time) }
+B3 bus 0 I = { pw(time,2)*iph(time) }
+B4 bus 0 I = { pw(time,3)*iph(time) }
+
+.tran 0.2u 5m 0 0.2u
+
+.control
+run
+meas tran vavg_hover AVG v(bus) from=1.5m to=2m
+meas tran vmin_hover MIN v(bus) from=1.5m to=2m
+meas tran vmin_peak MIN v(bus) from=2m to=5m
+meas tran vavg_peak AVG v(bus) from=4.5m to=5m
+meas tran ipack_hover AVG i(Llead) from=1.5m to=2m
+meas tran ipack_peak AVG i(Llead) from=4.5m to=5m
+meas tran icap_rms_peak RMS i(Lbesl) from=4.5m to=5m
+quit
+.endc
+.end

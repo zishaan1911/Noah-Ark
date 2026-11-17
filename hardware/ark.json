@@ -125,6 +125,41 @@
       }
     ]
   },
+  "electrical": {
+    "note": "Inputs for electronics/spice/run_spice.py (chosen config only). Class estimates for an 8108-class 120 KV motor and 26 in prop until a datasheet is picked.",
+    "motor": {
+      "kv": 120,
+      "pole_pairs": 14,
+      "rph_ohm": 0.05,
+      "lph_h": 4e-05,
+      "i0_a": 0.6
+    },
+    "prop_ct": 0.08,
+    "cell": {
+      "r0_ohm": 0.018,
+      "r1_ohm": 0.012,
+      "c1_f": 2000,
+      "ocv_full_v": 4.15,
+      "ocv_low_v": 3.45,
+      "cutoff_load_v": 2.8,
+      "cutoff_note": "Floor for short surges under load; the 50S-class datasheet allows 2.5 V."
+    },
+    "harness": {
+      "r_ohm": 0.004,
+      "l_h": 1.5e-07
+    },
+    "bulk": {
+      "c_f": 0.002,
+      "esr_ohm": 0.015
+    },
+    "avionics_w": 60,
+    "esc": {
+      "fpwm_hz": 24000,
+      "ron_ohm": 0.002,
+      "local_c_f": 0.00033,
+      "duty_max": 0.85
+    }
+  },
   "chosen": {
     "propulsion": "8108-class 120KV + 26x8.5 in",
     "cell": "21700 5.0 Ah high-energy (50S-class)",
@@ -213,5 +248,82 @@
       "energy_margin": 1.0818,
       "all_up_kg": 14.1637
     }
-  ]
+  ],
+  "power_chain": {
+    "hover": {
+      "thrust_n": 32.2521,
+      "rpm": 2564.7325,
+      "wm_rad_s": 268.5782,
+      "ke_v_s_rad": 0.0796,
+      "p_shaft_w": 311.3127,
+      "p_target_w": 324.1364,
+      "eta_drive_assumed": 0.8
+    },
+    "esc_hover_low_pack": {
+      "vbus_v": 39.9587,
+      "duty": 0.6254,
+      "p_mech_w": 323.4991,
+      "p_in_w": 351.6151,
+      "ibus_a": 8.7995,
+      "iph_rms_a": 12.8315,
+      "efficiency": 0.8854,
+      "sweep": [
+        {
+          "duty": 0.5349,
+          "p_mech_w": 53.9208
+        },
+        {
+          "duty": 0.5549,
+          "p_mech_w": 112.6247
+        },
+        {
+          "duty": 0.5749,
+          "p_mech_w": 171.3744
+        },
+        {
+          "duty": 0.5949,
+          "p_mech_w": 231.0975
+        },
+        {
+          "duty": 0.6149,
+          "p_mech_w": 291.7945
+        },
+        {
+          "duty": 0.6349,
+          "p_mech_w": 353.5149
+        }
+      ]
+    },
+    "bus": {
+      "full": {
+        "vavg_hover": 47.582,
+        "vmin_hover": 47.4551,
+        "vmin_peak": 45.0689,
+        "vavg_peak": 45.1727,
+        "ipack_hover": 29.4016,
+        "ipack_peak": 89.6314,
+        "icap_rms_peak": 2.5146,
+        "vocv": 49.8,
+        "vcell_min_peak": 3.7557,
+        "cutoff_load_v": 2.8
+      },
+      "low": {
+        "vavg_hover": 38.9355,
+        "vmin_hover": 38.8455,
+        "vmin_peak": 35.9274,
+        "vavg_peak": 36.0399,
+        "ipack_hover": 35.4179,
+        "ipack_peak": 107.8042,
+        "icap_rms_peak": 3.0241,
+        "vocv": 41.4,
+        "vcell_min_peak": 2.9939,
+        "cutoff_load_v": 2.8
+      }
+    },
+    "checks": {
+      "bus_above_cutoff": true,
+      "duty_headroom": true,
+      "efficiency_vs_sizing": true
+    }
+  }
 }

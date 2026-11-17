@@ -18,3 +18,4 @@ ml/datasets/raw/
 .agents/
 .pytest_cache/
 .ruff_cache/
+hardware/electronics/spice/build/
