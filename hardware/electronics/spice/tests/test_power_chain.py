@@ -28,8 +28,8 @@ def test_hover_duty_leaves_headroom_and_efficiency_covers_sizing():
 
 def test_pack_scaling():
     s, p, pk = pack(ARK)
-    assert (s, p) == (12, 6)
-    assert float(pk["rp0"]) == pytest.approx(12 * ARK["electrical"]["cell"]["r0_ohm"] / 6)
+    assert f"{s}S{p}P" == ARK["chosen"]["pack"]
+    assert float(pk["rp0"]) == pytest.approx(s * ARK["electrical"]["cell"]["r0_ohm"] / p, rel=1e-4)
 
 
 def test_hover_point_obeys_thrust_coefficient():

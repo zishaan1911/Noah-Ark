@@ -1,0 +1,438 @@
+<title>Ark-1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: product reveal. A dark studio stage carries the drone; the data sheet runs beside it, stacking under it on phones. */
+:root {
+  --bg: #eef0f0;
+  --panel: #ffffff;
+  --ink: #15181a;
+  --muted: #5c6569;
+  --rule: #d6dbdc;
+  --accent: #e8621c;          /* rescue orange, as on the pontoons */
+  --stage: #101315;
+  --stage-ink: #e9eded;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0c0e0f; --panel: #15191b; --ink: #e6eaeb; --muted: #97a2a6; --rule: #262c2f; --accent: #ff7a33; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0c0e0f; --panel: #15191b; --ink: #e6eaeb; --muted: #97a2a6; --rule: #262c2f; --accent: #ff7a33; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+h1 { font: 700 clamp(36px, 5.5vw, 60px)/0.95 var(--display); letter-spacing: 0.01em; margin: 0; text-transform: uppercase; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); max-width: 62ch; margin: 6px 0 0; }
+.tag { font: 12px var(--mono); color: var(--muted); }
+.main { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 960px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.stage { background: var(--stage); border-radius: 8px; overflow: hidden; position: relative; display: grid; }
+#c { width: 100%; aspect-ratio: 16 / 11; max-width: 100%; display: block; touch-action: none; cursor: grab; }
+#c:active { cursor: grabbing; }
+.tip { position: absolute; pointer-events: none; background: rgba(12, 14, 15, 0.88); color: var(--stage-ink); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 4px; padding: 6px 9px; font: 12px/1.35 var(--body); max-width: 270px; transform: translate(12px, 12px); }
+.tip b { font: 600 13px var(--display); letter-spacing: 0.03em; display: block; }
+.bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: #171b1d; border-top: 1px solid #262c2f; }
+.bar .gap { flex: 1 1 0; }
+button { font: 500 13px var(--body); color: #dfe5e6; background: transparent; border: 1px solid #3a4245; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+button[aria-pressed="true"] { background: #2b2017; border-color: #ff7a33; color: #fff; }
+button:hover { border-color: #6b767a; }
+button:focus-visible { outline: 2px solid #ff7a33; outline-offset: 2px; }
+.hint { color: #8b979b; font-size: 12px; padding: 0 10px 10px; background: #171b1d; }
+aside { display: grid; gap: 18px; min-width: 0; }
+h2 { font: 600 13px var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.figs b { display: block; font: 700 30px/1 var(--display); font-variant-numeric: tabular-nums; }
+.figs span { font-size: 12.5px; color: var(--muted); }
+dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); font-size: 13.5px; }
+dt, dd { margin: 0; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+dt { color: var(--muted); padding-right: 12px; }
+dd { font: 12.5px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 11px var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+td.n { font: 12px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td small { color: var(--muted); }
+.scroll { overflow-x: auto; }
+a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 2px; }
+.changes { margin: 0; padding-left: 18px; font-size: 14px; color: var(--muted); display: grid; gap: 4px; }
+.changes b { color: var(--ink); font-weight: 600; }
+footer { font-size: 12.5px; color: var(--muted); }
+code { font: 0.92em var(--mono); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ark-1 <span>amphibious</span></h1>
+      <p class="sub">All-weather delivery quad. Inflatable pontoons deploy for a water landing, cargo clips to the connector under the hub, and every electronic part is a real catalogue product.</p>
+    </div>
+    <div class="tag">hardware/industrial-design · ark.json</div>
+  </header>
+
+  <div class="main">
+    <div class="stage">
+      <canvas id="c" aria-label="3D model of Ark-1. Drag to orbit, scroll or pinch to zoom, hover a part for its name."></canvas>
+      <div class="tip" id="tip" hidden></div>
+      <div class="bar">
+        <button id="v-hero" aria-pressed="true">Hero</button>
+        <button id="v-side" aria-pressed="false">Side</button>
+        <button id="v-top" aria-pressed="false">Top</button>
+        <button id="v-under" aria-pressed="false">Underside</button>
+        <span class="gap"></span>
+        <button id="t-float" aria-pressed="false">Inflate pontoons</button>
+        <button id="t-water" aria-pressed="false">On water</button>
+        <button id="t-cargo" aria-pressed="true">Cargo</button>
+        <button id="t-xray" aria-pressed="false">See inside</button>
+        <button id="t-spin" aria-pressed="false">Spin props</button>
+      </div>
+      <div class="hint">Drag to orbit · scroll to zoom · hover any part for its name and size</div>
+    </div>
+
+    <aside>
+      <section>
+        <h2>At a glance</h2>
+        <div class="figs">
+          <div><b id="f-auw">–</b><span>all-up, loaded</span></div>
+          <div><b id="f-span">–</b><span>tip to tip</span></div>
+          <div><b id="f-float">–</b><span>pontoon reserve</span></div>
+        </div>
+      </section>
+      <section>
+        <h2>On the water</h2>
+        <dl id="wstats"></dl>
+      </section>
+      <section>
+        <h2>What changed from the base model</h2>
+        <ul class="changes">
+          <li><b>Scaled</b> so the motors sit on Ark's arm radius; the props come out at 28.6 in, the real G28.</li>
+          <li><b>Gimbal removed</b> with its damping mount and board.</li>
+          <li><b>Inflatable pontoons</b> on the skids, CO2-inflated for a water landing.</li>
+          <li><b>Cargo connector</b> under the hub, with a 2 kg drop pod.</li>
+          <li><b>Battery housing</b> stretched to hold the real pack; <b>motor pods</b> widened to the MN801-S.</li>
+          <li><b>Radar altimeter</b> and <b>GNSS mast</b> added.</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+
+  <section>
+    <h2>Real parts on board</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Role</th><th>Product</th><th>Size (mm)</th><th>Mass</th><th>Source</th></tr></thead>
+        <tbody id="parts"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Airframe from the team's drone model, edited by <code>industrial-design/ark_from_model.py</code> and <code>build_viewer.py</code>. Electronics are modelled here from datasheet dimensions. Estimated masses are marked.</footer>
+</div>
+
+<script>window.ARK = __ARK_DATA__;</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
+<script>
+(function () {
+  const A = window.ARK, R = A.id.result, PT = A.id.pontoon, C = A.chosen;
+  const P = Number(C.pack.split('S')[1].replace('P', ''));
+  const PARTS = [
+    ['Motors ×4', 'T-Motor MN801-S KV120', 'Ø89 × 39.4', '470 g', 'https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html', 'T-Motor store'],
+    ['Props ×4', 'T-Motor G28×9.2 carbon', 'Ø711', '~60 g est.', 'https://store.tmotor.com/product/mn801-s-kv120-motor-navigator-type.html', 'T-Motor'],
+    ['ESCs ×4', 'T-Motor ALPHA 80A 12S', '88.5 × 36.6 × 19', '110 g', 'https://uav-en.tmotor.com/Multirotor/ESC/alpha', 'T-Motor'],
+    ['Battery', `${12 * P} × Samsung INR21700-50S, ${C.pack}`, `cells Ø21.4 × 70.5`, C.pack_kg.toFixed(1) + ' kg', '', 'cell datasheet'],
+    ['Flight controller', 'Holybro Pixhawk 6X, standard baseboard', '103.4 × 52.4 × 16.7', '74 g', 'https://docs.px4.io/main/en/flight_controller/pixhawk6x', 'PX4 docs'],
+    ['Companion computer', 'NVIDIA Jetson Orin Nano on carrier', 'module 69.6 × 45; carrier 100 × 79 × 21', '~176 g', 'https://developer.nvidia.com/embedded/jetson-orin', 'NVIDIA'],
+    ['Radar altimeter', 'Ainstein US-D1', '108 × 79 × 20', '110 g', 'https://docs.px4.io/main/en/sensor/ulanding_radar', 'PX4 docs'],
+    ['Satellite link', 'Ground Control RockBLOCK 9603', '45 × 45 × 15', '36 g', 'https://docs.groundcontrol.com/iot/rockblock/specification/dimensions', 'Ground Control'],
+    ['Telemetry radio', 'RFDesign RFD900x', '≈ 57 × 30 × 13', '≈ 15 g', '', 'size not yet verified'],
+    ['GNSS', 'Holybro M10 GPS', '≈ Ø50 × 15', '≈ 33 g', '', 'size not yet verified'],
+    ['Pontoons', 'Inflatable kit: 2 tubes + 2 × 60 g CO2', `Ø${PT.d_m * 1000} × ${PT.length_m * 1000} inflated`, (A.id.added_mass_kg.inflatable_pontoon_kit * 1000) + ' g est.', '', 'estimate'],
+    ['Cargo connector', 'Servo latch + 4-pin smart-cargo contacts', 'Ø60', (A.id.added_mass_kg.cargo_connector * 1000) + ' g est.', '', 'estimate'],
+  ];
+  const tb = document.getElementById('parts');
+  PARTS.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td class="n">${p[2]}</td><td class="n">${p[3]}</td>` +
+      `<td>${p[4] ? `<a href="${p[4]}" target="_blank" rel="noopener">${p[5]}</a>` : `<small>${p[5]}</small>`}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('f-auw').textContent = R.auw_estimate_kg.toFixed(1) + ' kg';
+  document.getElementById('f-float').textContent = Math.round(R.pontoons.reserve_buoyancy * 100) + ' %';
+  [['Pontoons', `2 × ${R.pontoons.volume_l_each.toFixed(1)} L`], ['Draft', (R.pontoons.draft_m * 1000).toFixed(0) + ' mm'],
+   ['Props above water', (R.pontoons.prop_clearance_m * 1000).toFixed(0) + ' mm'], ['Hub above water', (R.pontoons.hub_clearance_m * 1000).toFixed(0) + ' mm'],
+   ['Battery', `${C.pack}, ${C.pack_kwh.toFixed(2)} kWh`], ['Structure', R.structure_kg.toFixed(2) + ' kg shell']]
+    .forEach(([k, v]) => document.getElementById('wstats').insertAdjacentHTML('beforeend', `<dt>${k}</dt><dd>${v}</dd>`));
+  document.getElementById('f-span').textContent = A.span_m.toFixed(2) + ' m';
+
+  const canvas = document.getElementById('c');
+  if (!window.THREE) return;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene();
+  const bgc = document.createElement('canvas'); bgc.width = 64; bgc.height = 512;
+  const bgx = bgc.getContext('2d'), grad = bgx.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0, '#07090a'); grad.addColorStop(0.55, '#1a1f22'); grad.addColorStop(0.8, '#3a4246'); grad.addColorStop(1, '#2a3033');
+  bgx.fillStyle = grad; bgx.fillRect(0, 0, 64, 512);
+  scene.background = new THREE.CanvasTexture(bgc); scene.background.encoding = THREE.sRGBEncoding;
+  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  const camera = new THREE.PerspectiveCamera(30, 16 / 11, 0.01, 60);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.minDistance = 0.5; controls.maxDistance = 7;
+  const key = new THREE.DirectionalLight(0xffffff, 1.3);
+  key.position.set(1.6, 3.2, 1.4); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+  Object.assign(key.shadow.camera, { left: -1.4, right: 1.4, top: 1.4, bottom: -1.4, near: 0.5, far: 8 });
+  key.shadow.radius = 4; key.shadow.bias = -0.0004; scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffe2cc, 0.6); rim.position.set(-2.5, 1.2, -2); scene.add(rim);
+
+  const ark = new THREE.Group(); ark.rotation.x = -Math.PI / 2; scene.add(ark); // x forward, y left, z up -> three.js y up
+  const M = {
+    shell: new THREE.MeshPhysicalMaterial({ color: 0xf1efe9, roughness: 0.28, clearcoat: 0.8, clearcoatRoughness: 0.15, transparent: true, opacity: 1 }),
+    pod: new THREE.MeshStandardMaterial({ color: 0x55595f, roughness: 0.3, metalness: 0.9 }),
+    carbon: new THREE.MeshPhysicalMaterial({ color: 0x121315, roughness: 0.32, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1, side: THREE.DoubleSide }),
+    batt: new THREE.MeshPhysicalMaterial({ color: 0x5d6268, roughness: 0.45, clearcoat: 0.4, transparent: true, opacity: 1 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0xc4c9cd, roughness: 0.28, metalness: 1 }),
+    anod: new THREE.MeshStandardMaterial({ color: 0x3b3f44, roughness: 0.35, metalness: 0.85 }),
+    orange: new THREE.MeshPhysicalMaterial({ color: 0xe8621c, roughness: 0.42, clearcoat: 0.5, clearcoatRoughness: 0.25 }),
+    yellow: new THREE.MeshPhysicalMaterial({ color: 0xf2b21b, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.4 }),
+    white: new THREE.MeshPhysicalMaterial({ color: 0xf4f3ef, roughness: 0.35, clearcoat: 0.5 }),
+    rubber: new THREE.MeshStandardMaterial({ color: 0x18191a, roughness: 0.9 }),
+    radome: new THREE.MeshStandardMaterial({ color: 0x1d2023, roughness: 0.75 }),
+    pcbG: new THREE.MeshStandardMaterial({ color: 0x1d5c3c, roughness: 0.6 }),
+    pcbB: new THREE.MeshStandardMaterial({ color: 0x17191b, roughness: 0.55 }),
+    cell: new THREE.MeshPhysicalMaterial({ color: 0x1e6f78, roughness: 0.35, clearcoat: 0.6 }),
+    nickel: new THREE.MeshStandardMaterial({ color: 0xb7bcbf, roughness: 0.3, metalness: 1 }),
+    red: new THREE.MeshStandardMaterial({ color: 0xb3261e, roughness: 0.5 }),
+    black: new THREE.MeshStandardMaterial({ color: 0x141516, roughness: 0.5 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xd4a53c, roughness: 0.3, metalness: 1 }),
+    navG: new THREE.MeshStandardMaterial({ color: 0x2bd45a, emissive: 0x1aa83f, emissiveIntensity: 1.2 }),
+  };
+  Object.values(M).forEach(m => { if (m.color) m.color.convertSRGBToLinear(); if (m.emissive) m.emissive.convertSRGBToLinear(); m.envMapIntensity = 0.55; });
+  M.shell.envMapIntensity = 0.8; M.steel.envMapIntensity = 1.0; M.carbon.envMapIntensity = 0.35;
+  const shadowed = o => { o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
+  const tag = (o, name, info) => { o.traverse(m => { if (m.isMesh) m.userData.part = { name, info }; }); return o; };
+  const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };
+  const cylZ = (r, h, mat, x, y, z, seg = 40) => { const m = mesh(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z); m.rotation.x = Math.PI / 2; return m; };
+  const box = (sx, sy, sz, mat, x, y, z, r = 0.0015) => mesh(new THREE.RoundedBoxGeometry(sx, sy, sz, 2, Math.min(r, sx / 2, sy / 2, sz / 2)), mat, x, y, z);
+
+  // ---- airframe from the model (uint16-quantised per part)
+  function b64(s) { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
+  function partGeo(p) {
+    const q = new Uint16Array(b64(p.v)), pos = new Float32Array(q.length);
+    for (let i = 0; i < q.length; i++) pos[i] = p.lo[i % 3] + (q[i] / 65535) * p.span[i % 3];
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(p.f32 ? new Uint32Array(b64(p.f)) : new Uint16Array(b64(p.f)), 1));
+    g.computeVertexNormals();
+    return g;
+  }
+  const props = [];
+  let body = null;
+  for (const [name, p] of Object.entries(A.parts)) {
+    let mat = M.shell, label = ['Airframe', 'Moulded composite shell with integrated arms and skids'];
+    if (name.startsWith('GEO_Propeller')) { mat = M.carbon; label = ['T-Motor G28×9.2 prop', 'Carbon, 711 mm'] ; }
+    else if (name.startsWith('GEO_Base')) { mat = M.pod; label = ['T-Motor MN801-S KV120', 'Ø89 × 39.4 mm, 470 g, 24N28P, IP45']; }
+    else if (name === 'Battery') { mat = M.batt; label = ['Battery ' + C.pack, `${12 * P} × Samsung 50S, ${C.pack_kwh.toFixed(2)} kWh, slides in from the rear`]; }
+    else if (name === 'Green_Light') { mat = M.navG; label = ['Status light', 'Arming and link state']; }
+    else if (name === 'Legs') { mat = M.rubber; label = ['Skid feet', 'Rubber pads']; }
+    const m = tag(shadowed(new THREE.Mesh(partGeo(p), mat)), ...label);
+    if (name === 'GEO_Main_Body') body = m;
+    if (name.startsWith('GEO_Propeller')) {
+      const c = new THREE.Vector3(); m.geometry.computeBoundingBox(); m.geometry.boundingBox.getCenter(c);
+      const hub = A.parts['GEO_Base' + name.slice(-3)];
+      const cx = hub ? hub.lo[0] + hub.span[0] / 2 : c.x, cy = hub ? hub.lo[1] + hub.span[1] / 2 : c.y;
+      m.geometry.translate(-cx, -cy, 0); m.position.set(cx, cy, 0);
+      m.userData.dir = (cx * cy > 0) ? -1 : 1; props.push(m);
+    }
+    ark.add(m);
+  }
+
+  // ---- markings projected onto the shell (decals)
+  function decalTexture(draw, w = 1024, h = 256) {
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+    const redraw = () => { const g = cv.getContext('2d'); g.clearRect(0, 0, w, h); draw(g); t.needsUpdate = true; };
+    redraw();
+    if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('700 150px "Barlow Condensed"'), document.fonts.load('500 34px "JetBrains Mono"')]).then(redraw, () => {});
+    return t;
+  }
+  const nameTex = decalTexture(g => {
+    g.fillStyle = '#2a2e31'; g.font = '700 160px "Barlow Condensed", "Arial Narrow", sans-serif'; g.fillText('ARK-1', 70, 165);
+    g.fillStyle = '#e8621c'; g.fillRect(74, 190, 560, 8);
+    g.fillStyle = '#7b8286'; g.font = '500 34px "JetBrains Mono", monospace'; g.fillText("NOAH'S ARK · AMPHIBIOUS", 74, 240);
+  });
+  const stripeTex = decalTexture(g => { g.fillStyle = '#e8621c'; g.fillRect(0, 60, 1024, 50); g.fillStyle = '#2a2e31'; g.fillRect(0, 140, 1024, 18); }, 1024, 256);
+  const decalMat = t => new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -4, depthWrite: false });
+  if (body && THREE.DecalGeometry) {
+    ark.updateMatrixWorld(true);
+    const down = new THREE.Raycaster();
+    const place = (x, y, rotZ, w, h, mat) => {
+      // find the top surface under (x, y) in the drone frame, then project a shallow decal straight down onto it
+      const from = ark.localToWorld(new THREE.Vector3(x, y, 0.5));
+      down.set(from, new THREE.Vector3(0, -1, 0));
+      const hit = down.intersectObject(body)[0];
+      if (!hit) return;
+      const e = new THREE.Euler(-Math.PI / 2, 0, rotZ, 'XYZ');
+      scene.add(new THREE.Mesh(new THREE.DecalGeometry(body, hit.point, e, new THREE.Vector3(w, h, 0.04)), mat));
+    };
+    place(0.09, 0.0, 0, 0.24, 0.06, decalMat(nameTex)); // forward of the GNSS mast
+    [[1, 1], [-1, 1], [-1, -1], [1, -1]].forEach(([sx, sy]) => place(sx * 0.21, sy * 0.21, Math.atan2(sy, sx) - Math.PI / 2, 0.11, 0.03, decalMat(stripeTex)));
+  }
+
+  // ---- GNSS mast, radar altimeter, cargo connector + pod
+  const top = R.mounts.hub_top_z_m, under = R.mounts.hub_bottom_z_m;
+  ark.add(tag(shadowed(cylZ(0.005, 0.07, M.carbon, -0.06, 0, top + 0.03)), 'GNSS mast', 'Carbon, lifts the antenna clear of the motors'));
+  const puck = new THREE.Group(); puck.position.set(-0.06, 0, top + 0.07);
+  puck.add(cylZ(0.025, 0.012, M.white, 0, 0, 0, 48), cylZ(0.021, 0.004, M.black, 0, 0, 0.007, 48));
+  ark.add(tag(shadowed(puck), 'Holybro M10 GPS', 'GNSS + compass'));
+  const rad = new THREE.Group(); rad.position.set(-0.11, 0, R.mounts.radar_z_m - 0.012);
+  rad.add(box(0.079, 0.108, 0.02, M.radome, 0, 0, 0, 0.004));
+  ark.add(tag(shadowed(rad), 'Ainstein US-D1 radar altimeter', '108 × 79 × 20 mm, 110 g; sees the water surface through rain'));
+  const conn = new THREE.Group(); conn.position.set(0.04, 0, under);
+  conn.add(cylZ(0.03, 0.014, M.anod, 0, 0, -0.007, 48), cylZ(0.032, 0.004, M.orange, 0, 0, -0.016, 48), cylZ(0.022, 0.012, M.black, 0, 0, -0.022, 40));
+  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; conn.add(cylZ(0.0018, 0.006, M.gold, Math.cos(a) * 0.012, Math.sin(a) * 0.012, -0.029, 10)); }
+  conn.add(box(0.008, 0.02, 0.012, M.steel, 0.0, 0, -0.033, 0.002));
+  ark.add(tag(shadowed(conn), 'Cargo connector', 'Servo latch + 4 pogo contacts for smart cargo (ID, sensors, release confirm)'));
+  const cargo = new THREE.Group(); cargo.position.set(0.04, 0, under - 0.04 - 0.05);
+  cargo.add(box(0.25, 0.16, 0.1, M.white, 0, 0, 0, 0.018));
+  cargo.add(box(0.03, 0.163, 0.103, M.orange, -0.07, 0, 0, 0.004), box(0.03, 0.163, 0.103, M.orange, 0.07, 0, 0, 0.004));
+  cargo.add(cylZ(0.02, 0.02, M.anod, 0, 0, 0.06, 32));
+  ark.add(tag(shadowed(cargo), 'Cargo pod, 2 kg', '250 × 160 × 100 mm; clips to the connector, released by the flight controller'));
+
+  // ---- inflatable pontoons: stowed packs on the skids, inflated tubes for a water landing
+  function capsuleGeo(r, len, seg = 48) {
+    const pts = [], half = len / 2 - r;
+    for (let i = 0; i <= 16; i++) { const a = -Math.PI / 2 + (i / 16) * Math.PI / 2; pts.push(new THREE.Vector2(Math.cos(a) * r, -half + Math.sin(a) * r)); }
+    for (let i = 0; i <= 16; i++) { const a = (i / 16) * Math.PI / 2; pts.push(new THREE.Vector2(Math.cos(a) * r, half + Math.sin(a) * r)); }
+    const g = new THREE.LatheGeometry(pts, seg); g.rotateZ(Math.PI / 2); return g; // axis along x
+  }
+  const W = R.pontoons, floats = [];
+  [1, -1].forEach(s => {
+    const y = s * W.skid_y_m;
+    const stowed = new THREE.Group(); stowed.position.set(0, y - s * 0.03, R.mounts.skid_bottom_z_m + 0.045);
+    stowed.add(mesh(capsuleGeo(PT.stowed_d_m / 2, PT.stowed_length_m), M.orange));
+    [-0.12, 0, 0.12].forEach(x => { const st = cylZ(PT.stowed_d_m / 2 + 0.002, 0.012, M.black, x, 0, 0, 32); st.rotation.set(0, Math.PI / 2, 0); stowed.add(st); });
+    const co2 = cylZ(0.011, 0.09, M.steel, 0.24, 0, 0.0, 24); co2.rotation.set(0, Math.PI / 2, 0); stowed.add(co2);
+    ark.add(tag(shadowed(stowed), 'Pontoon pack (stowed)', 'Folded tube + 60 g CO2 cartridge; the flight controller fires it before a water touchdown'));
+    const tube = new THREE.Group(); tube.position.set(0, y, W.tube_centre_z_m);
+    tube.add(mesh(capsuleGeo(PT.d_m / 2, PT.length_m), M.yellow));
+    [-0.2, 0, 0.2].forEach(x => { const sm = new THREE.Mesh(new THREE.TorusGeometry(PT.d_m / 2 + 0.001, 0.0025, 8, 64), M.orange); sm.position.x = x; sm.rotation.y = Math.PI / 2; tube.add(sm); });
+    tube.add(box(PT.length_m * 0.7, 0.02, 0.006, M.orange, 0, 0, PT.d_m / 2 - 0.002, 0.002));
+    tube.scale.setScalar(0.001); tube.visible = false;
+    ark.add(tag(shadowed(tube), 'Inflated pontoon', `${W.volume_l_each.toFixed(1)} L, Ø${PT.d_m * 1000} × ${PT.length_m * 1000} mm, TPU-coated nylon`));
+    floats.push({ stowed, tube });
+  });
+
+  // ---- internals (See inside): real electronics in the hub and the pack in the battery slot
+  const inside = new THREE.Group(); inside.visible = false; ark.add(inside);
+  const bp = A.parts.Battery, bc = [bp.lo[0] + bp.span[0] / 2, bp.lo[1] + bp.span[1] / 2, bp.lo[2] + bp.span[2] / 2];
+  const cellGeo = new THREE.CylinderGeometry(0.0107, 0.0107, 0.0705, 18); cellGeo.rotateX(Math.PI / 2);
+  const grid = R.battery.grid, n = 12 * P, cells = new THREE.InstancedMesh(cellGeo, M.cell, n), dm = new THREE.Object3D();
+  for (let k = 0; k < n; k++) { const i = k % grid[0], j = Math.floor(k / grid[0]); dm.position.set(bc[0] + (i - (grid[0] - 1) / 2) * 0.0214, bc[1] + (j - (grid[1] - 1) / 2) * 0.0214, bc[2]); dm.updateMatrix(); cells.setMatrixAt(k, dm.matrix); }
+  inside.add(tag(cells, 'Battery cells', `${n} × Samsung INR21700-50S in a ${grid[0]} × ${grid[1]} grid`));
+  const deck = under + 0.06;
+  inside.add(tag(box(0.3, 0.2, 0.002, M.pcbB, 0.02, 0, deck, 0.004), 'Avionics tray', 'Carbon deck on rubber isolators'));
+  const fc = new THREE.Group(); fc.position.set(0.0, 0, deck + 0.0095);
+  fc.add(box(0.1034, 0.0524, 0.0167, M.pcbB, 0, 0, 0, 0.003), box(0.0388, 0.0318, 0.0146, M.steel, -0.012, 0, 0.0155, 0.002));
+  inside.add(tag(fc, 'Holybro Pixhawk 6X', '103.4 × 52.4 × 16.7 mm baseboard; 38.8 × 31.8 × 14.6 mm module'));
+  const jet = new THREE.Group(); jet.position.set(0.11, 0, deck + 0.002);
+  jet.add(box(0.1, 0.079, 0.0016, M.pcbG, 0, 0, 0), box(0.0696, 0.045, 0.004, M.pcbG, 0, 0, 0.004, 0.0005));
+  for (let k = 0; k < 13; k++) jet.add(box(0.0024, 0.045, 0.012, M.anod, -0.03 + k * 0.005, 0, 0.012, 0.0004));
+  inside.add(tag(jet, 'NVIDIA Jetson Orin Nano', 'Module 69.6 × 45 mm on a 100 × 79 mm carrier'));
+  [[1, 1], [-1, 1], [-1, -1], [1, -1]].forEach(([sx, sy]) => {
+    const e = new THREE.Group(); e.position.set(sx * 0.2, sy * 0.2, -0.075); e.rotation.z = Math.atan2(sy, sx);
+    e.add(box(0.0885, 0.0366, 0.019, M.pcbB, 0, 0, 0, 0.003));
+    inside.add(tag(e, 'T-Motor ALPHA 80A 12S ESC', '88.5 × 36.6 × 19 mm, 110 g, in the arm root'));
+  });
+  inside.add(tag(box(0.045, 0.045, 0.015, M.pcbG, -0.05, 0.07, top - 0.03, 0.002), 'RockBLOCK 9603', 'Iridium satellite modem, patch antenna up'));
+  inside.add(tag(box(0.057, 0.03, 0.013, M.anod, -0.07, -0.07, deck + 0.008, 0.002), 'RFD900x telemetry radio', '900 MHz link'));
+  inside.add(tag(box(0.051, 0.03, 0.004, M.pcbG, 0.11, 0.0, deck + 0.03, 0.0008), 'LTE modem (mPCIe)', '4G link to AWS IoT Core'));
+
+  // ---- ground and water
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.ShadowMaterial({ opacity: 0.45 }));
+  ground.position.z = R.mounts.skid_bottom_z_m - 0.021; ground.receiveShadow = true; ark.add(ground);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(3.5, 96), new THREE.MeshPhysicalMaterial({ color: 0x1f5f63, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.8, clearcoat: 1 }));
+  water.material.color.convertSRGBToLinear(); water.material.envMapIntensity = 0.9;
+  water.position.z = W.waterline_z_m; water.visible = false; water.receiveShadow = true; ark.add(water);
+
+  // ---- views, toggles, hover
+  const views = { hero: [1.45, 0.75, 1.65], side: [0, 0.05, 2.5], top: [0.001, 2.7, 0.001], under: [1.15, -1.0, 1.3] };
+  function setView(k) {
+    camera.position.set(...views[k]); controls.target.set(0, k === 'top' ? -0.1 : -0.18, 0); controls.update();
+    Object.keys(views).forEach(v => document.getElementById('v-' + v).setAttribute('aria-pressed', String(v === k)));
+  }
+  Object.keys(views).forEach(k => document.getElementById('v-' + k).addEventListener('click', () => setView(k)));
+  const btn = id => document.getElementById(id);
+  const isOn = id => btn(id).getAttribute('aria-pressed') === 'true';
+  const set = (id, on) => btn(id).setAttribute('aria-pressed', String(on));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let inflate = 0, inflateTarget = 0;
+  function setFloat(on) { set('t-float', on); inflateTarget = on ? 1 : 0; if (reduce) inflate = inflateTarget; }
+  btn('t-float').addEventListener('click', () => { setFloat(!isOn('t-float')); if (!isOn('t-float') && isOn('t-water')) { set('t-water', false); water.visible = false; ground.visible = true; } });
+  btn('t-water').addEventListener('click', () => {
+    const on = !isOn('t-water'); set('t-water', on); water.visible = on; ground.visible = !on; if (on) { setFloat(true); set('t-cargo', false); cargo.visible = false; }
+  });
+  btn('t-cargo').addEventListener('click', () => { const on = !isOn('t-cargo'); set('t-cargo', on); cargo.visible = on; });
+  btn('t-xray').addEventListener('click', () => {
+    const on = !isOn('t-xray'); set('t-xray', on); inside.visible = on;
+    [M.shell, M.batt].forEach(m => { m.opacity = on ? 0.18 : 1; m.depthWrite = !on; });
+  });
+  let spin = false; btn('t-spin').addEventListener('click', () => { spin = !isOn('t-spin'); set('t-spin', spin); });
+  setView('hero');
+  function fromHash() {
+    const h = location.hash.slice(1);
+    if (views[h]) setView(h);
+    const map = { inside: 't-xray', water: 't-water', floats: 't-float' };
+    if (map[h] && !isOn(map[h])) btn(map[h]).click();
+    if (h === 'water' || h === 'floats') inflate = 1;
+  }
+  fromHash(); window.addEventListener('hashchange', fromHash);
+
+  const tip = document.getElementById('tip'), ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  canvas.addEventListener('pointermove', ev => {
+    const r = canvas.getBoundingClientRect();
+    ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ptr, camera);
+    const hit = ray.intersectObjects(ark.children, true).find(h => h.object.userData.part && h.object.visible && h.object.parent.visible && !(h.object.material && h.object.material.opacity < 0.5));
+    if (!hit) { tip.hidden = true; return; }
+    const p = hit.object.userData.part;
+    tip.innerHTML = `<b>${p.name}</b>${p.info}`;
+    tip.style.left = (ev.clientX - r.left) + 'px'; tip.style.top = (ev.clientY - r.top) + 'px'; tip.hidden = false;
+  });
+  canvas.addEventListener('pointerleave', () => { tip.hidden = true; });
+
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio();
+    if (canvas.width !== Math.floor(w * pr) || canvas.height !== Math.floor(h * pr)) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  }
+  function frame() {
+    resize();
+    inflate += (inflateTarget - inflate) * 0.08;
+    if (Math.abs(inflate - inflateTarget) < 0.002) inflate = inflateTarget;
+    floats.forEach(f => {
+      const k = Math.max(inflate, 0.001);
+      f.tube.visible = inflate > 0.01; f.tube.scale.set(0.35 + 0.65 * k, k, k); f.stowed.visible = inflate < 0.5;
+    });
+    if (spin && !reduce) props.forEach(p => { p.rotation.z += 0.35 * p.userData.dir; });
+    controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>

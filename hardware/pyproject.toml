@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
-pythonpath = ["sizing", "mechanical", "electronics/spice"]
-testpaths = ["sizing/tests", "mechanical/tests", "electronics/spice/tests"]
+pythonpath = ["sizing", "mechanical", "electronics/spice", "industrial-design"]
+testpaths = ["sizing/tests", "mechanical/tests", "electronics/spice/tests", "industrial-design/tests"]
 
 [tool.ruff]
 line-length = 120

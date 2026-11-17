@@ -97,6 +97,22 @@
         "max_thrust_kg": 13.0,
         "fm": 0.66,
         "eta_drive": 0.8
+      },
+      {
+        "name": "T-Motor MN801-S KV120 + G28x9.2",
+        "real": true,
+        "prop_in": 28,
+        "motor_kg": 0.47,
+        "prop_kg": 0.06,
+        "esc_kg": 0.11,
+        "max_thrust_kg": 10.47,
+        "fm": 0.78,
+        "eta_drive": 0.85,
+        "source": "store.tmotor.com MN801-S KV120 test data (G28x9.2, 48 V): 3724 g at 337 W -> FM x eta = 0.66 at hover. ESC T-Motor ALPHA 80A 12S (110 g, 88.5x36.6x19 mm). Prop mass not published: estimate.",
+        "motor_size_m": [
+          0.089,
+          0.0394
+        ]
       }
     ],
     "series_cells": 12,
@@ -124,15 +140,15 @@
     ]
   },
   "electrical": {
-    "note": "Inputs for electronics/spice/run_spice.py (chosen config only). Class estimates for an 8108-class 120 KV motor and 26 in prop until a datasheet is picked.",
+    "note": "Inputs for electronics/spice/run_spice.py (chosen config only). Motor: T-Motor MN801-S KV120 datasheet (80 mOhm line-to-line, 24N28P, 1.1 A idle at 18 V). prop_ct fitted to T-Motor's G28x9.2 test point 3724 g at 2174 rpm (0 C air, rho 1.29).",
     "motor": {
       "kv": 120,
       "pole_pairs": 14,
-      "rph_ohm": 0.05,
+      "rph_ohm": 0.04,
       "lph_h": 4e-05,
-      "i0_a": 0.6
+      "i0_a": 1.1
     },
-    "prop_ct": 0.08,
+    "prop_ct": 0.084,
     "cell": {
       "r0_ohm": 0.018,
       "r1_ohm": 0.012,
@@ -159,9 +175,9 @@
     }
   },
   "chosen": {
-    "propulsion": "8108-class 120KV + 26x8.5 in",
+    "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
     "cell": "21700 5.0 Ah high-energy (50S-class)",
-    "pack": "12S6P",
+    "pack": "12S4P",
     "feasible": true,
     "checks": {
       "energy": true,
@@ -170,172 +186,172 @@
       "prop_clearance": true,
       "stability": true
     },
-    "energy_margin": 1.0052,
+    "energy_margin": 1.0352,
     "mass_kg": {
-      "all_up": 13.8969,
+      "all_up": 12.573,
       "payload": 2.0,
-      "pack": 5.7132,
-      "power_set": 2.16,
-      "arms": 0.7595,
-      "hull_shell": 1.2442,
+      "pack": 3.8088,
+      "power_set": 2.56,
+      "arms": 1.0203,
+      "hull_shell": 1.1639,
       "fixed": 2.02
     },
     "geometry_m": {
-      "prop_d": 0.6604,
-      "arm_radius": 0.5137,
-      "span_tip_to_tip": 1.6877,
-      "hull_length": 0.5745,
-      "hull_width": 0.4021,
-      "hull_height": 0.2298,
-      "hull_volume_l": 27.7937,
-      "cda_m2": 0.0841,
-      "cda_out_m2": 0.1001
+      "prop_d": 0.7112,
+      "arm_radius": 0.5532,
+      "span_tip_to_tip": 1.8176,
+      "hull_length": 0.5556,
+      "hull_width": 0.3889,
+      "hull_height": 0.2222,
+      "hull_volume_l": 25.146,
+      "cda_m2": 0.0863,
+      "cda_out_m2": 0.1023
     },
     "power_w": {
-      "hover_loaded": 1690.9042,
-      "hover_empty": 1339.3453,
-      "cruise_out": 1590.4063,
-      "cruise_back": 1265.2681,
-      "peak_at_twr_min": 4782.5993
+      "hover_loaded": 1076.0601,
+      "hover_empty": 829.8035,
+      "cruise_out": 886.555,
+      "cruise_back": 690.4364,
+      "peak_at_twr_min": 3043.5575
     },
     "cruise_speed_mps": {
-      "out": 20.0,
-      "back": 20.0
+      "out": 17.0,
+      "back": 17.0
     },
     "energy_wh": {
-      "pack": 1296.0,
-      "usable": 1166.4,
-      "mission": 928.2922,
-      "needed_with_reserve": 1160.3653
+      "pack": 864.0,
+      "usable": 777.6,
+      "mission": 600.9241,
+      "needed_with_reserve": 751.1551
     },
-    "pack_peak_current_a": 110.7083,
-    "thrust_to_weight": 3.0223,
-    "flight_time_min": 38.3333,
+    "pack_peak_current_a": 70.4527,
+    "thrust_to_weight": 3.331,
+    "flight_time_min": 44.2157,
     "float_loaded": {
-      "draft_m": 0.1149,
-      "kg_m": 0.1044,
-      "gm_m": 0.0993,
+      "draft_m": 0.1111,
+      "kg_m": 0.1158,
+      "gm_m": 0.0813,
       "prop_clearance_m": 0.26
     },
     "arm_tube": {
-      "tube_mm": "38x1",
+      "tube_mm": "38x1.5",
       "od_m": 0.038,
-      "kg_per_m": 0.2139,
-      "mode_hz": 95.7257,
-      "sf": 21.739,
+      "kg_per_m": 0.3165,
+      "mode_hz": 82.816,
+      "sf": 26.9044,
       "hover_deflection_m": 0.0002,
-      "free_length_m": 0.2807,
+      "free_length_m": 0.3279,
       "rotor_1p_band_hz": [
-        24.857065086382555,
-        91.66895530327847
+        20.386425458881263,
+        78.92809240045646
       ]
     },
     "layout_z_m": {
-      "battery_z_m": 0.0693,
+      "battery_z_m": 0.0653,
       "payload_z_m": -0.06,
-      "fixed_z_m": 0.0671,
+      "fixed_z_m": 0.0666,
       "skid_bottom_z_m": -0.14
     },
     "hull_grown_for_fit": false
   },
   "runners_up": [
     {
-      "propulsion": "7010-class 150KV + 24x8 in",
+      "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
       "cell": "21700 5.0 Ah high-energy (50S-class)",
-      "pack": "12S7P",
-      "energy_margin": 1.0408,
-      "all_up_kg": 14.4631
+      "pack": "12S5P",
+      "energy_margin": 1.1798,
+      "all_up_kg": 13.5869
+    },
+    {
+      "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
+      "cell": "21700 4.5 Ah high-power (P45B-class)",
+      "pack": "12S5P",
+      "energy_margin": 1.0551,
+      "all_up_kg": 13.6604
     },
     {
       "propulsion": "8108-class 120KV + 26x8.5 in",
       "cell": "21700 5.0 Ah high-energy (50S-class)",
-      "pack": "12S7P",
-      "energy_margin": 1.0769,
-      "all_up_kg": 14.9088
+      "pack": "12S6P",
+      "energy_margin": 1.0052,
+      "all_up_kg": 13.8969
     },
     {
-      "propulsion": "7010-class 150KV + 24x8 in",
+      "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
       "cell": "21700 5.0 Ah high-energy (50S-class)",
-      "pack": "12S8P",
-      "energy_margin": 1.0889,
-      "all_up_kg": 15.4741
-    },
-    {
-      "propulsion": "8318-class 100KV + 28x9.2 in",
-      "cell": "21700 5.0 Ah high-energy (50S-class)",
-      "pack": "12S7P",
-      "energy_margin": 1.0697,
-      "all_up_kg": 15.695
+      "pack": "12S6P",
+      "energy_margin": 1.3144,
+      "all_up_kg": 14.3971
     }
   ],
   "power_chain": {
     "hover": {
-      "thrust_n": 34.0821,
-      "rpm": 2636.4929,
-      "wm_rad_s": 276.0929,
+      "thrust_n": 30.8353,
+      "rpm": 2110.1974,
+      "wm_rad_s": 220.9794,
       "ke_v_s_rad": 0.0796,
-      "p_shaft_w": 338.182,
-      "p_target_w": 351.3645,
-      "eta_drive_assumed": 0.8
+      "p_shaft_w": 228.6634,
+      "p_target_w": 248.0069,
+      "eta_drive_assumed": 0.85
     },
     "esc_hover_low_pack": {
-      "vbus_v": 39.8343,
-      "duty": 0.6487,
-      "p_mech_w": 351.2597,
-      "p_in_w": 381.5954,
-      "ibus_a": 9.5796,
-      "iph_rms_a": 13.361,
-      "efficiency": 0.8862,
+      "vbus_v": 39.9553,
+      "duty": 0.5099,
+      "p_mech_w": 247.6447,
+      "p_in_w": 266.0536,
+      "ibus_a": 6.6588,
+      "iph_rms_a": 11.9225,
+      "efficiency": 0.8595,
       "sweep": [
         {
-          "duty": 0.5516,
-          "p_mech_w": 56.6562
+          "duty": 0.4401,
+          "p_mech_w": 38.4447
         },
         {
-          "duty": 0.5716,
-          "p_mech_w": 116.2188
+          "duty": 0.4601,
+          "p_mech_w": 97.3579
         },
         {
-          "duty": 0.5916,
-          "p_mech_w": 176.8138
+          "duty": 0.4801,
+          "p_mech_w": 156.5328
         },
         {
-          "duty": 0.6116,
-          "p_mech_w": 236.633
+          "duty": 0.5001,
+          "p_mech_w": 217.618
         },
         {
-          "duty": 0.6316,
-          "p_mech_w": 298.3332
+          "duty": 0.5201,
+          "p_mech_w": 279.3492
         },
         {
-          "duty": 0.6516,
-          "p_mech_w": 360.2876
+          "duty": 0.5401,
+          "p_mech_w": 342.4531
         }
       ]
     },
     "bus": {
       "full": {
-        "vavg_hover": 47.4326,
-        "vmin_hover": 47.3065,
-        "vmin_peak": 44.7166,
-        "vavg_peak": 44.8181,
-        "ipack_hover": 31.8774,
-        "ipack_peak": 97.2356,
-        "icap_rms_peak": 2.7308,
+        "vavg_hover": 47.5071,
+        "vmin_hover": 47.4405,
+        "vmin_peak": 45.1397,
+        "vavg_peak": 45.2023,
+        "ipack_hover": 22.5729,
+        "ipack_peak": 62.3084,
+        "icap_rms_peak": 1.7367,
         "vocv": 49.8,
-        "vcell_min_peak": 3.7264,
+        "vcell_min_peak": 3.7616,
         "cutoff_load_v": 2.8
       },
       "low": {
-        "vavg_hover": 38.7687,
-        "vmin_hover": 38.6814,
-        "vmin_peak": 35.4977,
-        "vavg_peak": 35.6232,
-        "ipack_hover": 38.3267,
-        "ipack_peak": 116.9618,
-        "icap_rms_peak": 3.2785,
+        "vavg_hover": 38.8319,
+        "vmin_hover": 38.7997,
+        "vmin_peak": 35.9763,
+        "vavg_peak": 36.0594,
+        "ipack_hover": 27.1655,
+        "ipack_peak": 74.9664,
+        "icap_rms_peak": 2.0869,
         "vocv": 41.4,
-        "vcell_min_peak": 2.9581,
+        "vcell_min_peak": 2.998,
         "cutoff_load_v": 2.8
       }
     },
@@ -568,16 +584,16 @@
   },
   "mechanical_design": {
     "arms": {
-      "tube_mm": "38x1",
+      "tube_mm": "38x1.5",
       "od_m": 0.038,
-      "kg_per_m": 0.2139,
-      "mode_hz": 95.7079,
-      "sf": 21.7363,
+      "kg_per_m": 0.3165,
+      "mode_hz": 82.8051,
+      "sf": 26.9021,
       "hover_deflection_m": 0.0002,
-      "free_length_m": 0.2808,
+      "free_length_m": 0.3279,
       "rotor_1p_band_hz": [
-        24.8571,
-        91.669
+        20.3864,
+        78.9281
       ]
     },
     "packaging": {
@@ -586,16 +602,16 @@
           "name": "battery",
           "size_m": [
             0.2648,
-            0.1364,
+            0.0936,
             0.0785
           ],
           "centre_m": [
             0.0,
             0.0,
-            0.0693
+            0.0653
           ],
           "mass": "pack",
-          "kg": 5.7132
+          "kg": 3.8088
         },
         {
           "name": "PDB + bulk capacitors",
@@ -607,7 +623,7 @@
           "centre_m": [
             0.0,
             0.0,
-            0.1235
+            0.1195
           ],
           "mass": "wiring_pdb_connectors",
           "kg": 0.35
@@ -622,7 +638,7 @@
           "centre_m": [
             0.0,
             0.0,
-            0.1535
+            0.1495
           ],
           "mass": "flight_controller_gps",
           "kg": 0.15
@@ -637,7 +653,7 @@
           "centre_m": [
             0.19,
             0.0,
-            0.083
+            0.087
           ],
           "mass": "perception_radar_lidar_camera",
           "kg": 0.3
@@ -652,7 +668,7 @@
           "centre_m": [
             -0.19,
             0.0,
-            0.086
+            0.09
           ],
           "mass": "companion_computer",
           "kg": 0.2
@@ -667,24 +683,24 @@
           "centre_m": [
             -0.08,
             0.1,
-            0.067
+            0.069
           ],
           "mass": "comms_lte_lora_sat",
           "kg": 0.12
         }
       ],
-      "battery_z_m": 0.0693,
+      "battery_z_m": 0.0653,
       "payload_z_m": -0.06,
-      "fixed_z_m": 0.0671,
+      "fixed_z_m": 0.0666,
       "skid_bottom_z_m": -0.14
     },
     "seals": {
-      "oring_length_m": 1.4962,
+      "oring_length_m": 1.4453,
       "gland_depth_mm": 2.6475,
       "gland_width_mm": 4.9288,
       "squeeze": 0.25,
       "fill": 0.75,
-      "clamp_force_n": 6149.8985,
+      "clamp_force_n": 5886.3343,
       "bolts": 25,
       "glands": [
         {
@@ -714,5 +730,112 @@
       "release_sf": 20.8121,
       "ok": true
     }
+  },
+  "industrial_design": {
+    "note": "Ark-1 body from the user's drone model (industrial-design/drone-model/Drone.obj, 3ds Max, cm). ark_from_model.py scales it to Ark's arm radius, removes the gimbal, and checks the battery fit, structure mass and inflatable pontoons.",
+    "model": "industrial-design/drone-model/Drone.obj",
+    "skid_z_below_m": -0.5,
+    "pontoon": {
+      "d_m": 0.18,
+      "length_m": 0.66,
+      "below_skid_m": 0.0,
+      "stowed_d_m": 0.05,
+      "stowed_length_m": 0.42,
+      "inflation": "2 x 60 g CO2 cartridges, fired by the flight controller before a water touchdown"
+    },
+    "added_mass_kg": {
+      "inflatable_pontoon_kit": 0.65,
+      "cargo_connector": 0.12,
+      "radar_altimeter_us_d1": 0.11,
+      "gnss_mast": 0.05
+    },
+    "mass_note": "Kit and connector masses are estimates. AUW = sizing's AUW minus its old hull shell and arms, plus this body's shell and the added parts.",
+    "result": {
+      "scale": 0.77915,
+      "removed_parts": [
+        "GEO_Camera_Part_011",
+        "GEO_Camera_Part_012",
+        "GEO_Camera_Part_013",
+        "GEO_Camera_Part_014",
+        "GEO_Camera_Part_015",
+        "GEO_Camera_Part_016",
+        "GEO_Camera_Part_017",
+        "GEO_Camera_Part_018",
+        "GEO_Camera_Part_019",
+        "GEO_Camera_Part_020",
+        "GEO_Computer",
+        "GEO_Lathe_01",
+        "GEO_Lathe_02",
+        "GEO_Lathe_03",
+        "GEO_Lathe_04",
+        "GEO_Lens_01",
+        "GEO_Lens_02",
+        "GEO_Support_01",
+        "GEO_Support_02",
+        "GEO_Wires_01",
+        "GEO_Wires_02",
+        "GEO_Wires_03",
+        "GEO_Wires_04",
+        "GEO_Wires_05"
+      ],
+      "kept_parts": [
+        "Battery",
+        "GEO_Base_01",
+        "GEO_Base_02",
+        "GEO_Base_03",
+        "GEO_Base_04",
+        "GEO_Main_Body",
+        "GEO_Propeller_01",
+        "GEO_Propeller_02",
+        "GEO_Propeller_03",
+        "GEO_Propeller_04",
+        "Green_Light",
+        "Legs"
+      ],
+      "triangles": 238400,
+      "body_area_m2": 1.6187,
+      "structure_kg": 2.428,
+      "auw_estimate_kg": 13.747,
+      "battery": {
+        "pack": "12S4P",
+        "grid": [
+          7,
+          7
+        ],
+        "pack_size_m": [
+          0.1578,
+          0.1578,
+          0.0785
+        ],
+        "slot_size_m": [
+          0.1502,
+          0.1666,
+          0.1088
+        ],
+        "housing_stretch_m": [
+          0.0076,
+          0.0,
+          0.0
+        ]
+      },
+      "pontoons": {
+        "volume_l_each": 15.27,
+        "reserve_buoyancy": 1.221,
+        "draft_m": 0.0832,
+        "waterline_z_m": -0.4968,
+        "prop_clearance_m": 0.433,
+        "hub_clearance_m": 0.2574,
+        "skid_y_m": 0.2809,
+        "tube_centre_z_m": -0.49
+      },
+      "mounts": {
+        "hub_bottom_z_m": -0.2394,
+        "hub_top_z_m": 0.0258,
+        "radar_z_m": -0.2394,
+        "skid_bottom_z_m": -0.58
+      }
+    },
+    "shell_wall_m": 0.002,
+    "shell_density": 1500
   }
 }

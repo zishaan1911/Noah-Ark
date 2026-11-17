@@ -19,3 +19,9 @@ ml/datasets/raw/
 .pytest_cache/
 .ruff_cache/
 hardware/electronics/spice/build/
+!.env.example
+hardware/generative/out/ark_viewer.html
+hardware/generative/out/run.log
+hardware/industrial-design/out/
+hardware/industrial-design/drone-model/drone.npz
+hardware/generative/
