@@ -13,6 +13,7 @@ These project skills live in `.claude/skills/` and are **mandatory**, not option
 | `ponytail-review` / `ponytail-audit` | Before every PR (review the diff) and before submission (audit the repo) |
 | `ponytail-debt` | Before submission: list every `shortcut:` comment |
 | `parallel-sonnet` | Any task that splits into 2+ independent, file-disjoint pieces: fan out to Sonnet/Haiku agents, then review, test and commit |
+| `drone-design` | Any drone hardware work in `hardware/`: sizing, airframe, power chain, harness, subsystems, viewer |
 | `apple-design` | Any UI work: Ark Command, Ark Care, Ark SOS, PartyRock app UX, landing pages |
 
 ## Product rules
