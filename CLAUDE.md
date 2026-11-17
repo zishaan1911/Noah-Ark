@@ -18,7 +18,7 @@ These project skills live in `.claude/skills/` and are **mandatory**, not option
 ## Product rules
 - Keep all three use cases: **GDEX jungle last-mile**, **disaster relief**, **defence logistics**. Each mission carries a `mode`: `gdex | relief | military`.
 - AWS **Bedrock** and **PartyRock** must be used in the solution.
-- **The Ark drone will be physically built.** Design and simulate first, then build. Design inspiration: `../slipstream` (Gannet SX-01: machined unibody sized from the electronics, SPICE-modelled power chain, harness netlist, ArduPilot params + Lua, Blender renders).
+- **Hardware is design + simulation only; no physical build.** Design it to a buildable level of detail. Design inspiration: `../slipstream` (Gannet SX-01: machined unibody sized from the electronics, SPICE-modelled power chain, harness netlist, ArduPilot params + Lua, Blender renders).
 
 ## Components
 | Name | What it is | Folder | Stack |

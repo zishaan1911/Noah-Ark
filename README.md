@@ -39,4 +39,4 @@ Bedrock (+ Agents, Knowledge Bases), PartyRock, IoT Core, IoT Greengrass, Locati
 Step Functions, DynamoDB, Timestream, SageMaker, Transcribe, Translate, Rekognition, SNS, Amplify, S3.
 
 ## Scope
-Electronics are **designed** and the drone is **simulated**, then **physically built**.
+Electronics are **designed** and the drone is **simulated**. No physical build.
