@@ -57,7 +57,16 @@ def main() -> int:
         p.stem: "data:image/png;base64," + base64.b64encode(p.read_bytes()).decode()
         for p in sorted((HERE / "livery").glob("*.png"))
     }
+    # optional inputs owned by the electronics and pontoon work: part models (glTF binary), harness netlist, pontoon system
+    models = {p.stem: base64.b64encode(p.read_bytes()).decode() for p in sorted((HERE / "parts").glob("*.glb"))}
+    extra = {
+        k: json.loads((HERE / f).read_text(encoding="utf-8"))
+        for k, f in (("harness", "harness.json"), ("pontoon_system", "pontoon_system.json"))
+        if (HERE / f).exists()
+    }
     data = {
+        "models": models,
+        **extra,
         "livery": livery,
         "span_m": round(float(np.hypot(props[:, 0], props[:, 1]).max()) * 2, 3),
         "parts": parts,
@@ -76,8 +85,11 @@ def main() -> int:
         },
     }
     html = (HERE / "viewer_template.html").read_text(encoding="utf-8")
-    if "__ARK_DATA__" not in html:
-        raise ValueError("template has no __ARK_DATA__ placeholder")
+    if "__ARK_DATA__" not in html or "/*__MODULES__*/" not in html:
+        raise ValueError("template needs the __ARK_DATA__ and /*__MODULES__*/ placeholders")
+    # viewer/NN_*.js run inside the page's one function scope, in file-name order (they share its variables)
+    modules = "\n".join(p.read_text(encoding="utf-8") for p in sorted((HERE / "viewer").glob("*.js")))
+    html = html.replace("/*__MODULES__*/", modules)
     out = OUT / "ark_viewer.html"
     out.write_text(html.replace("__ARK_DATA__", json.dumps(data)), encoding="utf-8")
     print(f"Wrote {out} ({out.stat().st_size / 1e6:.1f} MB)")
