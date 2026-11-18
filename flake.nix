@@ -30,7 +30,7 @@
         default = pkgs.mkShell {
           packages = with pkgs; [
             # shortcut: datamodel-code-generator stays on pip (shared/ pins 0.97, nixpkgs has 0.71), package it if codegen runs often
-            (python312.withPackages (p: with p; [ numpy scipy trimesh pymavlink lupa pytest jsonschema pyyaml pydantic ]))
+            (python312.withPackages (p: with p; [ numpy scipy trimesh pymavlink lupa pytest jsonschema pyyaml pydantic boto3 ]))
             ruff
             nodejs_22
             awscli2
