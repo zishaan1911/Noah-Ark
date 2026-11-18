@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Map as MapLibreMap, Marker, type GeoJSONSource } from 'maplibre-gl';
 import { PAPAR } from '../lib/config';
+import { poseKey } from '../lib/geo';
 import {
   BASE_STYLE_URL,
   EMPTY_FC,
@@ -47,6 +48,7 @@ export function MiniMap({ route, track, getPose, theme }: Props) {
       center: [PAPAR.lon, PAPAR.lat],
       zoom: ZOOM,
       interactive: false,
+      pixelRatio: 1, // a small flat overview: HiDPI pixels buy nothing here
       attributionControl: false,
     });
     mapRef.current = map;
@@ -89,16 +91,23 @@ export function MiniMap({ route, track, getPose, theme }: Props) {
     src?.setData(track.length > 1 ? lineFeature(track) : EMPTY_FC);
   }, [ready, track]);
 
-  // Follow the drone every frame.
+  // Follow the drone at ~10 Hz, and only when it has moved: at zoom 13 a 60 fps follow looks the same.
   useEffect(() => {
     const map = mapRef.current;
     const dot = dotRef.current;
     if (!ready || !map || !dot) return;
     let raf = 0;
-    const tick = () => {
+    let lastAt = 0;
+    let lastKey = '';
+    const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
+      if (now - lastAt < 100) return;
+      lastAt = now;
       const pose = getPose();
       if (!pose) return;
+      const key = poseKey(pose);
+      if (key === lastKey) return;
+      lastKey = key;
       dot.setLngLat([pose.lon, pose.lat]).setRotation(pose.headingDeg);
       map.jumpTo({ center: [pose.lon, pose.lat] });
     };

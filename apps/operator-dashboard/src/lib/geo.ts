@@ -59,4 +59,15 @@ export function parseLatLon(text: string): Point | null {
   return { lat, lon };
 }
 
+/** Identity of a pose for "has anything moved?" checks: ~1 cm, 0.1 degree. Lets render loops skip idle frames. */
+export const poseKey = (p: {
+  lat: number;
+  lon: number;
+  altAmslM: number;
+  headingDeg: number;
+  pitchDeg: number;
+  rollDeg: number;
+}) =>
+  `${p.lat.toFixed(7)},${p.lon.toFixed(7)},${p.altAmslM.toFixed(2)},${p.headingDeg.toFixed(1)},${p.pitchDeg.toFixed(1)},${p.rollDeg.toFixed(1)}`;
+
 export const formatLatLon = (p: Point) => `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
