@@ -1,4 +1,6 @@
 numpy>=2.0
+paho-mqtt>=2.1
+pillow>=10
 pymavlink>=2.4.41
 pytest>=8
 ruff>=0.6

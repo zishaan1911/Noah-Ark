@@ -25,6 +25,7 @@ hardware/generative/out/run.log
 hardware/industrial-design/out/
 hardware/industrial-design/drone-model/drone.npz
 hardware/generative/
+simulation/.cache/
 
 # nix + direnv
 .direnv/

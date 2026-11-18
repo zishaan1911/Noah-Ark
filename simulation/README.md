@@ -42,6 +42,15 @@ docker run --rm -v "$PWD:/repo" -w /repo/simulation noah-ark-sitl python -m ark_
 Each scenario takes about 1-2 min. SITL runs in lockstep with the physics (1200 Hz), as fast as Python allows.
 Then rebuild the viewer: `python hardware/industrial-design/build_viewer.py`.
 
+## Live mode
+`python -m ark_sim.live --broker broker:1883 --drone ARK-006 [--lat 5.7346 --lon 115.9302] [--speedup 1]` keeps one
+SITL running for Ark Command. It spawns at the given point (default Papar, Sabah) and respawns on MQTT
+`sim/<drone>/spawn {"lat","lon"}`, refused while the drone is armed. The ground is real AWS Terrain Tiles
+(`ark_sim/terrain.py`, cached in `.cache/terrain/`) and the wind is the current Open-Meteo wind. SITL boots with
+`params/ark1-live.parm` layered on `ark1-sitl.parm` (400 Hz, 17 m/s cruise, arm in AUTO, RTL at 60 m) and blocks until
+a gateway connects to `tcp:<sim>:5760`. Progress is the retained `sim/<drone>/status`; the real-time factor prints
+every 10 s. Rivers and lakes are not water on real terrain (`shortcut:` in `physics.py`).
+
 ## Test
 ```bash
 pip install -r requirements.txt
