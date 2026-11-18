@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react';
 import type { Telemetry } from '@contracts';
 import { normDeg } from '../lib/geo';
+import type { Stick } from '../lib/types';
 
 interface Props {
   telemetry: Telemetry | null;
   groundM: number | null;
+  manual?: boolean;
+  stick?: Stick;
 }
 
 const TAPE_W = 600;
@@ -90,7 +93,7 @@ function Readout({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function OnboardHud({ telemetry: t, groundM }: Props) {
+export function OnboardHud({ telemetry: t, groundM, manual = false, stick }: Props) {
   const heading = t?.headingDeg ?? 0;
   const agl = t?.altAmslM !== undefined && groundM !== null ? t.altAmslM - groundM : undefined;
   return (
@@ -98,6 +101,11 @@ export function OnboardHud({ telemetry: t, groundM }: Props) {
       <div className="absolute top-3 left-3 flex items-center gap-2 text-xs lg:top-24">
         <span className="size-2 rounded-full bg-[#ff453a]" aria-hidden="true" />
         CAM 1 · 30° ↓ · REC
+        {manual && (
+          <span className="rounded bg-amber-500 px-1.5 py-0.5 font-bold tracking-wide text-black">
+            MANUAL
+          </span>
+        )}
       </div>
       <div className="absolute inset-x-0 top-10 px-4 lg:top-[88px]">
         <div className="mx-auto w-fit text-center text-sm">
@@ -118,6 +126,12 @@ export function OnboardHud({ telemetry: t, groundM }: Props) {
         <Readout label="BATT" value={t ? `${Math.round(t.batteryPct)}%` : '—'} />
         <Readout label="MODE" value={t?.flightMode ?? '—'} />
       </div>
+      {manual && stick && (
+        <div className="absolute inset-x-0 bottom-12 text-center text-xs">
+          FWD {stick.forwardMs.toFixed(1)} · RIGHT {stick.rightMs.toFixed(1)} · UP {stick.upMs.toFixed(1)} m/s
+          · YAW {Math.round(stick.yawRateDegS)}°/s
+        </div>
+      )}
       <p className="absolute inset-x-0 bottom-3 m-0 px-3 text-center text-[11px] opacity-90">
         Synthetic camera: street map on a 30 m elevation model
       </p>

@@ -19,7 +19,7 @@ export function ViewSwitch({ view, onChange }: { view: View; onChange: (v: View)
             aria-checked={on}
             onClick={() => onChange(v.id)}
             className={`min-h-11 min-w-16 cursor-pointer rounded-[10px] border-0 px-3 text-sm font-semibold transition-colors ${
-              on ? 'bg-white text-ink shadow-sm' : 'bg-transparent text-sub'
+              on ? 'bg-(--glass-solid) text-ink shadow-sm' : 'bg-transparent text-sub'
             }`}
           >
             {v.label}
