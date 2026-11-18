@@ -166,14 +166,26 @@ export interface MissionRequest {
   notes?: string;
 }
 /**
- * Drone state, published on ark/<droneId>/telemetry at about 1 Hz (lower on LoRa / satellite).
+ * Drone state, published on ark/<droneId>/telemetry at 1 to 5 Hz (lower on LoRa / satellite).
  */
 export interface Telemetry {
   droneId: string;
   missionId?: string;
   ts: string;
   position: Geo;
+  /**
+   * Metres above mean sea level (position.altM is above home).
+   */
+  altAmslM?: number;
   headingDeg?: number;
+  /**
+   * Right wing down is positive.
+   */
+  rollDeg?: number;
+  /**
+   * Nose up is positive.
+   */
+  pitchDeg?: number;
   groundSpeedMs?: number;
   climbRateMs?: number;
   armed: boolean;

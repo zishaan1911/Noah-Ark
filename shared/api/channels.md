@@ -10,6 +10,14 @@ Everything asynchronous in Noah's Ark. REST is in [openapi.yaml](openapi.yaml). 
 | `ark/<droneId>/events` | drone → cloud | 1 | `drone-event` | `edge/flight-bridge`, `edge/offload-manager` | IoT rule → EventBridge (`drone.event`) |
 | `ark/<droneId>/cmd` | cloud → drone | 1 | `drone-command` | `dispatch-agent`, the approve and abort handlers | `edge/flight-bridge` |
 
+Simulation only (never on a real drone):
+| Topic | Direction | QoS | Payload | Publisher | Subscribers |
+|---|---|---|---|---|---|
+| `sim/<droneId>/spawn` | app → sim | 1 | `{"lat": n, "lon": n}` | Ark Command (sim mode) | `simulation/ark_sim/live.py`: reboots SITL there on real terrain and current wind |
+| `sim/<droneId>/status` | sim → app | 1, retained | `{"state": "booting" \| "ready" \| "error", "lat", "lon", "groundAmslM", "windMs", "windFromDeg", "detail"?}` | `live.py` | Ark Command |
+
+Locally the broker is Mosquitto (`compose.yaml`, MQTT 1883, WebSocket 9001) with the same topics and payloads as IoT Core.
+
 Rules:
 - **The drone is the authority on flight.** Every command gets a `command_ack` event (`accepted: true|false`).
   The drone may refuse a command, for example `start` with a low battery. After losing the link it finishes or aborts
