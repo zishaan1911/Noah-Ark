@@ -2,27 +2,29 @@ import 'package:ark_contracts/ark_contracts.dart';
 import 'package:geolocator/geolocator.dart';
 
 /// Where the sender is: one fix for the SOS, then a stream while help is on the way.
-/// Screens take these as parameters so tests can pass fakes.
+/// The app takes a Locator so tests can pass a fake.
 abstract class Locator {
   Future<Geo> current();
   Stream<Geo> track();
 }
 
+enum LocationProblem { off, denied }
+
 class LocationUnavailable implements Exception {
-  LocationUnavailable(this.reason);
-  final String reason;
+  LocationUnavailable(this.problem);
+  final LocationProblem problem;
 
   @override
-  String toString() => reason;
+  String toString() => 'LocationUnavailable(${problem.name})';
 }
 
 class DeviceLocator implements Locator {
   Future<void> _ensurePermission() async {
-    if (!await Geolocator.isLocationServiceEnabled()) throw LocationUnavailable('Turn on location (GPS).');
+    if (!await Geolocator.isLocationServiceEnabled()) throw LocationUnavailable(LocationProblem.off);
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-      throw LocationUnavailable('Allow location so the drone can find you.');
+      throw LocationUnavailable(LocationProblem.denied);
     }
   }
 
@@ -38,6 +40,7 @@ class DeviceLocator implements Locator {
 
   // A foreground service with a visible notification keeps updates coming while the app is in the background,
   // without the ACCESS_BACKGROUND_LOCATION permission.
+  // shortcut: notification text is English only, pass the l10n strings in if users find it confusing
   @override
   Stream<Geo> track() async* {
     await _ensurePermission();

@@ -3,10 +3,13 @@ import 'dart:convert';
 import 'package:ark_contracts/ark_contracts.dart';
 import 'package:http/http.dart' as http;
 
-/// The three public calls Ark SOS makes (shared/api/openapi.yaml). No login: SOS ids are unguessable ULIDs.
+/// The public calls Ark SOS makes (shared/api/openapi.yaml). No login: SOS ids are unguessable ULIDs.
 abstract class SosApi {
   Future<SosRequest> create(SosReport report);
   Future<SosRequest> get(String sosId);
+
+  /// Sends more detail after the one-press SOS; the backend triages and plans the kit again.
+  Future<SosRequest> updateReport(String sosId, SosReport report);
 
   /// Returns false once the SOS is delivered or closed (409): stop sending.
   Future<bool> sendLocation(String sosId, SosLocationUpdate update);
@@ -64,6 +67,10 @@ class HttpSosApi implements SosApi {
 
   @override
   Future<SosRequest> get(String sosId) async => _parse(await _send('GET', '/sos/${Uri.encodeComponent(sosId)}'), 200);
+
+  @override
+  Future<SosRequest> updateReport(String sosId, SosReport report) async =>
+      _parse(await _send('PUT', '/sos/${Uri.encodeComponent(sosId)}/report', report.toJson()), 200);
 
   @override
   Future<bool> sendLocation(String sosId, SosLocationUpdate update) async {

@@ -52,6 +52,7 @@ void main() {
       'channel': 'app',
       'location': {'lat': 5.98, 'lon': 116.07},
       'needs': <String>[],
+      'medicines': <String>[],
       'peopleCount': 2,
     });
     expect(sos.id, sosId);
@@ -78,6 +79,23 @@ void main() {
       api.sendLocation(sosId, update()),
       throwsA(isA<ApiException>().having((e) => e.code, 'code', 'invalid_body')),
     );
+  });
+
+  test('updateReport PUTs the whole report and returns the stored SOS', () async {
+    final api = HttpSosApi(
+      'https://api.test/v1',
+      client: MockClient((req) async {
+        expect((req.method, req.url.path), ('PUT', '/v1/sos/$sosId/report'));
+        final body = jsonDecode(req.body) as Map<String, dynamic>;
+        expect(body['vulnerable'], {'children': 1});
+        return http.Response(jsonEncode(stored(body)), 200);
+      }),
+    );
+    final sos = await api.updateReport(
+      sosId,
+      SosReport(channel: Channel.APP, location: Geo(lat: 5.98, lon: 116.07), vulnerable: SosVulnerable(children: 1)),
+    );
+    expect(sos.report.vulnerable?.children, 1);
   });
 
   test('FakeSosApi walks an SOS from new to delivered and then refuses locations', () async {

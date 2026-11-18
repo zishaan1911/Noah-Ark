@@ -1,0 +1,93 @@
+{
+  "@@locale": "en",
+  "appTitle": "Ark SOS",
+  "language": "Language",
+  "tabSos": "SOS",
+  "tabPeople": "People",
+  "tabNeeds": "Needs",
+  "tabSupplies": "Supplies",
+  "holdToSend": "Hold for 2 seconds to call for help",
+  "keepHolding": "Keep holding…",
+  "sosHint": "Your location goes to the rescue team.",
+  "findingLocation": "Finding your location…",
+  "sending": "Sending…",
+  "sendFailed": "Could not send. Check your signal and try again.",
+  "locationOff": "Turn on location (GPS).",
+  "locationDenied": "Allow location so the drone can find you.",
+  "helpComing": "Help is coming",
+  "helpArrived": "Help has arrived",
+  "stepSent": "SOS sent",
+  "stepSentDetail": "We have your request and location.",
+  "stepArranged": "Help is being arranged",
+  "stepArrangedDetail": "A coordinator is choosing what to send.",
+  "stepDrone": "Drone on the way",
+  "stepDroneNamed": "Drone {droneId} on the way",
+  "@stepDroneNamed": {
+    "placeholders": {
+      "droneId": {
+        "type": "String"
+      }
+    }
+  },
+  "stepDroneEta": "About {minutes} min. Stay where you are if it is safe.",
+  "@stepDroneEta": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "stepDroneWait": "Stay where you are if it is safe.",
+  "stepDelivered": "Delivered",
+  "stepDeliveredDetail": "Take the supplies from the drone.",
+  "sharingOn": "Sharing your location",
+  "sharingOff": "Location not shared",
+  "done": "Done",
+  "reference": "Reference: {id}",
+  "@reference": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "peopleTitle": "Who is with you?",
+  "peopleTotal": "People (including you)",
+  "children": "Children",
+  "elderly": "Elderly",
+  "disabled": "Disabled",
+  "pregnant": "Pregnant women",
+  "phoneLabel": "Phone (optional)",
+  "phoneInvalid": "Use the international format, e.g. +60123456789",
+  "needsTitle": "What do you need?",
+  "needWater": "Water",
+  "needFood": "Food",
+  "needMedicine": "Medicine",
+  "needBabySupplies": "Baby supplies",
+  "needShelter": "Shelter",
+  "needRescue": "Rescue",
+  "needOther": "Other",
+  "medicinesLabel": "Medicines needed",
+  "medicinesHint": "e.g. insulin, paracetamol",
+  "notesLabel": "Anything else?",
+  "notesHint": "Any language",
+  "sendDetails": "Send details",
+  "detailsSent": "Details sent",
+  "detailsWithSos": "Sent with your SOS",
+  "suppliesTitle": "What the drone brings",
+  "suppliesEmpty": "The rescue team plans what to send once your SOS arrives.",
+  "suppliesPending": "Planned. Waiting for a coordinator to approve.",
+  "suppliesTotal": "{kg} of {cap} kg",
+  "@suppliesTotal": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      },
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "fewer": "Fewer",
+  "more": "More"
+}
