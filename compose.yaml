@@ -16,6 +16,7 @@ services:
     volumes: [".:/repo"]
     depends_on: [broker]
     restart: unless-stopped
+    cpus: 2  # physics + SITL peg a core; the cap keeps the browser responsive. Below ~1.5 the sim falls behind real time.
 
   gateway:
     build: edge/flight-bridge
