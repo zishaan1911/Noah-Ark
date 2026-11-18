@@ -29,6 +29,10 @@
     patch: mat(0xe8621c, { roughness: 0.6 }),
   };
   MP.tube.color.convertSRGBToLinear(); MP.tube.envMapIntensity = 0.6;
+  if (LIVERY) { // low-signature tubes and covers instead of high-visibility yellow and orange
+    MP.tube.color.set(LIVERY.pontoon_hex).convertSRGBToLinear(); MP.tube.clearcoat = 0.05; MP.tube.roughness = 0.8;
+    [MP.cordura, MP.cordDark, MP.patch].forEach(m => m.color.set(LIVERY.cover_hex).convertSRGBToLinear());
+  }
   const yx = (s, y) => s * y; // mirror helper: s = +1 left, -1 right
   function labelTex(text) {
     const c = document.createElement('canvas'); c.width = 1024; c.height = 96;
@@ -235,7 +239,7 @@
   function settle(u) { return u <= 0 ? 0 : 1 - Math.exp(-u / 0.28) * Math.cos(u * 2 * Math.PI / 1.3); }
   function landingAt(T) {
     if (SR) return sitlAt(T);
-    const h = Math.max(H0 - LV * T, 0), td = T >= T_TD;
+    const h = Math.max(H0 - LIVERY * T, 0), td = T >= T_TD;
     const st = stateAt(T - T_FIRE);
     const sink = td ? W.draft_m * settle(T - T_TD) : 0;
     return { T, h, td, st, waterZ: zb - h + sink };
@@ -298,11 +302,11 @@
     const T = F.T, st = F.st, fired = T >= T_FIRE, ok = st.tau >= T_OK, okR = st.tau >= T_OK + 0.06;
     const msg = F.td ? (T >= T_STOP ? `Floating at ${Math.round(W.draft_m * 1000)} mm draft · motors off` : 'Touchdown · land detector')
       : ok && okR ? 'PONT: L + R pressure OK · landing continues'
-        : fired ? `PONT: FIRE at ${HF.toFixed(1)} m (radar), ${LV.toFixed(1)} m/s down`
+        : fired ? `PONT: FIRE at ${HF.toFixed(1)} m (radar), ${LIVERY.toFixed(1)} m/s down`
           : 'PONT: ARMED · planned water landing';
     hud.innerHTML = title('Water landing · LAND mode')
       + row('Radar, skid → water', F.td ? '0.00 m' : `${F.h.toFixed(2)} m`)
-      + row('Descent', F.td ? '0.00 m/s' : `${LV.toFixed(2)} m/s`)
+      + row('Descent', F.td ? '0.00 m/s' : `${LIVERY.toFixed(2)} m/s`)
       + row('Fire height', `${HF.toFixed(1)} m`)
       + row('Bag pressure', fired ? `${st.gauge.toFixed(1)} kPa · ${Math.round(st.vol * 100)} %` : '–')
       + `<div style="margin-top:4px">${chip('ARMED', true)}${chip('FIRE', fired)}${chip('L OK', ok, true)}${chip('R OK', okR, true)}${chip('TOUCHDOWN', F.td, true)}${chip('FLOATING', T >= T_STOP + 0.8, true)}</div>`
