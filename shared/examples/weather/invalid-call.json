@@ -1,0 +1,41 @@
+{
+  "updatedAt": "2026-11-19T02:00:00Z",
+  "source": "open-meteo+demo-storm",
+  "hubs": [
+    {
+      "name": "Papar",
+      "lat": 5.7346,
+      "lon": 115.9302,
+      "windMs": 4.2,
+      "gustMs": 7.9,
+      "windFromDeg": 225,
+      "rainMmH": 0.4,
+      "weatherCode": 61,
+      "call": "maybe"
+    },
+    {
+      "name": "Beaufort",
+      "lat": 5.3473,
+      "lon": 115.7455,
+      "windMs": 9.8,
+      "gustMs": 17.5,
+      "windFromDeg": 250,
+      "rainMmH": 38.0,
+      "weatherCode": 95,
+      "call": "no_go",
+      "reason": "Thunderstorm over the hub, gusts 17.5 m/s"
+    }
+  ],
+  "storms": [
+    {
+      "id": "storm-1",
+      "lat": 5.42,
+      "lon": 115.82,
+      "radiusKm": 6.0,
+      "rainMmH": 45.0,
+      "movingToDeg": 60,
+      "speedMs": 6.0,
+      "thunder": true
+    }
+  ]
+}
