@@ -1,0 +1,12 @@
+# Live mode (ark_sim.live), layered after ark1-sitl.parm with --defaults "ark1-sitl.parm,ark1-live.parm".
+
+# physics rate: low enough that Python keeps up in real time (the skid friction in physics.py is stable at 400 Hz)
+SIM_RATE_HZ 400
+# 200 Hz main loop: the arming check needs the gyro at 1.8x the loop rate, and Python tops out near 400 Hz real time
+SCHED_LOOP_RATE 200
+# cruise 17 m/s: the outbound speed from the hardware mission check (hardware/ark.json)
+WP_SPD 17
+# allow arming in AUTO and take off without a throttle raise: Ark-1 flies with no pilot RC
+AUTO_OPTIONS 5
+# return at 60 m above home: the terrain rises inland
+RTL_ALT_M 60
