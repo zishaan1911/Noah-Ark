@@ -28,7 +28,9 @@
         "link_lost",
         "link_restored",
         "offload_decision",
-        "fault"
+        "fault",
+        "manual_started",
+        "manual_ended"
       ]
     },
     "severity": { "enum": ["info", "warning", "critical"] },

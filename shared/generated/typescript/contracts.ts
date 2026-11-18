@@ -23,7 +23,9 @@ export type EventType =
   | "link_lost"
   | "link_restored"
   | "offload_decision"
-  | "fault";
+  | "fault"
+  | "manual_started"
+  | "manual_ended";
 export type DroneStatus = "available" | "assigned" | "in_flight" | "charging" | "maintenance" | "offline";
 /**
  * Server to dashboard over the WebSocket API. One message per change; `kind` says what `data` is.

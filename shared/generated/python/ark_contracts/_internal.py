@@ -237,6 +237,8 @@ class EventType(Enum):
     link_restored = "link_restored"
     offload_decision = "offload_decision"
     fault = "fault"
+    manual_started = "manual_started"
+    manual_ended = "manual_ended"
 
 
 class Severity(Enum):
