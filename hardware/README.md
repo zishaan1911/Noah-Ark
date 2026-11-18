@@ -6,6 +6,7 @@ Ark-1's airframe is the team's drone model, turned into Ark by scripts. The deta
 | Path | What it is |
 |---|---|
 | `ark.json` | Single source of truth: requirements, candidate parts, and every result the scripts write back |
+| `ark-1m/` | Ark-1M, the unarmed defence-logistics variant (4 kg forward resupply, low-signature skin, aramid liner, self-sealing pontoons). Same pipeline with `ARK_VARIANT=ark-1m` (`variant.py`) |
 | `sizing/size_ark.py` | First-pass sizing: sweeps real motor, prop and cell candidates and writes `chosen` (power set and cell) |
 | `industrial-design/` | The airframe, mass budget, mission check on the real drag, harness, pontoons and 3D viewer |
 | `flight/` | ArduPilot params and the Lua script that fires the pontoons |
