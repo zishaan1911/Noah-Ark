@@ -21,10 +21,49 @@
   --color-red-tint: #fdedea;
   --color-fill: rgb(118 118 128 / 0.12);
   --color-hair: rgb(60 60 67 / 0.12);
+  --color-card: #fff;
+  --color-danger: #b23a26;
+  --color-terrain: #c2dfb1;
+  --color-terrain-line: #6f9a5c;
 }
 
 :root {
   color-scheme: light;
+  --glass-bg: rgb(255 255 255 / 0.78);
+  --glass-solid: #fff;
+  --glass-border: rgb(255 255 255 / 0.9);
+  --glass-shadow: rgb(30 40 50 / 0.12);
+  --page-bg: #eef0ea;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-ink: #f2f3f5;
+  --color-sub: #a3acb9;
+  --color-accent: #4da3ff;
+  --color-action: #0a6cde;
+  --color-accent-ink: #7ab8ff;
+  --color-accent-deep: #9ccaff;
+  --color-accent-tint: rgb(10 132 255 / 0.2);
+  --color-amber: #f5a524;
+  --color-amber-tint: rgb(245 165 36 / 0.2);
+  --color-amber-ink: #ffc965;
+  --color-green: #4cc16b;
+  --color-green-ink: #74d68e;
+  --color-green-tint: rgb(52 168 83 / 0.22);
+  --color-red: #ef7561;
+  --color-red-ink: #ff9d8c;
+  --color-red-tint: rgb(224 96 74 / 0.22);
+  --color-fill: rgb(255 255 255 / 0.1);
+  --color-hair: rgb(255 255 255 / 0.12);
+  --color-card: rgb(255 255 255 / 0.06);
+  --color-terrain: rgb(111 154 92 / 0.45);
+  --color-terrain-line: #8fbf79;
+  --glass-bg: rgb(28 31 36 / 0.78);
+  --glass-solid: #1c1f24;
+  --glass-border: rgb(255 255 255 / 0.08);
+  --glass-shadow: rgb(0 0 0 / 0.4);
+  --page-bg: #101215;
 }
 
 html,
@@ -35,7 +74,7 @@ body,
 }
 
 body {
-  background: #eef0ea;
+  background: var(--page-bg);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -44,13 +83,13 @@ body {
 @layer components {
   /* layered so Tailwind utilities (px-0, w-11...) can override these */
   .glass {
-    background: rgb(255 255 255 / 0.78);
+    background: var(--glass-bg);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgb(255 255 255 / 0.9);
+    border: 1px solid var(--glass-border);
     box-shadow:
-      0 8px 32px rgb(30 40 50 / 0.12),
-      0 1px 2px rgb(30 40 50 / 0.08);
+      0 8px 32px var(--glass-shadow),
+      0 1px 2px var(--glass-shadow);
   }
 
   .btn {
@@ -103,9 +142,9 @@ body {
     sans-serif;
   color: var(--color-ink);
   text-shadow:
-    0 0 3px #fff,
-    0 0 3px #fff,
-    0 0 3px #fff;
+    0 0 3px var(--glass-solid),
+    0 0 3px var(--glass-solid),
+    0 0 3px var(--glass-solid);
 }
 .ark-pin-dot {
   width: 34px;
@@ -155,9 +194,23 @@ body {
   font-size: 10px;
 }
 
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.stage-in {
+  animation: stage-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 @media (prefers-reduced-transparency: reduce) {
   .glass {
-    background: #fff;
+    background: var(--glass-solid);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }

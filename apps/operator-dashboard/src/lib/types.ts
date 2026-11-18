@@ -1,4 +1,19 @@
 export type View = 'map' | 'chase' | 'onboard';
+export type Theme = 'light' | 'dark';
+export type PickTarget = 'start' | 'dest';
+/** Fly the Map view camera here when `seq` changes (e.g. a search result). */
+export interface MapFocus {
+  point: Point;
+  zoom: number;
+  seq: number;
+}
+/** Operator stick input, body frame (see shared/schemas/manual-control.schema.json). */
+export interface Stick {
+  forwardMs: number;
+  rightMs: number;
+  upMs: number;
+  yawRateDegS: number;
+}
 
 export interface Point {
   lat: number;
