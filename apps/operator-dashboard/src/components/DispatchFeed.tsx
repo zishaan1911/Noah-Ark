@@ -32,6 +32,11 @@ function Row({ m }: { m: Mission }) {
     <li className="flex flex-col gap-1 border-b border-hair py-2 last:border-b-0">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${mode.cls}`}>{mode.label}</span>
+        {m.waypoints && m.waypoints.length > 0 && (
+          <span className="rounded-full bg-accent-tint px-2 py-0.5 text-[11px] font-semibold text-accent-ink">
+            Storm detour
+          </span>
+        )}
         <span className="font-mono text-[13px] font-semibold">{m.droneId}</span>
         <span
           className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[m.status] ?? 'bg-fill text-sub'}`}

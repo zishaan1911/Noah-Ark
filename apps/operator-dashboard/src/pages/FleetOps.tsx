@@ -3,6 +3,7 @@ import { DispatchFeed } from '../components/DispatchFeed';
 import { FleetKpis } from '../components/FleetKpis';
 import { FleetList } from '../components/FleetList';
 import { FleetMap } from '../components/FleetMap';
+import { FleetWeather } from '../components/FleetWeather';
 import { Header } from '../components/Header';
 import { useFleet } from '../hooks/useFleet';
 import { useTheme } from '../hooks/useTheme';
@@ -12,7 +13,8 @@ const EMPTY_AFTER_MS = 5000;
 
 /** Fleet-scale view: every drone on one map, the dispatch queue, and the delivery numbers. */
 export function FleetOps() {
-  const { conn, state, stats } = useFleet();
+  const { conn, state, stats, weather } = useFleet();
+  const [radar, setRadar] = useState(true);
   const [theme, toggleTheme] = useTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [waited, setWaited] = useState(false);
@@ -29,7 +31,14 @@ export function FleetOps() {
   return (
     <div className="relative h-dvh overflow-hidden">
       <div className="absolute inset-0">
-        <FleetMap state={state} selectedId={selectedId} onSelect={setSelectedId} theme={theme} />
+        <FleetMap
+          state={state}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          theme={theme}
+          weather={weather}
+          radar={radar}
+        />
       </div>
 
       <div className="pointer-events-none absolute inset-x-3 top-3 bottom-3 z-10 flex flex-col gap-2 lg:inset-x-4 lg:top-4 lg:bottom-4">
@@ -58,6 +67,7 @@ export function FleetOps() {
               </p>
             )}
             <FleetKpis kpis={numbers} stats={stats} />
+            <FleetWeather weather={weather} stats={stats} radar={radar} onRadar={setRadar} />
             <DispatchFeed missions={state.missions} />
           </aside>
           <aside
