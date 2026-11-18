@@ -354,6 +354,44 @@ class ManualControl(BaseModel):
     issuedBy: str | None = None
 
 
+class FlyCall(Enum):
+    go = "go"
+    caution = "caution"
+    no_go = "no_go"
+
+
+class HubWeather(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: constr(min_length=1)
+    lat: confloat(ge=-90.0, le=90.0)
+    lon: confloat(ge=-180.0, le=180.0)
+    windMs: confloat(ge=0.0)
+    gustMs: confloat(ge=0.0)
+    windFromDeg: confloat(ge=0.0, le=360.0)
+    rainMmH: confloat(ge=0.0)
+    weatherCode: conint(ge=0, le=99) | None = Field(
+        None, description="WMO code; 95-99 are thunderstorms."
+    )
+    call: FlyCall
+    reason: constr(max_length=300) | None = None
+
+
+class Storm(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: constr(min_length=1)
+    lat: confloat(ge=-90.0, le=90.0)
+    lon: confloat(ge=-180.0, le=180.0)
+    radiusKm: PositiveFloat
+    rainMmH: confloat(ge=0.0)
+    movingToDeg: confloat(ge=0.0, le=360.0) | None = None
+    speedMs: confloat(ge=0.0) | None = None
+    thunder: bool | None = None
+
+
 class SosRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -428,6 +466,19 @@ class MissionUpdate(BaseModel):
     data: Mission
 
 
+class Weather(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    updatedAt: Timestamp
+    source: str = Field(
+        ...,
+        description="Where the numbers come from, e.g. open-meteo, open-meteo+demo-storm.",
+    )
+    hubs: list[HubWeather]
+    storms: list[Storm]
+
+
 class Contracts(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -443,6 +494,7 @@ class Contracts(BaseModel):
     drone: Drone | None = None
     liveUpdate: Schema | None = None
     manualControl: ManualControl | None = None
+    weather: Weather | None = None
 
 
 class Schema(

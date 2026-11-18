@@ -31,6 +31,10 @@ export type DroneStatus = "available" | "assigned" | "in_flight" | "charging" | 
  * Server to dashboard over the WebSocket API. One message per change; `kind` says what `data` is.
  */
 export type LiveUpdate = TelemetryUpdate | DroneEventUpdate | SosUpdate | MissionUpdate | DroneUpdate;
+/**
+ * go: normal ops. caution: fly, with reduced range or payload. no_go: hold every drone at this hub.
+ */
+export type FlyCall = "go" | "caution" | "no_go";
 
 /**
  * Codegen root only; not a message.
@@ -47,6 +51,7 @@ export interface Contracts {
   drone?: Drone;
   liveUpdate?: LiveUpdate;
   manualControl?: ManualControl;
+  weather?: Weather;
 }
 /**
  * A call for help as stored: what the sender said (report), what sos-triage (Bedrock) concluded (triage), and where it is in the flow.
@@ -329,4 +334,41 @@ export interface ManualControl {
    */
   yawRateDegS: number;
   issuedBy?: string;
+}
+/**
+ * Flying weather for the network: a go / caution / no-go call per hub and the storm cells drones route around. Published retained on fleet/weather (sim) and by the weather service in the cloud.
+ */
+export interface Weather {
+  updatedAt: string;
+  /**
+   * Where the numbers come from, e.g. open-meteo, open-meteo+demo-storm.
+   */
+  source: string;
+  hubs: HubWeather[];
+  storms: Storm[];
+}
+export interface HubWeather {
+  name: string;
+  lat: number;
+  lon: number;
+  windMs: number;
+  gustMs: number;
+  windFromDeg: number;
+  rainMmH: number;
+  /**
+   * WMO code; 95-99 are thunderstorms.
+   */
+  weatherCode?: number;
+  call: FlyCall;
+  reason?: string;
+}
+export interface Storm {
+  id: string;
+  lat: number;
+  lon: number;
+  radiusKm: number;
+  rainMmH: number;
+  movingToDeg?: number;
+  speedMs?: number;
+  thunder?: boolean;
 }

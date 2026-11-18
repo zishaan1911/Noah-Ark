@@ -21,6 +21,7 @@ here first, run codegen, then update the consumers.
 | `drone-event` | `ark/<droneId>/events` |
 | `drone` | the fleet registry, GET /drones |
 | `live-update` | the WebSocket feed to the dashboards |
+| `weather` | `fleet/weather`: go / caution / no-go per hub and the storm cells drones route around |
 | `common` | location, IDs (`ARK-NNN`, `sos_`/`msn_`/`cmd_`/`evt_` + ULID), `mode`, timestamps |
 
 Some rules a schema cannot hold are checked in code. For example, a mission's `payloadKg` must equal the sum of its

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Weather",
+  "description": "Flying weather for the network: a go / caution / no-go call per hub and the storm cells drones route around. Published retained on fleet/weather (sim) and by the weather service in the cloud.",
+  "type": "object",
+  "required": ["updatedAt", "source", "hubs", "storms"],
+  "additionalProperties": false,
+  "properties": {
+    "updatedAt": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "source": { "type": "string", "description": "Where the numbers come from, e.g. open-meteo, open-meteo+demo-storm." },
+    "hubs": { "type": "array", "items": { "$ref": "#/$defs/hubWeather" } },
+    "storms": { "type": "array", "items": { "$ref": "#/$defs/storm" } }
+  },
+  "$defs": {
+    "flyCall": {
+      "title": "FlyCall",
+      "enum": ["go", "caution", "no_go"],
+      "description": "go: normal ops. caution: fly, with reduced range or payload. no_go: hold every drone at this hub."
+    },
+    "hubWeather": {
+      "title": "HubWeather",
+      "type": "object",
+      "required": ["name", "lat", "lon", "windMs", "gustMs", "windFromDeg", "rainMmH", "call"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "windMs": { "type": "number", "minimum": 0 },
+        "gustMs": { "type": "number", "minimum": 0 },
+        "windFromDeg": { "type": "number", "minimum": 0, "maximum": 360 },
+        "rainMmH": { "type": "number", "minimum": 0 },
+        "weatherCode": { "type": "integer", "minimum": 0, "maximum": 99, "description": "WMO code; 95-99 are thunderstorms." },
+        "call": { "$ref": "#/$defs/flyCall" },
+        "reason": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "storm": {
+      "title": "Storm",
+      "type": "object",
+      "required": ["id", "lat", "lon", "radiusKm", "rainMmH"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "radiusKm": { "type": "number", "exclusiveMinimum": 0 },
+        "rainMmH": { "type": "number", "minimum": 0 },
+        "movingToDeg": { "type": "number", "minimum": 0, "maximum": 360 },
+        "speedMs": { "type": "number", "minimum": 0 },
+        "thunder": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -16,7 +16,9 @@ from ._internal import (
     DroneUpdate,
     EventId,
     EventType,
+    FlyCall,
     Geo,
+    HubWeather,
     LandingType,
     LinkType,
     ManualControl,
@@ -37,10 +39,12 @@ from ._internal import (
     SosStatus,
     SosTriage,
     SosUpdate,
+    Storm,
     Target,
     Telemetry,
     TelemetryUpdate,
     Timestamp,
+    Weather,
 )
 
 __all__ = [
@@ -57,7 +61,9 @@ __all__ = [
     "DroneUpdate",
     "EventId",
     "EventType",
+    "FlyCall",
     "Geo",
+    "HubWeather",
     "LandingType",
     "LinkType",
     "ManualControl",
@@ -78,8 +84,10 @@ __all__ = [
     "SosStatus",
     "SosTriage",
     "SosUpdate",
+    "Storm",
     "Target",
     "Telemetry",
     "TelemetryUpdate",
     "Timestamp",
+    "Weather",
 ]

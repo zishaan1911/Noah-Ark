@@ -28,6 +28,7 @@ TARGETS = {
     "drone": {"$ref": "drone.schema.json"},
     "live-update": {"$ref": "live-update.schema.json"},
     "manual-control": {"$ref": "manual-control.schema.json"},
+    "weather": {"$ref": "weather.schema.json"},
 }
 
 
