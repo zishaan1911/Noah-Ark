@@ -12,14 +12,18 @@
 
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ARK_JSON = HERE.parent / "ark.json"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import variant  # ARK_VARIANT picks Ark-1 or a variant folder
+
+ARK_JSON = variant.ARK_JSON
 SRC = HERE / "drone-model" / "drone.npz"
-OUT = HERE / "out"
+OUT = variant.OUT
 # the camera gimbal and its damping mount go (Ark carries cargo); so does the external battery (the pack moves inside)
 GIMBAL = ("GEO_Camera", "GEO_Lens", "GEO_Lathe", "GEO_Support", "GEO_Computer", "GEO_Wires", "Battery")
 
@@ -70,7 +74,7 @@ def mass_budget(ark: dict, structure_kg: float, pack_kg: float) -> dict[str, flo
     chosen one), its copper, the props, the pontoon kit, the shell, the payload and a mounting-hardware allowance."""
     idc = ark["industrial_design"]
     prop = next(p for p in ark["candidates"]["propulsion"] if p["name"] == ark["chosen"]["propulsion"])
-    harness_file, pontoon_file = HERE / "harness.json", HERE / "pontoon_system.json"
+    harness_file, pontoon_file = variant.ID_DATA / "harness.json", variant.ID_DATA / "pontoon_system.json"
     if harness_file.exists():
         h = json.loads(harness_file.read_text(encoding="utf-8"))
         electrical = sum(c["mass_g"] for c in h["components"] if c["id"] != "pack") / 1000
@@ -93,6 +97,23 @@ def mass_budget(ark: dict, structure_kg: float, pack_kg: float) -> dict[str, flo
         "mounting_hardware": idc["mounting_hardware_kg"],  # shortcut: deck plates, standoffs, fasteners, sealant
         "payload": ark["requirements"]["payload_kg"],
     }
+
+
+def box_area(size: list[float]) -> float:
+    x, y, z = size
+    return 2 * (x * y + y * z + x * z)
+
+
+def variant_mass(idc: dict, pack_size: list[float], body_area: float) -> dict[str, float]:
+    """Groups only a variant carries (Ark-1M): a spall liner boxed around the pack and the avionics, and a topcoat
+    over the outer shell (body_area counts inner and outer faces, so half of it is the outside)."""
+    out = {}
+    if arm := idc.get("armour"):
+        area = (box_area(pack_size) if arm["covers"]["pack"] else 0.0) + box_area(arm["covers"]["avionics_box_m"])
+        out["armour"] = area * arm["areal_kg_m2_per_ply"] * arm["plies"]
+    if coat := idc.get("coating"):
+        out["coating"] = body_area / 2 * coat["areal_kg_m2"]
+    return out
 
 
 def tube_volume(d: float, length: float) -> float:
@@ -161,7 +182,7 @@ def main() -> int:
     skid_y = float(np.abs(legs[:, 1]).max())
     skid_bottom = float(legs[:, 2].min())
     pt = idc["pontoon"]
-    mass = mass_budget(ark, structure_kg, pack_kg)
+    mass = mass_budget(ark, structure_kg, pack_kg) | variant_mass(idc, pack_size, body_area)
     auw = sum(mass.values())
     # pontoon diameter: the smallest (5 mm steps, never below the configured size) that keeps the buoyancy reserve
     need = ark["requirements"]["reserve_buoyancy_frac"]

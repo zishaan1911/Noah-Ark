@@ -11,11 +11,15 @@ import argparse
 import itertools
 import json
 import math
+import sys
 from pathlib import Path
 
 import spice
 
-ARK_JSON = Path(__file__).resolve().parents[2] / "ark.json"
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+import variant  # ARK_VARIANT picks Ark-1 or a variant folder
+
+ARK_JSON = variant.ARK_JSON
 ROTORS = 4
 
 
@@ -99,13 +103,15 @@ def esc_params(ark: dict, hp: dict, vbus: float) -> tuple[dict, dict]:
 def esc_hover(ark: dict, hp: dict, vbus: float) -> dict:
     base, subs = esc_params(ark, hp, vbus)
     d0 = hp["ke_v_s_rad"] * hp["wm_rad_s"] / vbus  # duty that just matches back-EMF
+    target = hp["p_target_w"]
     sweep = []
-    for k in range(6):
+    for k in range(15):  # step the duty until the shaft power passes the target (a heavier variant needs more)
         d = round(d0 + 0.02 * k, 4)
         sweep.append((d, spice.run("esc_bldc.cir", f"esc_d{int(d * 1e4)}", base | {"duty": d}, subs)["pmech"]))
+        if len(sweep) >= 6 and sweep[-1][1] >= target:  # at least Ark-1's six points, so its stored sweep is unchanged
+            break
     if any(p2 <= p1 for (_, p1), (_, p2) in itertools.pairwise(sweep)):
         raise RuntimeError(f"shaft power does not rise with duty (unstable sim?): {sweep}")
-    target = hp["p_target_w"]
     for (d1, p1), (d2, p2) in itertools.pairwise(sweep):
         if p1 <= target <= p2:
             duty = d1 + (target - p1) / (p2 - p1) * (d2 - d1)

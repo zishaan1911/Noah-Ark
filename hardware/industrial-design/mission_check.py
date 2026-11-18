@@ -16,7 +16,10 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ARK_JSON = HERE.parent / "ark.json"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import variant  # ARK_VARIANT picks Ark-1 or a variant folder
+
+ARK_JSON = variant.ARK_JSON
 sys.path.insert(0, str(HERE.parent / "sizing"))
 from size_ark import best_cruise, hover_power
 
@@ -78,7 +81,7 @@ def main() -> int:
     ark = json.loads(ARK_JSON.read_text(encoding="utf-8"))
     idc = ark["industrial_design"]
     res = idc["result"]
-    d = np.load(HERE / "out" / "ark_model.npz")
+    d = np.load(variant.OUT / "ark_model.npz")
     # every airframe part except the props (rotor drag is in the power model), merged into one mesh
     names = sorted(n for n in {k.split("::")[0] for k in d.files} if not n.startswith("GEO_Propeller"))
     verts, faces, base = [], [], 0

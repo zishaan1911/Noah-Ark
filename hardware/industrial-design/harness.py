@@ -27,10 +27,13 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ARK_JSON = HERE.parent / "ark.json"
-HARNESS = HERE / "harness.json"
-MODEL = HERE / "out" / "ark_model.npz"
-CACHE = HERE / "out" / "shell_cavity.npz"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import variant  # ARK_VARIANT picks Ark-1 or a variant folder
+
+ARK_JSON = variant.ARK_JSON
+HARNESS = variant.ID_DATA / "harness.json"
+MODEL = variant.OUT / "ark_model.npz"
+CACHE = variant.OUT / "shell_cavity.npz"
 
 VOXEL_M = 0.003
 GRID_LO = (-0.46, -0.46, -0.61)
@@ -42,7 +45,7 @@ SHELL_PARTS = ("GEO_Main_Body", "GEO_Base_01", "GEO_Base_02", "GEO_Base_03", "GE
 
 # Chassis-wiring ampacity (single conductor in free air), A. Source: the common Handbook-of-Electronic-Tables figures
 # as tabulated at https://www.powerstream.com/Wire_Size.htm ("Maximum amps for chassis wiring").
-AMPACITY_A = {8: 73, 10: 55, 12: 41, 14: 32, 16: 22, 18: 16, 20: 11, 22: 7, 24: 3.5, 26: 2.2, 28: 1.4, 30: 0.86}
+AMPACITY_A = {6: 101, 8: 73, 10: 55, 12: 41, 14: 32, 16: 22, 18: 16, 20: 11, 22: 7, 24: 3.5, 26: 2.2, 28: 1.4, 30: 0.86}
 # Short peaks (the sizing's thrust-to-weight manoeuvre lasts seconds) may run this far over the chassis rating: the
 # silicone insulation is rated 200 C against the table's 60 C rise basis.
 PEAK_FACTOR = 1.5
@@ -331,6 +334,9 @@ def design_currents(ark: dict) -> dict[str, float]:
     bus = ark["power_chain"]["bus"]
     pack_cont = max(bus["full"]["ipack_hover"], bus["low"]["ipack_hover"])
     pack_peak = max(ark["chosen"]["pack_peak_current_a"], bus["full"]["ipack_peak"], bus["low"]["ipack_peak"])
+    # a variant may cap the motor current in the flight controller (ArduCopter MOT_BAT_CURR_MAX); SPICE still runs the
+    # uncapped peak, which is the harder case for bus sag
+    pack_peak = min(pack_peak, ark["electrical"].get("mot_bat_curr_max_a", math.inf))
     duty_max = ark["electrical"]["esc"]["duty_max"]
     return {
         "pack": pack_cont,
