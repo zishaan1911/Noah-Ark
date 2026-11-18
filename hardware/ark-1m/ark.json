@@ -1,0 +1,973 @@
+{
+  "note": "Ark-1M: the defence-logistics variant of Ark-1 (forward resupply between outposts). Same airframe, motors and electronics; heavier payload, an aramid spall liner around the pack and avionics, a low-signature CARC topcoat and self-sealing pontoon tubes. Unarmed. Generated files are written by the same pipeline with ARK_VARIANT=ark-1m.",
+  "requirements": {
+    "payload_kg": 4.0,
+    "range_out_km": 17.0,
+    "range_back_km": 17.0,
+    "reserve_frac": 0.2,
+    "hover_out_s": 120,
+    "water_ops_s": 120,
+    "hover_back_s": 60,
+    "cruise_speed_range_mps": [
+      8,
+      20
+    ],
+    "twr_min": 2.0,
+    "reserve_buoyancy_frac": 0.8,
+    "prop_clearance_min_m": 0.25,
+    "gm_min_m": 0.05,
+    "payload_cda_m2": 0.016,
+    "reserve_buoyancy_note": "80 % (Ark-1: 100 %): keeps Ark-1's 16.8 L tubes and 60 g lifejacket CO2 cylinders. At 100 % the tubes grow to 19 L and need 64 g with the 1.25 gas margin, more than the largest standard cylinder. A water landing is the emergency case for a resupply drone; tube length, which sets pitch stability, is unchanged."
+  },
+  "environment": {
+    "rho_air": 1.16,
+    "rho_water": 1000.0,
+    "g": 9.81,
+    "air_note": "30 C, sea level, humid (Sabah/Sarawak floods). Fresh floodwater, not seawater: the lower density is the worst case for buoyancy."
+  },
+  "fixed_mass_kg": {
+    "flight_controller_gps": 0.15,
+    "companion_computer": 0.2,
+    "comms_lte_lora_sat": 0.12,
+    "perception_radar_lidar_camera": 0.3,
+    "payload_release": 0.25,
+    "wiring_pdb_connectors": 0.35,
+    "hatch_and_seals": 0.2,
+    "landing_skids": 0.3,
+    "flange_ring_and_arm_sockets": 0.15
+  },
+  "frame": {
+    "motor_mount_kg": 0.08,
+    "prop_gap_frac": 0.1,
+    "motor_pylon_m": 0.26,
+    "cd_arm": 1.0,
+    "motor_frontal_m2": 0.004,
+    "cda_extras_m2": 0.025
+  },
+  "hull": {
+    "shape": "ellipsoid",
+    "aspect_width": 0.7,
+    "aspect_height": 0.4,
+    "shell_kg_per_m2": 2.5,
+    "cd_hull": 0.3,
+    "min_length_m": 0.45,
+    "layout_z_frac": {
+      "shell": 0.5,
+      "arms": 0.5
+    }
+  },
+  "candidates": {
+    "propulsion_note": "Datasheet-class estimates for large-prop 12S power sets (motor + prop + ESC per arm). Replace with real datasheet numbers once a set is chosen.",
+    "propulsion": [
+      {
+        "name": "6010-class 170KV + 22x7.2 in",
+        "prop_in": 22,
+        "motor_kg": 0.25,
+        "prop_kg": 0.05,
+        "esc_kg": 0.09,
+        "max_thrust_kg": 7.0,
+        "fm": 0.65,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "7010-class 150KV + 24x8 in",
+        "prop_in": 24,
+        "motor_kg": 0.3,
+        "prop_kg": 0.06,
+        "esc_kg": 0.1,
+        "max_thrust_kg": 8.5,
+        "fm": 0.65,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "8108-class 120KV + 26x8.5 in",
+        "prop_in": 26,
+        "motor_kg": 0.36,
+        "prop_kg": 0.07,
+        "esc_kg": 0.11,
+        "max_thrust_kg": 10.5,
+        "fm": 0.66,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "8318-class 100KV + 28x9.2 in",
+        "prop_in": 28,
+        "motor_kg": 0.45,
+        "prop_kg": 0.09,
+        "esc_kg": 0.12,
+        "max_thrust_kg": 13.0,
+        "fm": 0.66,
+        "eta_drive": 0.8
+      },
+      {
+        "name": "T-Motor MN801-S KV120 + G28x9.2",
+        "real": true,
+        "prop_in": 28,
+        "motor_kg": 0.47,
+        "prop_kg": 0.06,
+        "esc_kg": 0.11,
+        "max_thrust_kg": 10.47,
+        "fm": 0.78,
+        "eta_drive": 0.85,
+        "source": "store.tmotor.com MN801-S KV120 test data (G28x9.2, 48 V): 3724 g at 337 W -> FM x eta = 0.66 at hover. ESC T-Motor ALPHA 80A 12S (110 g, 88.5x36.6x19 mm). Prop mass not published: estimate.",
+        "motor_size_m": [
+          0.089,
+          0.0394
+        ]
+      }
+    ],
+    "series_cells": 12,
+    "parallel_range": [
+      2,
+      12
+    ],
+    "pack_overhead_frac": 0.15,
+    "usable_dod": 0.9,
+    "cells": [
+      {
+        "name": "21700 4.5 Ah high-power (P45B-class)",
+        "ah": 4.5,
+        "v_nom": 3.6,
+        "kg": 0.07,
+        "max_a": 45
+      },
+      {
+        "name": "21700 5.0 Ah high-energy (50S-class)",
+        "ah": 5.0,
+        "v_nom": 3.6,
+        "kg": 0.069,
+        "max_a": 25
+      }
+    ]
+  },
+  "electrical": {
+    "note": "Inputs for electronics/spice/run_spice.py (chosen config only). Motor: T-Motor MN801-S KV120 datasheet (80 mOhm line-to-line, 24N28P, 1.1 A idle at 18 V). prop_ct fitted to T-Motor's G28x9.2 test point 3724 g at 2174 rpm (0 C air, rho 1.29).",
+    "motor": {
+      "kv": 120,
+      "pole_pairs": 14,
+      "rph_ohm": 0.04,
+      "lph_h": 4e-05,
+      "i0_a": 1.1
+    },
+    "prop_ct": 0.084,
+    "cell": {
+      "r0_ohm": 0.018,
+      "r1_ohm": 0.012,
+      "c1_f": 2000,
+      "ocv_full_v": 4.15,
+      "ocv_low_v": 3.45,
+      "cutoff_load_v": 2.8,
+      "cutoff_note": "Floor for short surges under load; the 50S-class datasheet allows 2.5 V."
+    },
+    "harness": {
+      "r_ohm": 0.004,
+      "l_h": 1.5e-07
+    },
+    "bulk": {
+      "c_f": 0.002,
+      "esr_ohm": 0.015
+    },
+    "avionics_w": 60,
+    "esc": {
+      "fpwm_hz": 24000,
+      "ron_ohm": 0.002,
+      "local_c_f": 0.00033,
+      "duty_max": 0.85
+    },
+    "mot_bat_curr_max_a": 130.0,
+    "mot_bat_curr_max_note": "ArduCopter MOT_BAT_CURR_MAX = 130 A (ark-1m/flight/ark1m.parm): keeps the AMASS AS150U arming plug inside its 140 A instantaneous rating at Ark-1M's 140 A uncapped peak; peak thrust drops to ~95 %, T/W ~2.08."
+  },
+  "chosen": {
+    "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
+    "cell": "21700 5.0 Ah high-energy (50S-class)",
+    "pack": "12S4P",
+    "feasible": true,
+    "checks": {
+      "energy": true,
+      "thrust_to_weight": true,
+      "pack_current": true,
+      "prop_clearance": true,
+      "stability": true
+    },
+    "energy_margin": 1.0352,
+    "mass_kg": {
+      "all_up": 12.573,
+      "payload": 2.0,
+      "pack": 3.8088,
+      "power_set": 2.56,
+      "arms": 1.0203,
+      "hull_shell": 1.1639,
+      "fixed": 2.02
+    },
+    "geometry_m": {
+      "prop_d": 0.7112,
+      "arm_radius": 0.5532,
+      "span_tip_to_tip": 1.8176,
+      "hull_length": 0.5556,
+      "hull_width": 0.3889,
+      "hull_height": 0.2222,
+      "hull_volume_l": 25.146,
+      "cda_m2": 0.0863,
+      "cda_out_m2": 0.1023
+    },
+    "power_w": {
+      "hover_loaded": 1076.0601,
+      "hover_empty": 829.8035,
+      "cruise_out": 886.555,
+      "cruise_back": 690.4364,
+      "peak_at_twr_min": 3043.5575
+    },
+    "cruise_speed_mps": {
+      "out": 17.0,
+      "back": 17.0
+    },
+    "energy_wh": {
+      "pack": 864.0,
+      "usable": 777.6,
+      "mission": 600.9241,
+      "needed_with_reserve": 751.1551
+    },
+    "pack_peak_current_a": 70.4527,
+    "thrust_to_weight": 3.331,
+    "flight_time_min": 44.2157,
+    "float_loaded": {
+      "draft_m": 0.1111,
+      "kg_m": 0.1158,
+      "gm_m": 0.0813,
+      "prop_clearance_m": 0.26
+    },
+    "arm_tube": {
+      "tube_mm": "38x1.5",
+      "od_m": 0.038,
+      "kg_per_m": 0.3165,
+      "mode_hz": 82.816,
+      "sf": 26.9044,
+      "hover_deflection_m": 0.0002,
+      "free_length_m": 0.3279,
+      "rotor_1p_band_hz": [
+        20.386425458881263,
+        78.92809240045646
+      ]
+    },
+    "layout_z_m": {
+      "battery_z_m": 0.0653,
+      "payload_z_m": -0.06,
+      "fixed_z_m": 0.0666,
+      "skid_bottom_z_m": -0.14
+    },
+    "hull_grown_for_fit": false
+  },
+  "runners_up": [
+    {
+      "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S5P",
+      "energy_margin": 1.1798,
+      "all_up_kg": 13.5869
+    },
+    {
+      "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
+      "cell": "21700 4.5 Ah high-power (P45B-class)",
+      "pack": "12S5P",
+      "energy_margin": 1.0551,
+      "all_up_kg": 13.6604
+    },
+    {
+      "propulsion": "8108-class 120KV + 26x8.5 in",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S6P",
+      "energy_margin": 1.0052,
+      "all_up_kg": 13.8969
+    },
+    {
+      "propulsion": "T-Motor MN801-S KV120 + G28x9.2",
+      "cell": "21700 5.0 Ah high-energy (50S-class)",
+      "pack": "12S6P",
+      "energy_margin": 1.3144,
+      "all_up_kg": 14.3971
+    }
+  ],
+  "mechanical": {
+    "note": "Inputs for mechanical/mech.py, used by sizing for every candidate. Carbon tube properties are catalogue-class (roll-wrapped, quasi-isotropic).",
+    "tube": {
+      "e_pa": 70000000000.0,
+      "flex_strength_pa": 600000000.0,
+      "density": 1600,
+      "fitting_overhead_frac": 0.15,
+      "max_d_over_t": 40
+    },
+    "tubes_od_wall_mm": [
+      [
+        20,
+        1
+      ],
+      [
+        22,
+        1
+      ],
+      [
+        25,
+        1
+      ],
+      [
+        25,
+        1.5
+      ],
+      [
+        28,
+        1
+      ],
+      [
+        28,
+        1.5
+      ],
+      [
+        30,
+        1
+      ],
+      [
+        30,
+        1.5
+      ],
+      [
+        32,
+        1
+      ],
+      [
+        32,
+        1.5
+      ],
+      [
+        35,
+        1
+      ],
+      [
+        35,
+        1.5
+      ],
+      [
+        38,
+        1
+      ],
+      [
+        38,
+        1.5
+      ],
+      [
+        40,
+        1
+      ],
+      [
+        40,
+        1.5
+      ]
+    ],
+    "arm_limits": {
+      "sf_min": 2.0,
+      "hover_deflection_max_m": 0.002,
+      "band_low": 0.8,
+      "band_high": 1.2,
+      "min_flight_thrust_frac": 0.5
+    },
+    "wall_m": 0.003,
+    "clearance_m": 0.005,
+    "hull_grow_step": 1.03,
+    "cell_21700_m": {
+      "d": 0.0214,
+      "h": 0.0705
+    },
+    "pack_case_m": 0.004,
+    "internal_parts": [
+      {
+        "name": "PDB + bulk capacitors",
+        "size_m": [
+          0.12,
+          0.08,
+          0.03
+        ],
+        "xy_m": [
+          0.0,
+          0.0
+        ],
+        "mass": "wiring_pdb_connectors"
+      },
+      {
+        "name": "flight controller + GNSS",
+        "size_m": [
+          0.06,
+          0.06,
+          0.03
+        ],
+        "xy_m": [
+          0.0,
+          0.0
+        ],
+        "mass": "flight_controller_gps"
+      },
+      {
+        "name": "perception: radar + lidar + camera",
+        "size_m": [
+          0.08,
+          0.07,
+          0.05
+        ],
+        "xy_m": [
+          0.19,
+          0.0
+        ],
+        "mass": "perception_radar_lidar_camera"
+      },
+      {
+        "name": "companion computer",
+        "size_m": [
+          0.1,
+          0.08,
+          0.04
+        ],
+        "xy_m": [
+          -0.19,
+          0.0
+        ],
+        "mass": "companion_computer"
+      },
+      {
+        "name": "comms: LTE + LoRa + satellite",
+        "size_m": [
+          0.08,
+          0.06,
+          0.03
+        ],
+        "xy_m": [
+          -0.08,
+          0.1
+        ],
+        "mass": "comms_lte_lora_sat"
+      }
+    ],
+    "pod": {
+      "size_m": [
+        0.3,
+        0.2,
+        0.12
+      ],
+      "gap_m": 0.01
+    },
+    "skids": {
+      "tube_d_m": 0.015,
+      "ground_gap_m": 0.03,
+      "track_m": 0.3
+    },
+    "shell_parts_z_frac": {
+      "hatch_and_seals": 0.5,
+      "payload_release": 0.0,
+      "flange_ring_and_arm_sockets": 0.5
+    },
+    "seal": {
+      "cord_d_mm": 3.53,
+      "squeeze_target": 0.25,
+      "squeeze_range": [
+        0.15,
+        0.3
+      ],
+      "fill_max": 0.85,
+      "flange_inset_m": 0.008,
+      "depth_m": 1.0,
+      "oring_force_n_per_mm": 3.0,
+      "bolt_preload_n": 3000,
+      "bolt_sf": 2.0,
+      "bolt_spacing_max_m": 0.06
+    },
+    "glands": [
+      {
+        "name": "motor phase leads (3 x 12 AWG)",
+        "qty": 4,
+        "cable_od_mm": 8.0,
+        "gland": "M16 IP68",
+        "range_mm": [
+          4.5,
+          10.0
+        ]
+      },
+      {
+        "name": "release servo lead",
+        "qty": 1,
+        "cable_od_mm": 4.0,
+        "gland": "M12 IP68",
+        "range_mm": [
+          3.0,
+          6.5
+        ]
+      }
+    ],
+    "release": {
+      "friction": 0.3,
+      "dynamic_factor": 2.0,
+      "horn_r_m": 0.01,
+      "servo_rated_nm": 2.45,
+      "sf_min": 3.0,
+      "servo": "IP67 metal-gear servo, 25 kg cm"
+    }
+  },
+  "mechanical_design": {
+    "arms": {
+      "tube_mm": "38x1.5",
+      "od_m": 0.038,
+      "kg_per_m": 0.3165,
+      "mode_hz": 82.8051,
+      "sf": 26.9021,
+      "hover_deflection_m": 0.0002,
+      "free_length_m": 0.3279,
+      "rotor_1p_band_hz": [
+        20.3864,
+        78.9281
+      ]
+    },
+    "packaging": {
+      "parts": [
+        {
+          "name": "battery",
+          "size_m": [
+            0.2648,
+            0.0936,
+            0.0785
+          ],
+          "centre_m": [
+            0.0,
+            0.0,
+            0.0653
+          ],
+          "mass": "pack",
+          "kg": 3.8088
+        },
+        {
+          "name": "PDB + bulk capacitors",
+          "size_m": [
+            0.12,
+            0.08,
+            0.03
+          ],
+          "centre_m": [
+            0.0,
+            0.0,
+            0.1195
+          ],
+          "mass": "wiring_pdb_connectors",
+          "kg": 0.35
+        },
+        {
+          "name": "flight controller + GNSS",
+          "size_m": [
+            0.06,
+            0.06,
+            0.03
+          ],
+          "centre_m": [
+            0.0,
+            0.0,
+            0.1495
+          ],
+          "mass": "flight_controller_gps",
+          "kg": 0.15
+        },
+        {
+          "name": "perception: radar + lidar + camera",
+          "size_m": [
+            0.08,
+            0.07,
+            0.05
+          ],
+          "centre_m": [
+            0.19,
+            0.0,
+            0.087
+          ],
+          "mass": "perception_radar_lidar_camera",
+          "kg": 0.3
+        },
+        {
+          "name": "companion computer",
+          "size_m": [
+            0.1,
+            0.08,
+            0.04
+          ],
+          "centre_m": [
+            -0.19,
+            0.0,
+            0.09
+          ],
+          "mass": "companion_computer",
+          "kg": 0.2
+        },
+        {
+          "name": "comms: LTE + LoRa + satellite",
+          "size_m": [
+            0.08,
+            0.06,
+            0.03
+          ],
+          "centre_m": [
+            -0.08,
+            0.1,
+            0.069
+          ],
+          "mass": "comms_lte_lora_sat",
+          "kg": 0.12
+        }
+      ],
+      "battery_z_m": 0.0653,
+      "payload_z_m": -0.06,
+      "fixed_z_m": 0.0666,
+      "skid_bottom_z_m": -0.14
+    },
+    "seals": {
+      "oring_length_m": 1.4453,
+      "gland_depth_mm": 2.6475,
+      "gland_width_mm": 4.9288,
+      "squeeze": 0.25,
+      "fill": 0.75,
+      "clamp_force_n": 5886.3343,
+      "bolts": 25,
+      "glands": [
+        {
+          "name": "motor phase leads (3 x 12 AWG)",
+          "qty": 4,
+          "cable_od_mm": 8.0,
+          "gland": "M16 IP68",
+          "range_mm": [
+            4.5,
+            10.0
+          ],
+          "ok": true
+        },
+        {
+          "name": "release servo lead",
+          "qty": 1,
+          "cable_od_mm": 4.0,
+          "gland": "M12 IP68",
+          "range_mm": [
+            3.0,
+            6.5
+          ],
+          "ok": true
+        }
+      ],
+      "release_torque_nm": 0.1177,
+      "release_sf": 20.8121,
+      "ok": true
+    }
+  },
+  "industrial_design": {
+    "note": "Ark-1M on the same airframe as Ark-1 (see ../../ark.json); the variant groups are armour, coating and the pontoon fabric.",
+    "model": "industrial-design/drone-model/Drone.obj",
+    "skid_z_below_m": -0.5,
+    "pontoon": {
+      "d_m": 0.155,
+      "length_m": 1.0,
+      "below_skid_m": 0.0,
+      "stowed_d_m": 0.05,
+      "stowed_length_m": 0.42,
+      "inflation": "2 x 60 g CO2 cartridges, fired by the flight controller before a water touchdown",
+      "length_note": "1.0 m (was 0.66): phase 5 sim found the 0.66 m tubes pitch over in 0.3 m waves (pitch righting peaked at 3 N m and vanished at 25 deg); 1.0 m keeps righting to 40 deg and rides 0.5 m waves",
+      "fabric": {
+        "name": "210D TPU-coated nylon outer + 0.5 mm self-sealing natural-rubber inner liner (fuel-cell style)",
+        "areal_kg_m2": 0.66,
+        "tensile_n_per_50mm": 1000.0,
+        "seam_efficiency": 0.7,
+        "seam_allowance": 0.12,
+        "estimated": "liner areal mass (~0.47 kg/m2 at 0.5 mm, 0.93 g/cm3) and self-sealing behaviour are estimates"
+      }
+    },
+    "added_mass_kg": {
+      "inflatable_pontoon_kit": 0.65,
+      "cargo_connector": 0.12,
+      "radar_altimeter_us_d1": 0.11,
+      "gnss_mast": 0.05
+    },
+    "mass_note": "AUW is built from the real parts (ark_from_model.mass_budget): harness.json components + copper, props, pontoon_system.json kit, shell, payload and a 0.25 kg mounting-hardware allowance (estimate).",
+    "shell_wall_m": 0.002,
+    "shell_density": 1500,
+    "belly_floor_below_m": -0.22,
+    "deck_gap_m": 0.006,
+    "deck_max_z_m": -0.12,
+    "mounting_hardware_kg": 0.25,
+    "pack": "12S7P",
+    "pack_note": "12S7P: the smallest pack that flies the 20 km out / 20 km back mission with 20 % reserve on this airframe's own drag (mission_check.py). Overrides sizing's 12S4P, which assumed the old low-drag hull.",
+    "armour": {
+      "role": "spall liner: stops fragments and small debris from reaching the pack and the flight electronics",
+      "material": "DuPont Kevlar 29 aramid, plain-weave ballistic fabric (style 745 class), resin-laminated panels",
+      "areal_kg_m2_per_ply": 0.47,
+      "plies": 3,
+      "estimated": "areal mass per ply and the ply count are class estimates, not a rated protection level",
+      "covers": {
+        "pack": true,
+        "avionics_box_m": [
+          0.22,
+          0.16,
+          0.06
+        ]
+      }
+    },
+    "coating": {
+      "role": "low-signature skin: matte, IR-reflectance-controlled topcoat instead of the white gloss livery",
+      "topcoat": "MIL-DTL-53039 Type II aliphatic polyurethane CARC, Green 383 (FED-STD-595 34094)",
+      "primer": "MIL-DTL-53022 epoxy primer",
+      "areal_kg_m2": 0.12,
+      "estimated": "dry film build ~60 um topcoat + ~40 um primer at ~1.4 g/cm3, est.",
+      "colour_hex": "#3b4233"
+    },
+    "livery": {
+      "scheme": "low-signature",
+      "registration": "ARK-201",
+      "shell_hex": "#3b4233",
+      "ink_hex": "#7d8270",
+      "accent_hex": "#8a7f5a",
+      "pontoon_hex": "#4a4d3a",
+      "cover_hex": "#545a45",
+      "logos": false,
+      "note": "Matte CARC Green 383 (FED-STD-595 34094) with low-visibility markings; no flag or partner logos."
+    },
+    "result": {
+      "scale": 0.77915,
+      "removed_parts": [
+        "Battery",
+        "GEO_Camera_Part_011",
+        "GEO_Camera_Part_012",
+        "GEO_Camera_Part_013",
+        "GEO_Camera_Part_014",
+        "GEO_Camera_Part_015",
+        "GEO_Camera_Part_016",
+        "GEO_Camera_Part_017",
+        "GEO_Camera_Part_018",
+        "GEO_Camera_Part_019",
+        "GEO_Camera_Part_020",
+        "GEO_Computer",
+        "GEO_Lathe_01",
+        "GEO_Lathe_02",
+        "GEO_Lathe_03",
+        "GEO_Lathe_04",
+        "GEO_Lens_01",
+        "GEO_Lens_02",
+        "GEO_Support_01",
+        "GEO_Support_02",
+        "GEO_Wires_01",
+        "GEO_Wires_02",
+        "GEO_Wires_03",
+        "GEO_Wires_04",
+        "GEO_Wires_05"
+      ],
+      "kept_parts": [
+        "GEO_Base_01",
+        "GEO_Base_02",
+        "GEO_Base_03",
+        "GEO_Base_04",
+        "GEO_Main_Body",
+        "GEO_Propeller_01",
+        "GEO_Propeller_02",
+        "GEO_Propeller_03",
+        "GEO_Propeller_04",
+        "Green_Light",
+        "Legs",
+        "Rear_Hatch"
+      ],
+      "triangles": 238400,
+      "body_area_m2": 1.6187,
+      "structure_kg": 2.428,
+      "auw_estimate_kg": 19.211,
+      "mass_kg": {
+        "structure": 2.428,
+        "pack": 6.665,
+        "electrical_parts": 3.262,
+        "copper": 0.214,
+        "props": 0.24,
+        "pontoon_kit": 1.68,
+        "mounting_hardware": 0.25,
+        "payload": 4.0,
+        "armour": 0.375,
+        "coating": 0.097
+      },
+      "battery": {
+        "pack": "12S7P",
+        "pack_kg": 6.665,
+        "pack_wh": 1512.0,
+        "location": "belly well, inside the hub",
+        "grid": [
+          12,
+          7
+        ],
+        "pack_size_m": [
+          0.2648,
+          0.1578,
+          0.0785
+        ],
+        "pack_centre_m": [
+          -0.06,
+          0.0,
+          -0.192
+        ],
+        "well_m": {
+          "x_m": [
+            -0.23,
+            0.11
+          ],
+          "y_m": [
+            -0.11,
+            0.11
+          ],
+          "floor_z_m": -0.2382
+        },
+        "fits": true
+      },
+      "deck_z_m": -0.1467,
+      "pontoons": {
+        "volume_l_each": 17.89,
+        "reserve_buoyancy": 0.863,
+        "draft_m": 0.0819,
+        "waterline_z_m": -0.4981,
+        "prop_clearance_m": 0.4343,
+        "hub_clearance_m": 0.2587,
+        "skid_y_m": 0.2809,
+        "tube_centre_z_m": -0.5025
+      },
+      "mounts": {
+        "hub_bottom_z_m": -0.2394,
+        "hub_top_z_m": 0.0258,
+        "radar_z_m": -0.2394,
+        "skid_bottom_z_m": -0.58
+      }
+    },
+    "mission": {
+      "cd_body": 0.9,
+      "result": {
+        "frontal_area_m2": 0.1822,
+        "cd_body": 0.9,
+        "cda_m2": 0.166,
+        "cda_payload_m2": 0.0216,
+        "auw_kg": 19.211,
+        "12S7P": {
+          "mission_wh": 1021.2,
+          "needed_with_reserve_wh": 1276.4,
+          "usable_wh": 1360.8,
+          "energy_margin": 1.0661,
+          "cruise_mps": [
+            18.0,
+            17.0
+          ],
+          "twr": 2.18,
+          "auw_kg": 19.211
+        },
+        "closes_with": "12S7P"
+      }
+    }
+  },
+  "power_chain": {
+    "hover": {
+      "thrust_n": 47.115,
+      "rpm": 2608.4265,
+      "wm_rad_s": 273.1538,
+      "ke_v_s_rad": 0.0796,
+      "p_shaft_w": 431.8801,
+      "p_target_w": 455.7907,
+      "eta_drive_assumed": 0.85
+    },
+    "esc_hover_low_pack": {
+      "vbus_v": 39.7601,
+      "duty": 0.6687,
+      "p_mech_w": 455.6138,
+      "p_in_w": 500.8798,
+      "ibus_a": 12.5975,
+      "iph_rms_a": 17.2708,
+      "efficiency": 0.8622,
+      "sweep": [
+        {
+          "duty": 0.5467,
+          "p_mech_w": 54.6579
+        },
+        {
+          "duty": 0.5667,
+          "p_mech_w": 118.1447
+        },
+        {
+          "duty": 0.5867,
+          "p_mech_w": 181.6105
+        },
+        {
+          "duty": 0.6067,
+          "p_mech_w": 247.0047
+        },
+        {
+          "duty": 0.6267,
+          "p_mech_w": 313.3564
+        },
+        {
+          "duty": 0.6467,
+          "p_mech_w": 380.5162
+        },
+        {
+          "duty": 0.6667,
+          "p_mech_w": 449.053
+        },
+        {
+          "duty": 0.6867,
+          "p_mech_w": 517.6161
+        }
+      ]
+    },
+    "bus": {
+      "full": {
+        "vavg_hover": 47.168,
+        "vmin_hover": 47.0137,
+        "vmin_peak": 44.4183,
+        "vavg_peak": 44.547,
+        "ipack_hover": 41.4435,
+        "ipack_peak": 116.6316,
+        "icap_rms_peak": 3.2799,
+        "vocv": 49.8,
+        "vcell_min_peak": 3.7015,
+        "cutoff_load_v": 2.8
+      },
+      "low": {
+        "vavg_hover": 38.47,
+        "vmin_hover": 38.3663,
+        "vmin_peak": 35.1645,
+        "vavg_peak": 35.3159,
+        "ipack_hover": 49.8472,
+        "ipack_peak": 140.3282,
+        "icap_rms_peak": 3.9447,
+        "vocv": 41.4,
+        "vcell_min_peak": 2.9304,
+        "cutoff_load_v": 2.8
+      }
+    },
+    "checks": {
+      "bus_above_cutoff": true,
+      "duty_headroom": true,
+      "efficiency_vs_sizing": true
+    }
+  },
+  "name": "Ark-1M",
+  "tagline": "defence logistics",
+  "blurb": "Unarmed forward-resupply quad for outposts: 4 kg of medical kit, blood, batteries or radios, 17 km out and back. Ark-1's airframe and electronics with a low-signature skin, an aramid spall liner around the pack and avionics, and self-sealing pontoons.",
+  "changes": [
+    [
+      "Payload 4 kg",
+      "in a larger insulated pod (300 x 200 x 120 mm); range 17 km out and back on the same 12S7P pack."
+    ],
+    [
+      "Low-signature skin",
+      "matte MIL-DTL-53039 CARC Green 383 over MIL-DTL-53022 primer instead of the white gloss; low-visibility markings, no flag or partner logos."
+    ],
+    [
+      "Armoured core",
+      "3 plies of Kevlar 29 aramid (est.) boxed around the pack and the flight electronics: 0.38 kg."
+    ],
+    [
+      "Self-sealing pontoons",
+      "0.5 mm natural-rubber liner inside the 210D TPU tubes (est.); still the 60 g lifejacket CO2 cylinder, fired at 8 m."
+    ],
+    [
+      "Current cap",
+      "ArduCopter MOT_BAT_CURR_MAX 130 A keeps the AS150U plug inside its 140 A rating; main pack path is 6 AWG."
+    ]
+  ]
+}
