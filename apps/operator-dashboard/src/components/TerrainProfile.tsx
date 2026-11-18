@@ -30,15 +30,21 @@ export function TerrainProfile({ profile, liveKm }: Props) {
       viewBox={`0 0 ${W} ${H}`}
       role="img"
       aria-label={`Terrain profile over ${maxKm.toFixed(1)} km: ground ${lo} to ${hi} metres, flight line above it`}
-      className="w-full rounded-xl bg-white"
+      className="w-full rounded-xl bg-card"
     >
-      <path d={area} fill="#C2DFB1" />
-      <path d={ground} fill="none" stroke="#6F9A5C" strokeWidth="1.2" />
-      <path d={line('flightAmslM')} fill="none" stroke="#0A84FF" strokeWidth="2" strokeLinejoin="round" />
+      <path d={area} fill="var(--color-terrain)" />
+      <path d={ground} fill="none" stroke="var(--color-terrain-line)" strokeWidth="1.2" />
+      <path
+        d={line('flightAmslM')}
+        fill="none"
+        stroke="var(--color-accent)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
       {showLive && (
-        <line x1={x(live)} x2={x(live)} y1={PAD.t} y2={H - PAD.b} stroke="#1C1C1E" strokeWidth="1" />
+        <line x1={x(live)} x2={x(live)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink)" strokeWidth="1" />
       )}
-      <g fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#5E6570">
+      <g fontFamily="JetBrains Mono, monospace" fontSize="9" fill="var(--color-sub)">
         <text x={PAD.l - 4} y={y(hi) + 8} textAnchor="end">
           {hi} m
         </text>
