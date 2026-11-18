@@ -12,7 +12,7 @@ Ark-1's airframe is the team's drone model, turned into Ark by scripts. The deta
 | `../simulation/` | Phase 5: Ark-1 flown in ArduCopter SITL (water landing, failed tube, water take-off, ditching) |
 | `electronics/spice/` | ngspice power chain: pack + harness + bus under surge, ESC + BLDC at hover |
 | `electronics/bom.md` | Bill of materials, filled from `ark.json` |
-| `sizing/hull.py`, `mechanical/` | The earlier concept (ellipsoid hull, carbon arms, STL CAD). It was replaced by the team's airframe and is kept only because sizing still imports it |
+| `sizing/hull.py`, `mechanical/mech.py` | The earlier concept (ellipsoid hull, carbon arms). It was replaced by the team's airframe and is kept only because sizing still imports it |
 
 ## Ark-1 (from `ark.json` -> `industrial_design`)
 Quad X built on the team's airframe. The gimbal is removed and a rear hatch closes the old battery bay. The pack
