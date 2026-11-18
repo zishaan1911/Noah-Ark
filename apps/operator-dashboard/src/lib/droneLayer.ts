@@ -7,7 +7,7 @@ import {
   type MapLibreMap,
 } from 'maplibre-gl';
 import { prefersReducedMotion } from './prefs';
-import type { Pose } from './types';
+import type { Pose, Theme } from './types';
 
 export type ModelStatus = 'loading' | 'ready' | 'error';
 
@@ -15,6 +15,7 @@ export interface DroneLayer extends CustomLayerInterface {
   setPose(pose: Pose): void;
   setVisible(visible: boolean): void;
   setArmed(armed: boolean): void;
+  setTheme(theme: Theme): void;
 }
 
 const MODEL_URL = '/models/ark1.glb';
@@ -139,6 +140,10 @@ export function createDroneLayer(onStatus: (status: ModelStatus) => void): Drone
     },
     setArmed(a) {
       armed = a;
+    },
+    setTheme(t) {
+      hemi.intensity = t === 'dark' ? 2.0 : 1.6; // the dark map gives less bounce light
+      map?.triggerRepaint();
     },
   };
   return layer;

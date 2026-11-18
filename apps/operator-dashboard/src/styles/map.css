@@ -1,0 +1,40 @@
+/* Camera reset button: bottom-centre, 24px above the bottom. Surface comes from the shared .glass class. */
+.map-reset {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.map-reset:active {
+  transform: translateX(-50%) scale(0.97);
+}
+
+/* Covers the one-frame camera jump when the view changes; MapView drives its opacity. */
+.map-fade {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.map-mini {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-reset {
+    transition: none;
+  }
+}
