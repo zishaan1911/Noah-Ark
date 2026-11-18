@@ -13,6 +13,21 @@ Apple Maps-like street map, plan a terrain-following route for Ark-1, send it to
 The 3D drone in Chase view is `public/models/ark1.glb` (metres, +Y up, nose toward -Z, props `prop_1`..`prop_4`).
 If it is missing the view still works and shows a "3D model not loaded" chip.
 
+## Use
+- **Pick:** search a place, click the map while picking, right-click or long-press to set the destination, or drag
+  the pins.
+- **Deliver:** the card steps through Plan → Review → Sending → Flying → Delivered. The bottom sheet (drag it: peek,
+  half, full) holds live telemetry, flight controls and events.
+- **Views:**
+  - **Chase:** drag to orbit, wheel or pinch to zoom, double-click to reset.
+  - **Onboard:** drag to aim the gimbal, wheel to zoom the field of view.
+  - Both hide the planning UI and show a minimap.
+- **Fly manually** (bottom sheet, once airborne):
+  - W/S forward and back, A/D sideways, Q/E or ←/→ to yaw, R/F to climb and descend, Shift to boost, Space to stop.
+  - Sticks stream on `ark/ARK-006/manual` at 10 Hz. The drone holds position if they stop for 1 s.
+  - End manual offers Hold, Return home or Land.
+- **Theme:** the sun/moon button in the header switches light and dark.
+
 ## Test
 `npm run lint && npm test && npm run build`
 
@@ -31,7 +46,7 @@ loaded from `shared/schemas` through `@schemas`.
 
 ## Data sources and attribution
 - Base map: OpenFreeMap vector tiles (style `liberty`, tinted in `src/lib/mapStyle.ts`), no API key. "OpenFreeMap
-  � OpenMapTiles, data from OpenStreetMap" (shown in the map's attribution control).
+  © OpenMapTiles, data from OpenStreetMap" (shown in the map's attribution control).
 - Elevation: AWS Terrain Tiles (terrarium, z12) from the Registry of Open Data on AWS. Sources include SRTM, ASTER
   GDEM and others; see the Terrain Tiles attribution page.
 - Map engine: MapLibre GL JS. 3D: three.js. Messaging: mqtt.js.
