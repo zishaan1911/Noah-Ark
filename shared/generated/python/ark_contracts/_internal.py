@@ -180,7 +180,16 @@ class Telemetry(BaseModel):
     missionId: MissionId | None = None
     ts: Timestamp
     position: Geo
+    altAmslM: float | None = Field(
+        None, description="Metres above mean sea level (position.altM is above home)."
+    )
     headingDeg: confloat(ge=0.0, lt=360.0) | None = None
+    rollDeg: confloat(ge=-180.0, le=180.0) | None = Field(
+        None, description="Right wing down is positive."
+    )
+    pitchDeg: confloat(ge=-90.0, le=90.0) | None = Field(
+        None, description="Nose up is positive."
+    )
     groundSpeedMs: confloat(ge=0.0) | None = None
     climbRateMs: float | None = None
     armed: bool

@@ -7,7 +7,10 @@
     "lon": 101.085,
     "altM": 42.0
   },
+  "altAmslM": 118.0,
   "headingDeg": 118.0,
+  "rollDeg": -2.4,
+  "pitchDeg": -6.1,
   "groundSpeedMs": 11.8,
   "climbRateMs": 0.0,
   "armed": true,
