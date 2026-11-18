@@ -65,7 +65,15 @@ def main() -> int:
         for k, f in (("harness", "harness.json"), ("pontoon_system", "pontoon_system.json"))
         if (HERE / f).exists()
     }
+    # flown scenarios from ../../simulation (optional): the water landing keeps its track for the replay
+    sitl = {}
+    for f in sorted((HERE.parents[1] / "simulation" / "results").glob("*.json")):
+        r = json.loads(f.read_text(encoding="utf-8"))
+        if f.stem != "water_landing":
+            r = {k: v for k, v in r.items() if k not in ("track", "events")}
+        sitl[f.stem] = r
     data = {
+        "sitl": sitl or None,
         "mission": idc.get("mission", {}).get("result"),
         "models": models,
         **extra,

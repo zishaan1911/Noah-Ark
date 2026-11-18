@@ -234,10 +234,45 @@
   });
   function settle(u) { return u <= 0 ? 0 : 1 - Math.exp(-u / 0.28) * Math.cos(u * 2 * Math.PI / 1.3); }
   function landingAt(T) {
+    if (SR) return sitlAt(T);
     const h = Math.max(H0 - LV * T, 0), td = T >= T_TD;
     const st = stateAt(T - T_FIRE);
     const sink = td ? W.draft_m * settle(T - T_TD) : 0;
     return { T, h, td, st, waterZ: zb - h + sink };
+  }
+  // SITL replay: with simulation/results/water_landing.json embedded, the landing plays the real ArduCopter run
+  // (radar height, attitude on the waves, the script's own FIRE / pressure messages, the disarm)
+  const SL = A.sitl && A.sitl.water_landing && A.sitl.water_landing.track ? A.sitl.water_landing : null;
+  const SR = SL && (() => {
+    const ix = k => SL.track_cols.indexOf(k);
+    const rows = SL.track.map(r => ({ t: r[ix('t')], d: r[ix('d')], roll: r[ix('roll')], pitch: r[ix('pitch')], h: r[ix('skid_h')], cg: r[ix('cg_h')] }));
+    const ev = SL.events.filter(e => /^PONT|Disarming|Arming/.test(e[1]));
+    const off = ev.find(e => e[1].includes('Disarming'));
+    return { rows, ev, t0: SL.fire_t_s - 8, tFire: SL.fire_t_s, tTD: SL.touchdown_t_s, tStop: off ? off[0] : SL.touchdown_t_s + 4, tEnd: rows[rows.length - 1].t, cg: SL.cg_hw_m };
+  })();
+  function sitlAt(T) {
+    const t = Math.min(SR.t0 + T, SR.tEnd), rows = SR.rows;
+    let i = rows.findIndex(q => q.t > t); i = i <= 0 ? (i === 0 ? 1 : rows.length - 1) : i;
+    const a = rows[i - 1], b = rows[i], k = clamp01((t - a.t) / Math.max(b.t - a.t, 1e-6)), f = key => lerp(a[key], b[key], k);
+    return { T, t, h: Math.max(f('h'), 0), td: t >= SR.tTD, st: stateAt(t - SR.tFire), roll: f('roll'), pitch: f('pitch'), cg: f('cg'),
+      vz: (b.d - a.d) / Math.max(b.t - a.t, 1e-6), fired: t >= SR.tFire };
+  }
+  const qAtt = new THREE.Quaternion(), eAtt = new THREE.Euler(), DEG = Math.PI / 180;
+  function waterFor(F) { // the water stays level in the world while the drone rolls and pitches on it (FRD -> this frame: pitch flips)
+    eAtt.set(F.roll * DEG, -F.pitch * DEG, 0, 'ZYX'); qAtt.setFromEuler(eAtt).invert();
+    water.quaternion.copy(qAtt);
+    water.position.set(...SR.cg).add(new THREE.Vector3(0, 0, -F.cg).applyQuaternion(qAtt));
+  }
+  function hudSitl(F) {
+    const seen = SR.ev.filter(e => e[0] <= F.t), has = s => seen.some(e => e[1].includes(s)), last = seen[seen.length - 1];
+    hud.innerHTML = title('Water landing · ArduCopter 4.7.2 SITL')
+      + row('Sim time', `${F.t.toFixed(1)} s`)
+      + row('Radar, skid → water', `${F.h.toFixed(2)} m`)
+      + row('Descent', `${Math.max(F.vz, 0).toFixed(2)} m/s`)
+      + row('Roll / pitch', `${F.roll.toFixed(1)}° / ${F.pitch.toFixed(1)}°`)
+      + row('Bag pressure', F.fired ? `${F.st.gauge.toFixed(1)} kPa · ${Math.round(F.st.vol * 100)} %` : '–')
+      + `<div style="margin-top:4px">${chip('ARMED', has('PONT: ARMED'))}${chip('FIRE', has('FIRE at'))}${chip('L OK', has('L pressure OK'), true)}${chip('R OK', has('R pressure OK'), true)}${chip('TOUCHDOWN', F.td, true)}${chip('DISARMED', has('Disarming'), true)}</div>`
+      + `<div style="margin-top:5px;color:#c9d2d4">${last ? esc(last[1]) : ''}</div>`;
   }
   function startLanding(T0, freeze) {
     landing = { T: T0 || 0, frozen: !!freeze };
@@ -248,11 +283,11 @@
     water.material.roughness = 0.32; water.material.clearcoatRoughness = 0.45; // soften the key-light glint seen from the chase camera
     set('t-water', true); set('t-float', false);
     camera.position.set(1.75, 0.55, 2.55); controls.target.set(-0.42, -0.2, 0.05); controls.update();
-    if (reduce) landing.T = T_TD + 6;
+    if (reduce) landing.T = SR ? SR.tTD - SR.t0 + 6 : T_TD + 6;
   }
   function stopLanding(reset) {
     landing = null; pinned = false; radarBeam.visible = false; ripples.forEach(m => { m.visible = false; });
-    water.scale.setScalar(1); water.position.z = W.waterline_z_m;
+    water.scale.setScalar(1); water.position.set(0, 0, W.waterline_z_m); water.quaternion.identity();
     if (landGloss) { [water.material.roughness, water.material.clearcoatRoughness] = landGloss; landGloss = null; }
     landBtn.setAttribute('aria-pressed', 'false'); hud.hidden = true;
     if (reset) { tau = 0; dir = 0; set('t-water', false); set('t-float', false); water.visible = false; ground.visible = true; setView('hero'); }
@@ -307,23 +342,25 @@
     if (landing) {
       if (!landing.frozen && !reduce) landing.T += dt;
       const F = landingAt(landing.T); st = F.st;
-      const bob = F.td && !reduce ? Math.min(1, (landing.T - T_TD) / 2) * (0.004 * Math.sin(clockT * 2.2) + 0.002 * Math.sin(clockT * 3.7 + 1)) : 0;
-      water.position.z = F.waterZ + bob;
+      const tS = SR ? F.t - SR.tStop : landing.T - T_STOP; // time since the land detector disarmed
+      if (SR) waterFor(F);
+      else water.position.z = F.waterZ + (F.td && !reduce ? Math.min(1, (landing.T - T_TD) / 2) * (0.004 * Math.sin(clockT * 2.2) + 0.002 * Math.sin(clockT * 3.7 + 1)) : 0);
       // props: hover speed until the land detector disarms, then spin down
-      propW = landing.T < T_STOP ? 32 : 32 * Math.exp(-(landing.T - T_STOP) / 0.45);
+      propW = tS < 0 ? 32 : 32 * Math.exp(-tS / 0.45);
       if (!landing.frozen && !reduce) props.forEach(p => { p.rotation.z += propW * dt * p.userData.dir; });
       else if (landing.frozen && propW > 1) props.forEach((p, i) => { p.rotation.z = i * 0.7; });
       radarBeam.visible = !F.td;
-      const beam = Math.max(0.01, R.mounts.radar_z_m - 0.022 - water.position.z);
+      const beam = Math.max(0.01, SR ? F.h + R.mounts.radar_z_m - 0.022 - zb : R.mounts.radar_z_m - 0.022 - water.position.z);
       radarBeam.scale.set(0.12 * beam, 0.12 * beam, beam);
-      const wash = landing.T < T_STOP ? clamp01(1 - F.h / 3) : clamp01(1 - (landing.T - T_STOP) / 1.5);
+      const wash = tS < 0 ? clamp01(1 - F.h / 3) : clamp01(1 - tS / 1.5);
       ripples.forEach((m, k) => {
         const ph = ((clockT / 1.4) + k / 3) % 1;
-        m.visible = wash > 0.01; m.position.set(0.02, 0, water.position.z + 0.003); m.scale.setScalar(0.45 + 1.5 * ph);
+        m.visible = wash > 0.01; m.quaternion.copy(water.quaternion);
+        m.position.copy(water.position).add(new THREE.Vector3(0.02, 0, 0.003).applyQuaternion(water.quaternion)); m.scale.setScalar(0.45 + 1.5 * ph);
         m.material.opacity = 0.32 * wash * (1 - ph) * Math.min(1, ph * 6);
       });
       if (st.tau >= T_OK) set('t-float', true);
-      hud.hidden = false; hudLanding(F);
+      hud.hidden = false; if (SR) hudSitl(F); else hudLanding(F);
     } else {
       if (!pinned && dir) { tau = Math.min(T_END, Math.max(0, tau + dt * (dir > 0 ? 1 : 3) * dir)); if (tau === 0 || tau === T_END) dir = 0; }
       st = stateAt(tau);

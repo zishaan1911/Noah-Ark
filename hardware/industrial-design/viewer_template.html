@@ -117,6 +117,10 @@ code { font: 0.92em var(--mono); }
         <h2>Mission</h2>
         <dl id="mstats"></dl>
       </section>
+      <section id="sitl" hidden>
+        <h2>Flown in ArduCopter SITL</h2>
+        <dl id="sstats"></dl>
+      </section>
       <section>
         <h2>What changed from the base model</h2>
         <ul class="changes">
@@ -216,6 +220,14 @@ code { font: 0.92em var(--mono); }
      ['Cruise', m.cruise_mps ? `${m.cruise_mps[0]} / ${m.cruise_mps[1]} m/s` : '–'], ['Thrust : weight', m.twr ? m.twr.toFixed(2) : '–'],
      ['Drag area', A.mission.cda_m2.toFixed(3) + ' m²']]
       .forEach(([k, v]) => document.getElementById('mstats').insertAdjacentHTML('beforeend', `<dt>${k}</dt><dd>${v}</dd>`));
+  }
+  if (A.sitl) { // simulation/results: each scenario flown in ArduCopter 4.7.2 SITL with the real Lua script
+    const NAMES = { water_landing: 'Water landing', one_side_fails: 'One tube fails', water_takeoff: 'Water take-off', ditching: 'Battery ditching' };
+    const KEY = r => r.fire_height_m != null && r.max_tilt_on_water_deg != null ? `fired ${r.fire_height_m.toFixed(1)} m, ${r.max_tilt_on_water_deg.toFixed(0)}° max on water`
+      : r.max_tilt_takeoff_deg != null ? `${r.max_tilt_takeoff_deg.toFixed(0)}° max at lift-off` : r.checks.aborted_and_held ? 'held, diverted, landed on the bank' : '';
+    Object.entries(A.sitl).forEach(([k, r]) => document.getElementById('sstats').insertAdjacentHTML('beforeend',
+      `<dt title="${esc(r.about)}">${NAMES[k] || k}</dt><dd>${r.passed ? '✓' : '✗'} ${KEY(r)}</dd>`));
+    document.getElementById('sitl').hidden = false;
   }
   document.getElementById('f-span').textContent = A.span_m.toFixed(2) + ' m';
 
