@@ -73,6 +73,26 @@ paths:
             application/json:
               schema: { $ref: '../schemas/sos-request.schema.json' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /sos/{sosId}/location:
+    post:
+      tags: [sos]
+      summary: Update the sender's location
+      description: Public, like GET /sos/{sosId}. Ark SOS sends this in the background until the SOS is delivered or closed; the latest position moves the mission destination. Throttled per SOS.
+      operationId: updateSosLocation
+      security: []
+      parameters:
+        - { name: sosId, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/sosId' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/sos-request.schema.json#/$defs/locationUpdate' }
+      responses:
+        '204': { description: Stored. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: The SOS is delivered or closed; stop sending. }
+        '429': { description: Too many requests }
   /missions:
     post:
       tags: [missions]

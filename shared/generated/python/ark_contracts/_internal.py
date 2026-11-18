@@ -101,6 +101,55 @@ class SosReport(BaseModel):
     needs: list[Need] | None = None
 
 
+class MissionStatus(Enum):
+    pending_approval = "pending_approval"
+    approved = "approved"
+    dispatched = "dispatched"
+    in_flight = "in_flight"
+    delivered = "delivered"
+    returned = "returned"
+    aborted = "aborted"
+    cancelled = "cancelled"
+
+
+class PayloadItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    item: constr(min_length=1)
+    qty: conint(ge=1)
+    weightKg: PositiveFloat = Field(
+        ..., description="Total for this line (qty included)."
+    )
+
+
+class LandingType(Enum):
+    ground = "ground"
+    water = "water"
+    winch = "winch"
+    drop = "drop"
+
+
+class MissionRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    mode: MissionMode
+    sosRequestIds: list[SosId] | None = Field(None, min_length=1)
+    destination: Geo | None = None
+    payload: list[PayloadItem] | None = None
+    landingType: LandingType | None = None
+    notes: constr(max_length=2000) | None = None
+
+
+class SosLocationUpdate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    location: Geo
+    ts: Timestamp
+
+
 class SosTriage(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -117,45 +166,34 @@ class SosTriage(BaseModel):
     )
 
 
-class MissionStatus(Enum):
-    pending_approval = "pending_approval"
-    approved = "approved"
-    dispatched = "dispatched"
-    in_flight = "in_flight"
-    delivered = "delivered"
-    returned = "returned"
-    aborted = "aborted"
-    cancelled = "cancelled"
-
-
-class LandingType(Enum):
-    ground = "ground"
-    water = "water"
-    winch = "winch"
-    drop = "drop"
-
-
-class PayloadItem(BaseModel):
+class Mission(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    item: constr(min_length=1)
-    qty: conint(ge=1)
-    weightKg: PositiveFloat = Field(
-        ..., description="Total for this line (qty included)."
-    )
-
-
-class MissionRequest(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
+    id: MissionId
     mode: MissionMode
-    sosRequestIds: list[SosId] | None = Field(None, min_length=1)
-    destination: Geo | None = None
-    payload: list[PayloadItem] | None = None
-    landingType: LandingType | None = None
-    notes: constr(max_length=2000) | None = None
+    droneId: DroneId
+    createdAt: Timestamp
+    status: MissionStatus = Field(..., title="MissionStatus")
+    sosRequestIds: list[SosId] | None = None
+    origin: Geo
+    destination: Geo
+    waypoints: list[Geo] | None = Field(None, max_length=50)
+    landingType: LandingType
+    payload: list[PayloadItem] = Field(..., min_length=1)
+    payloadKg: confloat(le=2.0, gt=0.0) = Field(
+        ...,
+        description="Total payload. Ark-1 is sized for 2 kg (hardware/ark.json). Must equal the sum of payload weights; checked in code.",
+    )
+    distanceKm: confloat(ge=0.0, le=20.0) | None = Field(
+        None, description="One way. Ark-1 range is 20 km out and back."
+    )
+    etaMinutes: confloat(ge=0.0) | None = None
+    aiRationale: constr(max_length=2000) | None = None
+    approvedBy: str | None = Field(
+        None, description="Operator user id; set on approve."
+    )
+    approvedAt: Timestamp | None = None
 
 
 class Pontoons(Enum):
@@ -209,6 +247,22 @@ class CommandType(Enum):
     abort = "abort"
     rtl = "rtl"
     land = "land"
+
+
+class DroneCommand(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: CommandId
+    droneId: DroneId
+    issuedAt: Timestamp
+    issuedBy: str | None = Field(
+        None,
+        description="Operator user id, or the service name for automatic commands.",
+    )
+    type: CommandType = Field(..., title="CommandType")
+    mission: Mission | None = None
+    reason: constr(max_length=500) | None = None
 
 
 class EventType(Enum):
@@ -316,12 +370,29 @@ class DroneEventUpdate(BaseModel):
     data: DroneEvent
 
 
+class MissionUpdate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["mission"]
+    data: Mission
+
+
 class DroneUpdate(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     kind: Literal["drone"]
     data: Drone
+
+
+class SosDelivery(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    droneId: DroneId
+    missionStatus: MissionStatus
+    etaMinutes: confloat(ge=0.0) | None = None
 
 
 class SosRequest(BaseModel):
@@ -334,52 +405,7 @@ class SosRequest(BaseModel):
     report: SosReport
     triage: SosTriage | None = None
     missionId: MissionId | None = None
-
-
-class Mission(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: MissionId
-    mode: MissionMode
-    droneId: DroneId
-    createdAt: Timestamp
-    status: MissionStatus = Field(..., title="MissionStatus")
-    sosRequestIds: list[SosId] | None = None
-    origin: Geo
-    destination: Geo
-    waypoints: list[Geo] | None = Field(None, max_length=50)
-    landingType: LandingType
-    payload: list[PayloadItem] = Field(..., min_length=1)
-    payloadKg: confloat(le=2.0, gt=0.0) = Field(
-        ...,
-        description="Total payload. Ark-1 is sized for 2 kg (hardware/ark.json). Must equal the sum of payload weights; checked in code.",
-    )
-    distanceKm: confloat(ge=0.0, le=20.0) | None = Field(
-        None, description="One way. Ark-1 range is 20 km out and back."
-    )
-    etaMinutes: confloat(ge=0.0) | None = None
-    aiRationale: constr(max_length=2000) | None = None
-    approvedBy: str | None = Field(
-        None, description="Operator user id; set on approve."
-    )
-    approvedAt: Timestamp | None = None
-
-
-class DroneCommand(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: CommandId
-    droneId: DroneId
-    issuedAt: Timestamp
-    issuedBy: str | None = Field(
-        None,
-        description="Operator user id, or the service name for automatic commands.",
-    )
-    type: CommandType = Field(..., title="CommandType")
-    mission: Mission | None = None
-    reason: constr(max_length=500) | None = None
+    delivery: SosDelivery | None = None
 
 
 class SosUpdate(BaseModel):
@@ -390,14 +416,6 @@ class SosUpdate(BaseModel):
     data: SosRequest
 
 
-class MissionUpdate(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    kind: Literal["mission"]
-    data: Mission
-
-
 class Contracts(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -405,6 +423,7 @@ class Contracts(BaseModel):
     sosRequest: SosRequest | None = None
     sosReport: SosReport | None = None
     sosTriage: SosTriage | None = None
+    sosLocationUpdate: SosLocationUpdate | None = None
     mission: Mission | None = None
     missionRequest: MissionRequest | None = None
     telemetry: Telemetry | None = None

@@ -3,7 +3,6 @@
 //
 //     final contracts = contractsFromJson(jsonString);
 
-import 'package:meta/meta.dart';
 import 'dart:convert';
 
 Contracts contractsFromJson(String str) => Contracts.fromJson(json.decode(str));
@@ -13,26 +12,79 @@ String contractsToJson(Contracts data) => json.encode(data.toJson());
 
 ///Codegen root only; not a message.
 class Contracts {
-    SosReport sosReport;
-    SosRequest sosRequest;
-    SosTriage sosTriage;
+    SosLocationUpdate? sosLocationUpdate;
+    SosReport? sosReport;
+    SosRequest? sosRequest;
+    SosTriage? sosTriage;
 
     Contracts({
-        required this.sosReport,
-        required this.sosRequest,
-        required this.sosTriage,
+        this.sosLocationUpdate,
+        this.sosReport,
+        this.sosRequest,
+        this.sosTriage,
     });
 
     factory Contracts.fromJson(Map<String, dynamic> json) => Contracts(
-        sosReport: SosReport.fromJson(json["sosReport"]),
-        sosRequest: SosRequest.fromJson(json["sosRequest"]),
-        sosTriage: SosTriage.fromJson(json["sosTriage"]),
+        sosLocationUpdate: json["sosLocationUpdate"] == null ? null : SosLocationUpdate.fromJson(json["sosLocationUpdate"]),
+        sosReport: json["sosReport"] == null ? null : SosReport.fromJson(json["sosReport"]),
+        sosRequest: json["sosRequest"] == null ? null : SosRequest.fromJson(json["sosRequest"]),
+        sosTriage: json["sosTriage"] == null ? null : SosTriage.fromJson(json["sosTriage"]),
     );
 
     Map<String, dynamic> toJson() => {
-        "sosReport": sosReport.toJson(),
-        "sosRequest": sosRequest.toJson(),
-        "sosTriage": sosTriage.toJson(),
+        "sosLocationUpdate": sosLocationUpdate?.toJson(),
+        "sosReport": sosReport?.toJson(),
+        "sosRequest": sosRequest?.toJson(),
+        "sosTriage": sosTriage?.toJson(),
+    };
+}
+
+
+///The sender's newer position. Ark SOS sends it in the background while help is on the way
+///(POST /sos/{sosId}/location).
+class SosLocationUpdate {
+    Geo location;
+    DateTime ts;
+
+    SosLocationUpdate({
+        required this.location,
+        required this.ts,
+    });
+
+    factory SosLocationUpdate.fromJson(Map<String, dynamic> json) => SosLocationUpdate(
+        location: Geo.fromJson(json["location"]),
+        ts: DateTime.parse(json["ts"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "location": location.toJson(),
+        "ts": ts.toIso8601String(),
+    };
+}
+
+class Geo {
+    
+    ///Metres above the home point (relative altitude).
+    double? altM;
+    double lat;
+    double lon;
+
+    Geo({
+        this.altM,
+        required this.lat,
+        required this.lon,
+    });
+
+    factory Geo.fromJson(Map<String, dynamic> json) => Geo(
+        altM: json["altM"]?.toDouble(),
+        lat: json["lat"]?.toDouble(),
+        lon: json["lon"]?.toDouble(),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "altM": altM,
+        "lat": lat,
+        "lon": lon,
     };
 }
 
@@ -42,25 +94,25 @@ class SosReport {
     Channel channel;
     
     ///E.164, used to reply.
-    String contactPhone;
+    String? contactPhone;
     
     ///BCP 47 tag, e.g. ms, en, zh.
-    String language;
+    String? language;
     Geo location;
-    List<Need> needs;
-    int peopleCount;
-    String photoUrl;
-    String rawMessage;
+    List<Need>? needs;
+    int? peopleCount;
+    String? photoUrl;
+    String? rawMessage;
 
     SosReport({
         required this.channel,
-        required this.contactPhone,
-        required this.language,
+        this.contactPhone,
+        this.language,
         required this.location,
-        required this.needs,
-        required this.peopleCount,
-        required this.photoUrl,
-        required this.rawMessage,
+        this.needs,
+        this.peopleCount,
+        this.photoUrl,
+        this.rawMessage,
     });
 
     factory SosReport.fromJson(Map<String, dynamic> json) => SosReport(
@@ -68,7 +120,7 @@ class SosReport {
         contactPhone: json["contactPhone"],
         language: json["language"],
         location: Geo.fromJson(json["location"]),
-        needs: List<Need>.from(json["needs"].map((x) => needValues.map[x]!)),
+        needs: json["needs"] == null ? [] : List<Need>.from(json["needs"]!.map((x) => needValues.map[x]!)),
         peopleCount: json["peopleCount"],
         photoUrl: json["photoUrl"],
         rawMessage: json["rawMessage"],
@@ -79,7 +131,7 @@ class SosReport {
         "contactPhone": contactPhone,
         "language": language,
         "location": location.toJson(),
-        "needs": List<dynamic>.from(needs.map((x) => needValues.reverse[x])),
+        "needs": needs == null ? [] : List<dynamic>.from(needs!.map((x) => needValues.reverse[x])),
         "peopleCount": peopleCount,
         "photoUrl": photoUrl,
         "rawMessage": rawMessage,
@@ -99,32 +151,6 @@ final channelValues = EnumValues({
     "voice": Channel.VOICE,
     "whatsapp": Channel.WHATSAPP
 });
-
-class Geo {
-    
-    ///Metres above the home point (relative altitude).
-    double altM;
-    double lat;
-    double lon;
-
-    Geo({
-        required this.altM,
-        required this.lat,
-        required this.lon,
-    });
-
-    factory Geo.fromJson(Map<String, dynamic> json) => Geo(
-        altM: json["altM"]?.toDouble(),
-        lat: json["lat"]?.toDouble(),
-        lon: json["lon"]?.toDouble(),
-    );
-
-    Map<String, dynamic> toJson() => {
-        "altM": altM,
-        "lat": lat,
-        "lon": lon,
-    };
-}
 
 enum Need {
     BABY_SUPPLIES,
@@ -151,39 +177,92 @@ final needValues = EnumValues({
 ///concluded (triage), and where it is in the flow.
 class SosRequest {
     DateTime createdAt;
+    SosDelivery? delivery;
     String id;
-    String missionId;
+    String? missionId;
     SosReport report;
     SosStatus status;
-    SosTriage triage;
+    SosTriage? triage;
 
     SosRequest({
         required this.createdAt,
+        this.delivery,
         required this.id,
-        required this.missionId,
+        this.missionId,
         required this.report,
         required this.status,
-        required this.triage,
+        this.triage,
     });
 
     factory SosRequest.fromJson(Map<String, dynamic> json) => SosRequest(
         createdAt: DateTime.parse(json["createdAt"]),
+        delivery: json["delivery"] == null ? null : SosDelivery.fromJson(json["delivery"]),
         id: json["id"],
         missionId: json["missionId"],
         report: SosReport.fromJson(json["report"]),
         status: sosStatusValues.map[json["status"]]!,
-        triage: SosTriage.fromJson(json["triage"]),
+        triage: json["triage"] == null ? null : SosTriage.fromJson(json["triage"]),
     );
 
     Map<String, dynamic> toJson() => {
         "createdAt": createdAt.toIso8601String(),
+        "delivery": delivery?.toJson(),
         "id": id,
         "missionId": missionId,
         "report": report.toJson(),
         "status": sosStatusValues.reverse[status],
-        "triage": triage.toJson(),
+        "triage": triage?.toJson(),
     };
 }
+
+
+///The drone on its way, for the sender: GET /missions needs a staff JWT, so Ark SOS reads
+///it here. Set once a mission is approved.
+class SosDelivery {
+    String droneId;
+    double? etaMinutes;
+    MissionStatus missionStatus;
+
+    SosDelivery({
+        required this.droneId,
+        this.etaMinutes,
+        required this.missionStatus,
+    });
+
+    factory SosDelivery.fromJson(Map<String, dynamic> json) => SosDelivery(
+        droneId: json["droneId"],
+        etaMinutes: json["etaMinutes"]?.toDouble(),
+        missionStatus: missionStatusValues.map[json["missionStatus"]]!,
+    );
+
+    Map<String, dynamic> toJson() => {
+        "droneId": droneId,
+        "etaMinutes": etaMinutes,
+        "missionStatus": missionStatusValues.reverse[missionStatus],
+    };
+}
+
+enum MissionStatus {
+    ABORTED,
+    APPROVED,
+    CANCELLED,
+    DELIVERED,
+    DISPATCHED,
+    IN_FLIGHT,
+    PENDING_APPROVAL,
+    RETURNED
+}
+
+final missionStatusValues = EnumValues({
+    "aborted": MissionStatus.ABORTED,
+    "approved": MissionStatus.APPROVED,
+    "cancelled": MissionStatus.CANCELLED,
+    "delivered": MissionStatus.DELIVERED,
+    "dispatched": MissionStatus.DISPATCHED,
+    "in_flight": MissionStatus.IN_FLIGHT,
+    "pending_approval": MissionStatus.PENDING_APPROVAL,
+    "returned": MissionStatus.RETURNED
+});
 
 enum SosStatus {
     ASSIGNED,
@@ -207,10 +286,10 @@ final sosStatusValues = EnumValues({
 class SosTriage {
     
     ///Detected language of rawMessage, BCP 47.
-    String language;
-    List<String> medicalConditions;
+    String? language;
+    List<String>? medicalConditions;
     List<Need> needs;
-    int peopleCount;
+    int? peopleCount;
     
     ///One or two sentences in English for the operator.
     String summary;
@@ -219,17 +298,17 @@ class SosTriage {
     int urgency;
 
     SosTriage({
-        required this.language,
-        required this.medicalConditions,
+        this.language,
+        this.medicalConditions,
         required this.needs,
-        required this.peopleCount,
+        this.peopleCount,
         required this.summary,
         required this.urgency,
     });
 
     factory SosTriage.fromJson(Map<String, dynamic> json) => SosTriage(
         language: json["language"],
-        medicalConditions: List<String>.from(json["medicalConditions"].map((x) => x)),
+        medicalConditions: json["medicalConditions"] == null ? [] : List<String>.from(json["medicalConditions"]!.map((x) => x)),
         needs: List<Need>.from(json["needs"].map((x) => needValues.map[x]!)),
         peopleCount: json["peopleCount"],
         summary: json["summary"],
@@ -238,7 +317,7 @@ class SosTriage {
 
     Map<String, dynamic> toJson() => {
         "language": language,
-        "medicalConditions": List<dynamic>.from(medicalConditions.map((x) => x)),
+        "medicalConditions": medicalConditions == null ? [] : List<dynamic>.from(medicalConditions!.map((x) => x)),
         "needs": List<dynamic>.from(needs.map((x) => needValues.reverse[x])),
         "peopleCount": peopleCount,
         "summary": summary,

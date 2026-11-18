@@ -3,9 +3,9 @@
 
 export type SosStatus = "new" | "triaged" | "assigned" | "delivered" | "closed";
 export type Need = "food" | "water" | "medicine" | "baby_supplies" | "shelter" | "rescue" | "other";
-export type MissionMode = "gdex" | "relief" | "military";
 export type MissionStatus =
   "pending_approval" | "approved" | "dispatched" | "in_flight" | "delivered" | "returned" | "aborted" | "cancelled";
+export type MissionMode = "gdex" | "relief" | "military";
 export type CommandType = "upload_mission" | "start" | "hold" | "abort" | "rtl" | "land";
 export type EventType =
   | "command_ack"
@@ -37,6 +37,7 @@ export interface Contracts {
   sosRequest?: SosRequest;
   sosReport?: SosReport;
   sosTriage?: SosTriage;
+  sosLocationUpdate?: SosLocationUpdate;
   mission?: Mission;
   missionRequest?: MissionRequest;
   telemetry?: Telemetry;
@@ -55,6 +56,7 @@ export interface SosRequest {
   report: SosReport;
   triage?: SosTriage;
   missionId?: string;
+  delivery?: SosDelivery;
 }
 /**
  * What the sender submits: the POST /sos body, or parsed from SMS / WhatsApp / voice.
@@ -105,6 +107,21 @@ export interface SosTriage {
    * Detected language of rawMessage, BCP 47.
    */
   language?: string;
+}
+/**
+ * The drone on its way, for the sender: GET /missions needs a staff JWT, so Ark SOS reads it here. Set once a mission is approved.
+ */
+export interface SosDelivery {
+  droneId: string;
+  missionStatus: MissionStatus;
+  etaMinutes?: number;
+}
+/**
+ * The sender's newer position. Ark SOS sends it in the background while help is on the way (POST /sos/{sosId}/location).
+ */
+export interface SosLocationUpdate {
+  location: Geo;
+  ts: string;
 }
 /**
  * A planned flight. mission-planner (Bedrock) writes it as pending_approval; an operator approves it in Ark Command before dispatch.

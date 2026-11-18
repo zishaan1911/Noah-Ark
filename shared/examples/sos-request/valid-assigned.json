@@ -1,0 +1,39 @@
+{
+  "id": "sos_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "createdAt": "2026-11-18T09:30:00Z",
+  "status": "assigned",
+  "report": {
+    "channel": "whatsapp",
+    "language": "ms",
+    "rawMessage": "Banjir naik, 4 orang di atas bumbung, perlu air dan ubat insulin",
+    "location": {
+      "lat": 4.5975,
+      "lon": 101.0901
+    },
+    "peopleCount": 4,
+    "needs": [
+      "water",
+      "medicine"
+    ],
+    "contactPhone": "+60123456789"
+  },
+  "triage": {
+    "urgency": 4,
+    "needs": [
+      "water",
+      "medicine"
+    ],
+    "peopleCount": 4,
+    "medicalConditions": [
+      "diabetes"
+    ],
+    "summary": "4 people stranded on a roof by flood water; one diabetic needs insulin.",
+    "language": "ms"
+  },
+  "missionId": "msn_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "delivery": {
+    "droneId": "ARK-001",
+    "missionStatus": "in_flight",
+    "etaMinutes": 2.5
+  }
+}
