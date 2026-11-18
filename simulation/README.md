@@ -68,7 +68,16 @@ climb to 60 m, outbound, hover for the drop, inbound, descend, then a 3 min pack
 |---|---|---|---|
 | `ark/<droneId>/telemetry` | sim → app | 0 | `telemetry.schema.json`, every second per drone, `ts` is wall clock |
 | `fleet/live` | sim → app | 1 | `{"kind": "mission" \| "drone", "data": ...}` on every change; every drone record again every 10 s |
-| `fleet/stats` | sim → app | 1, retained | `flying`, `queued`, `deliveredTotal`, `avgDeliveryMin`, `onTimePct` (order to drop within `promiseMin`, 30), `windMs`, `windFromDeg`, `speedup` |
+| `fleet/stats` | sim → app | 1, retained | `flying`, `queued`, `held` (queued orders waiting on weather), `weatherCalls` (hubs per `go`/`caution`/`no_go`), `deliveredTotal`, `avgDeliveryMin`, `onTimePct` (order to drop within `promiseMin`, 30), `windMs`, `windFromDeg`, `speedup` |
+| `fleet/weather` | sim → app | 1, retained | `weather.schema.json`: a go / caution / no-go call per hub and the storm cells, every 10 s |
+
+**Weather.** Every 10 minutes the sim makes one Open-Meteo request for all six hubs (wind, gusts, rain, WMO code); the
+dispatcher's `fly_call` turns each hub's numbers into a call, and the optimiser holds orders at a `no_go` hub and plans
+paths around storm cells (missions carry the detour as `waypoints`). A scripted **demo storm** (6 km radius, 45 mm/h,
+thunder) drifts NE from the sea SW of Beaufort at 8 m/s in sim time and restarts after 3 sim-hours; a hub under it is
+`no_go`. Turn it off with `--no-storm`. If Open-Meteo is unreachable the air is calm and dry. Shortcuts: the storm is
+scripted (a radar cell tracker would replace it); in-flight drones do not re-route when the storm moves onto their path;
+one wind (Papar's) drives flight for the whole network. Test: `pytest tests/test_fleet_weather.py`.
 
 `--speedup` scales sim time only. Shortcuts: missions are auto-approved (the real flow waits for an operator); the
 optimiser runs in-process instead of as a Lambda behind Step Functions; powers are Ark-1's at 17 m/s and hover

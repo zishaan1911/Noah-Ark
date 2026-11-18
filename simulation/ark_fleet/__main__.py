@@ -1,8 +1,8 @@
 """MQTT runner for the fleet sim.
 
-    python -m ark_fleet --broker broker:1883 [--drones-per-hub 4] [--speedup 4] [--seed 7]
+    python -m ark_fleet --broker broker:1883 [--drones-per-hub 4] [--speedup 4] [--seed 7] [--no-storm]
 
-Publishes telemetry to `ark/<droneId>/telemetry`, changes to `fleet/live`, and the retained `fleet/stats`.
+Publishes telemetry to `ark/<droneId>/telemetry`, changes to `fleet/live`, and the retained `fleet/stats` and `fleet/weather`.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ import paho.mqtt.client as mqtt
 
 from .network import HUBS
 from .sim import Fleet
+from .weather import fetch_hub_weather
 
 PAPAR = next(h for h in HUBS if h.name == "Papar")
 WIND_URL = (
@@ -45,13 +46,23 @@ def main() -> None:
     ap.add_argument("--drones-per-hub", type=int, default=4)
     ap.add_argument("--speedup", type=float, default=4.0)
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--no-storm", action="store_true", help="skip the demo storm cell")
     a = ap.parse_args()
     host, _, port = a.broker.rpartition(":")
 
     wind_ms, wind_from, detail = current_wind(PAPAR.lat, PAPAR.lon)
     if detail:
         print(detail, flush=True)
-    fleet = Fleet(a.seed, wind_ms, wind_from, a.drones_per_hub, epoch=datetime.now(UTC))
+    fleet = Fleet(a.seed, wind_ms, wind_from, a.drones_per_hub, epoch=datetime.now(UTC), storms_enabled=not a.no_storm)
+
+    def refresh_weather() -> None:
+        hub_wx, wx_detail = fetch_hub_weather(HUBS)
+        if wx_detail:
+            print(wx_detail, flush=True)
+        fleet.set_hub_weather(hub_wx)
+
+    refresh_weather()
+    last_wx = time.monotonic()
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.connect(host, int(port))
@@ -68,8 +79,12 @@ def main() -> None:
         stats = fleet.stats() | {"windMs": wind_ms, "windFromDeg": wind_from, "speedup": a.speedup}
         client.publish("fleet/stats", json.dumps(stats), qos=1, retain=True)
 
+    def publish_weather() -> None:
+        client.publish("fleet/weather", json.dumps(fleet.weather(now_iso())), qos=1, retain=True)
+
     publish_records()
     publish_stats()
+    publish_weather()
     print(f"fleet sim: {len(fleet.drones)} drones, speedup {a.speedup:g}, seed {a.seed}", flush=True)
 
     start = time.monotonic()
@@ -86,6 +101,10 @@ def main() -> None:
             if tick_n % 10 == 0:
                 publish_records()  # a dashboard that opens late fills in
                 publish_stats()
+                publish_weather()
+            if time.monotonic() - last_wx >= 600:
+                last_wx = time.monotonic()
+                refresh_weather()
     except KeyboardInterrupt:
         print("stopping", flush=True)
     finally:

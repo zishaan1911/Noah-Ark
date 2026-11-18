@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import math
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from energy import DELIVERY_HOVER_S, bearing_deg, cruise_w, ground_speed_ms, haversine_km, hover_w, pct
-from optimiser import DroneState, Order, assign
+from optimiser import DroneState, Order, assign, held_reason
+from routing import path_around
 
 from .ids import ulid
 from .network import DRONES_PER_HUB, DROP_POINTS, HUBS, DropPoint
+from .weather import DemoStorm, HubWx, calm, conditions_at, weather_message
 
 CRUISE_ALT_M = 60.0
 CLIMB_MS = 4.0
@@ -40,8 +42,7 @@ class FleetDrone:
     status: str = "available"  # available | assigned | in_flight | charging
     phase: str = "idle"  # idle | climb | outbound | deliver | inbound | descend
     mission: dict[str, Any] | None = None
-    target_lat: float = 0.0
-    target_lon: float = 0.0
+    route: list[tuple[float, float]] = field(default_factory=list)  # remaining points, the first is the target
     ground_speed_ms: float = 0.0
     hover_left_s: float = 0.0
     swap_left_s: float = 0.0
@@ -73,9 +74,14 @@ class Fleet:
         wind_from_deg: float,
         drones_per_hub: int = DRONES_PER_HUB,
         epoch: datetime | None = None,
+        storms_enabled: bool = True,
     ):
         self.rng = random.Random(seed)
+        # shortcut: one wind for the whole network (Papar's); use per-hub wind in the flight model if hubs differ much.
         self.wind_ms, self.wind_from_deg = wind_ms, wind_from_deg
+        self.storms_enabled = storms_enabled
+        self.demo_storm = DemoStorm()
+        self.hub_wx: list[HubWx] = calm(HUBS, wind_ms, wind_from_deg)
         self.epoch = epoch or EPOCH
         self.now_s = 0.0
         self.drones: list[FleetDrone] = []
@@ -99,6 +105,23 @@ class Fleet:
         self._by_id = {d.id: d for d in self.drones}
         self._next_order_s = self.rng.expovariate(ORDERS_PER_MIN / 60)
         self._delivered = 0
+        self.held: dict[str, str] = {}  # queued order id -> why it waits (weather), for stats
+        self._refresh_weather(0.0)
+
+    # --- weather -------------------------------------------------------------------------------------------------
+
+    def set_hub_weather(self, hub_wx: list[HubWx]) -> None:
+        self.hub_wx = hub_wx
+        self._refresh_weather(self.now_s)
+
+    def _refresh_weather(self, now_s: float) -> None:
+        self.storms = (self.demo_storm.at(now_s),) if self.storms_enabled else ()
+        self.conditions, self.hubs_json = conditions_at(self.hub_wx, self.storms)
+        self.storms_json = [self.demo_storm.json(now_s)] if self.storms_enabled else []
+
+    def weather(self, now_iso: str) -> dict[str, Any]:
+        source = "open-meteo+demo-storm" if self.storms_enabled else "open-meteo"
+        return weather_message(now_iso, source, self.hubs_json, self.storms_json)
 
     # --- clock helpers -------------------------------------------------------------------------------------------
 
@@ -181,9 +204,14 @@ class Fleet:
     def stats(self) -> dict[str, Any]:
         done = [(t.delivered_s - t.created_s) / 60 for t in self.tracks.values() if t.delivered_s is not None]
         on_time = sum(1 for m in done if m <= PROMISE_MIN)
+        calls = {"go": 0, "caution": 0, "no_go": 0}
+        for h in self.hubs_json:
+            calls[h["call"]] += 1
         return {
             "flying": sum(1 for d in self.drones if d.status == "in_flight"),
             "queued": len(self.queue),
+            "held": len(self.held),
+            "weatherCalls": calls,
             "deliveredTotal": self._delivered,
             "avgDeliveryMin": round(sum(done) / len(done), 1) if done else 0.0,
             "onTimePct": round(100 * on_time / len(done), 1) if done else 100.0,
@@ -197,37 +225,56 @@ class Fleet:
         self.now_s = now_s
         events: list[dict[str, Any]] = []
         self.spawn_orders(now_s)
+        self._refresh_weather(now_s)
         self._dispatch(now_s, events)
         for d in self.drones:
             self._step(d, dt_s, now_s, events)
         return events
 
+    @staticmethod
+    def _state(d: FleetDrone) -> DroneState:
+        return DroneState(d.id, d.lat, d.lon, d.home_lat, d.home_lon, d.status, d.battery_pct, MAX_PAYLOAD_KG)
+
     def _dispatch(self, now_s: float, events: list[dict[str, Any]]) -> None:
         free = [d for d in self.drones if d.status == "available"]
-        if not self.queue or not free:
-            return
-        states = [
-            DroneState(d.id, d.lat, d.lon, d.home_lat, d.home_lon, d.status, d.battery_pct, MAX_PAYLOAD_KG)
-            for d in free
-        ]
-        choices = assign([q.order for q in self.queue], states, self.wind_ms, self.wind_from_deg, now_s)
-        for c in choices:
-            q = next((x for x in self.queue if x.order.id == c.order_id), None)
-            d = self._by_id.get(c.drone_id)
-            if q is None or d is None or d.status != "available":
-                continue
-            self.queue.remove(q)
-            d.mission = self._mission(d, q, c, now_s)
-            d.status = "assigned"
-            d.target_lat, d.target_lon = q.drop.lat, q.drop.lon
-            self.tracks[d.mission["id"]] = _Track(created_s=q.order.created_s)
-            # shortcut: auto-approved (straight to `dispatched`); the real flow waits for an operator in Ark Command.
-            events.append({"kind": "mission", "data": dict(d.mission)})
-            events.append({"kind": "drone", "data": self.drone_record(d)})
+        if self.queue and free:
+            choices = assign(
+                [q.order for q in self.queue],
+                [self._state(d) for d in free],
+                self.wind_ms,
+                self.wind_from_deg,
+                now_s,
+                conditions=self.conditions,
+            )
+            for c in choices:
+                q = next((x for x in self.queue if x.order.id == c.order_id), None)
+                d = self._by_id.get(c.drone_id)
+                if q is None or d is None or d.status != "available":
+                    continue
+                self.queue.remove(q)
+                d.mission = self._mission(d, q, c, now_s)
+                d.status = "assigned"
+                # shortcut: in-flight drones do not re-route when the storm moves onto their path; re-plan per tick
+                # with path_around when that matters.
+                d.route = [*c.route, (q.drop.lat, q.drop.lon)]
+                self.tracks[d.mission["id"]] = _Track(created_s=q.order.created_s)
+                # shortcut: auto-approved (straight to `dispatched`); the real flow waits for an operator in Ark Command.
+                events.append({"kind": "mission", "data": dict(d.mission)})
+                events.append({"kind": "drone", "data": self.drone_record(d)})
+        states = [self._state(d) for d in self.drones]
+        self.held = {}
+        for q in self.queue:
+            why = held_reason(q.order, states, self.conditions)
+            if why is not None:
+                self.held[q.order.id] = why
 
     def _mission(self, d: FleetDrone, q: _Queued, c: Any, now_s: float) -> dict[str, Any]:
         weight = round(q.order.payload_kg, 2)
+        extra: dict[str, Any] = (
+            {"waypoints": [{"lat": lat, "lon": lon} for lat, lon in c.route[:50]]} if c.route else {}
+        )
         return {
+            **extra,
             "id": f"msn_{self._ulid(now_s)}",
             "mode": q.order.mode,
             "droneId": d.id,
@@ -255,22 +302,26 @@ class Fleet:
         d.battery_pct -= pct(hover_w(_payload_kg(d)) * dt_s / 3600)
 
     def _fly_to(self, d: FleetDrone, dt_s: float) -> bool:
-        """Move toward the target; True on arrival."""
-        dist = haversine_km(d.lat, d.lon, d.target_lat, d.target_lon)
-        brg = bearing_deg(d.lat, d.lon, d.target_lat, d.target_lon)
+        """Move toward the next point of the route; True on arriving at the last one."""
+        tlat, tlon = d.route[0]
+        dist = haversine_km(d.lat, d.lon, tlat, tlon)
+        brg = bearing_deg(d.lat, d.lon, tlat, tlon)
         gs = max(ground_speed_ms(brg, self.wind_ms, self.wind_from_deg), 1.0)
         step = min(gs * dt_s / 1000, dist)
         d.heading_deg = brg
         d.ground_speed_ms = gs
         if step >= dist:
-            d.lat, d.lon = d.target_lat, d.target_lon
+            d.lat, d.lon = tlat, tlon
         else:
             r = math.radians(brg)
             # shortcut: flat-earth step (steps are under 0.1 km); use a great-circle destination if dt grows.
             d.lat += step * math.cos(r) / KM_PER_DEG
             d.lon += step * math.sin(r) / (KM_PER_DEG * math.cos(math.radians(d.lat)))
         d.battery_pct -= pct(cruise_w(_payload_kg(d)) * (step * 1000 / gs) / 3600)
-        return step >= dist
+        if step >= dist:
+            d.route.pop(0)
+            return not d.route
+        return False
 
     def _step(self, d: FleetDrone, dt_s: float, now_s: float, events: list[dict[str, Any]]) -> None:
         d.ground_speed_ms = 0.0
@@ -301,7 +352,12 @@ class Fleet:
                 self._set_mission(d, "delivered", events)
                 self.tracks[d.mission["id"]].delivered_s = now_s
                 self._delivered += 1
-                d.phase, d.target_lat, d.target_lon = "inbound", d.home_lat, d.home_lon
+                dest = (d.lat, d.lon)
+                home = (d.home_lat, d.home_lon)
+                around = path_around(dest, home, self.storms) or []
+                # drop endpoints in case path_around includes them; only the middle points are waypoints
+                d.route = [p for p in around if p != dest and p != home] + [home]
+                d.phase = "inbound"
         elif ph == "inbound":
             if self._fly_to(d, dt_s):
                 d.phase = "descend"
