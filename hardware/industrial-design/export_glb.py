@@ -1,6 +1,7 @@
 """Export the real Ark-1 to a glTF binary for Ark Command's 3D views.
 
     python industrial-design/export_glb.py   # out/ark_model.npz + ark.json -> apps/operator-dashboard/public/models/ark1.glb
+    npx @gltf-transform/cli@4.2.1 meshopt <that glb> <that glb>   # then compress: 4 MB -> 0.8 MB, node names kept
 
 Same airframe as the viewer (build_viewer.py: the motor pods are widened to the real T-Motor MN801-S diameter) plus the
 parts the viewer builds from data and that are visible from outside: GNSS mast and puck, radar altimeter, cargo
