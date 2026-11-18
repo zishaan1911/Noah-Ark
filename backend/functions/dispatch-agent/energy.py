@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import itertools
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 # Ark-1 as built (hardware/ark.json industrial_design: 16.19 kg AUW, 12S7P), powers from sizing/size_ark.py's
@@ -93,6 +95,26 @@ def pct(wh: float) -> float:
     return wh / PACK_WH * 100.0
 
 
+def path_km(path: Sequence[tuple[float, float]]) -> float:
+    """Length of a (lat, lon) path in km."""
+    return sum(haversine_km(p[0], p[1], q[0], q[1]) for p, q in itertools.pairwise(path))
+
+
+def path_s(path: Sequence[tuple[float, float]], wind_ms: float, wind_from_deg: float) -> float:
+    """Cruise time along the path (each leg on its own track) plus one take-off/landing hover."""
+    cruise = sum(
+        _flight_s(haversine_km(p[0], p[1], q[0], q[1]), bearing_deg(p[0], p[1], q[0], q[1]), wind_ms, wind_from_deg)
+        for p, q in itertools.pairwise(path)
+    )
+    return cruise + HOVER_S_PER_LEG
+
+
+def path_wh(path: Sequence[tuple[float, float]], wind_ms: float, wind_from_deg: float, payload_kg: float) -> float:
+    """Energy along the path: cruise per leg plus ONE take-off/landing hover."""
+    cruise_s = path_s(path, wind_ms, wind_from_deg) - HOVER_S_PER_LEG
+    return (cruise_w(payload_kg) * cruise_s + hover_w(payload_kg) * HOVER_S_PER_LEG) / 3600.0
+
+
 def trip(
     drone_lat: float,
     drone_lon: float,
@@ -103,19 +125,22 @@ def trip(
     payload_kg: float,
     wind_ms: float,
     wind_from_deg: float,
+    *,
+    out_path: Sequence[tuple[float, float]] | None = None,
+    back_path: Sequence[tuple[float, float]] | None = None,
 ) -> Trip:
-    """Drone to destination loaded, delivery hover, then destination to home empty."""
-    out_km = haversine_km(drone_lat, drone_lon, dest_lat, dest_lon)
-    back_km = haversine_km(dest_lat, dest_lon, home_lat, home_lon)
-    out_track = bearing_deg(drone_lat, drone_lon, dest_lat, dest_lon)
-    back_track = bearing_deg(dest_lat, dest_lon, home_lat, home_lon)
+    """Drone to destination loaded, delivery hover, then destination to home empty (straight unless paths given)."""
+    out_path = out_path or [(drone_lat, drone_lon), (dest_lat, dest_lon)]
+    back_path = back_path or [(dest_lat, dest_lon), (home_lat, home_lon)]
+    out_km = path_km(out_path)
+    back_km = path_km(back_path)
 
-    out_wh = leg_wh(out_km, out_track, wind_ms, wind_from_deg, payload_kg)
-    back_wh = leg_wh(back_km, back_track, wind_ms, wind_from_deg, 0.0)
+    out_wh = path_wh(out_path, wind_ms, wind_from_deg, payload_kg)
+    back_wh = path_wh(back_path, wind_ms, wind_from_deg, 0.0)
     delivery_wh = hover_w(payload_kg) * DELIVERY_HOVER_S / 3600.0
 
-    out_s = _flight_s(out_km, out_track, wind_ms, wind_from_deg) + HOVER_S_PER_LEG
-    back_s = _flight_s(back_km, back_track, wind_ms, wind_from_deg) + HOVER_S_PER_LEG
+    out_s = path_s(out_path, wind_ms, wind_from_deg)
+    back_s = path_s(back_path, wind_ms, wind_from_deg)
     return Trip(
         out_km=out_km,
         back_km=back_km,
