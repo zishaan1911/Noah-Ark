@@ -112,7 +112,7 @@ def trip(
 
     out_wh = leg_wh(out_km, out_track, wind_ms, wind_from_deg, payload_kg)
     back_wh = leg_wh(back_km, back_track, wind_ms, wind_from_deg, 0.0)
-    delivery_wh = P_HOVER_LOADED_W * DELIVERY_HOVER_S / 3600.0
+    delivery_wh = hover_w(payload_kg) * DELIVERY_HOVER_S / 3600.0
 
     out_s = _flight_s(out_km, out_track, wind_ms, wind_from_deg) + HOVER_S_PER_LEG
     back_s = _flight_s(back_km, back_track, wind_ms, wind_from_deg) + HOVER_S_PER_LEG
