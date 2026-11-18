@@ -39,4 +39,25 @@ drone to destination loaded, delivery hover, then destination to home empty.
 
 Eligible drones are `available`, can carry the payload, are within 20 km, and land with at least 20%.
 
+## Weather
+
+Optional `"weather"` in the event, shaped like `shared/schemas/weather.schema.json` (`hubs[]` with lat/lon/call/reason,
+`storms[]` with id/lat/lon/radiusKm/rainMmH). Each assignment then carries `"route": [{"lat","lon"}, ...]` (empty when
+straight). Without `weather` nothing changes.
+
+| Limit (Ark-1 estimates) | Caution | No-go |
+|---|---|---|
+| Wind | 8 m/s | 12 m/s |
+| Gusts | 11 m/s | 15 m/s |
+| Rain | 10 mm/h | 30 mm/h |
+| Thunderstorm (WMO 95-99) | | always |
+
+`weather.fly_call()` makes the call. A `no_go` hub launches nothing. A `caution` hub caps the one-way range at 15 km
+(instead of 20). Storms are circles: a leg that passes within radius + 1 km of a centre is bent round it with one
+waypoint, and the rationale says how many km that adds. A drop inside a storm cannot be served (`held_reason()` says why).
+
+shortcut: flat-earth detour, fine under ~50 km, use geodesic maths beyond that.
+shortcut: one detour waypoint per storm (recursion depth 3), use a visibility-graph planner for dense storm fields.
+shortcut: storms are static during a pick, re-run dispatch as they move.
+
 shortcut: dispatch uses a greedy per-order pick, upgrade to a joint assignment / VRP solver when the fleet passes ~50 drones.
