@@ -5,7 +5,10 @@
   // arm tops like a vinyl sheet instead of stretching.
   const decals = [];
   { // block scope: the modules share one function scope
-  const INK = '#1d2226', GREY = '#5f676c', ORANGE = '#e8621c', LIGHT = '#f4f3ef';
+  // LV (template): a variant's low-signature scheme draws low-visibility ink and no flag or partner logos
+  const INK = LIVERY ? LIVERY.ink_hex : '#1d2226', GREY = LIVERY ? LIVERY.ink_hex : '#5f676c';
+  const ORANGE = LIVERY ? LIVERY.accent_hex : '#e8621c', LIGHT = '#f4f3ef';
+  const NAME = ((A.variant && A.variant.name) || 'Ark-1').toUpperCase();
   const COND = '"Barlow Condensed", "Arial Narrow", sans-serif', MONO = '"JetBrains Mono", Consolas, monospace';
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
   const redraws = [];
@@ -50,24 +53,27 @@
     g.beginPath(); g.moveTo(x + s / 2, y); g.lineTo(x + s, y + s * 0.88); g.lineTo(x, y + s * 0.88); g.closePath(); g.fill(); g.stroke();
     g.fillStyle = INK; g.fillRect(x + s * 0.46, y + s * 0.3, s * 0.08, s * 0.32); g.fillRect(x + s * 0.46, y + s * 0.68, s * 0.08, s * 0.08);
   };
-  const REG = 'ARK-001';
+  const REG = (LIVERY && LIVERY.registration) || 'ARK-001';
   const pack = (A.chosen && A.chosen.pack) || '12S4P';
   const kwh = A.chosen && A.chosen.pack_kwh ? `  ·  ${A.chosen.pack_kwh.toFixed(2)} kWh` : '';
 
   // ---- artwork
   // hub flanks (280 x 70 mm): flag, registration and model, maker's mark, orange belt line
   const flankTex = artwork(280, 70, g => {
-    const fw = logoW('flag-of-malaysia', 22);
-    drawLogo(g, 'flag-of-malaysia', 12, 13, 22);
-    g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(12, 13, fw, 0.4); g.fillRect(12, 34.6, fw, 0.4);
+    const fw = LIVERY ? -7 : logoW('flag-of-malaysia', 22);
+    if (!LIVERY) {
+      drawLogo(g, 'flag-of-malaysia', 12, 13, 22);
+      g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(12, 13, fw, 0.4); g.fillRect(12, 34.6, fw, 0.4);
+    }
     text(g, REG, 12 + fw + 7, 35, `700 33px ${COND}`, INK, 'left', 0.8);
-    text(g, 'ARK-1  ·  AMPHIBIOUS DELIVERY', 12, 47, `600 9px ${COND}`, GREY, 'left', 1.2);
+    text(g, LIVERY ? `${NAME}  ·  DEFENCE LOGISTICS` : 'ARK-1  ·  AMPHIBIOUS DELIVERY', 12, 47, `600 9px ${COND}`, GREY, 'left', 1.2);
     drawAxis(g, 214, 3, 48, INK);
     stripe(g, 0, 280, 53, 7, ORANGE, 7);
     stripe(g, 20, 262, 63, 1.6, INK, 1.6);
   });
   // nose (230 x 70 mm): operator and cloud partner
   const noseTex = artwork(230, 70, g => {
+    if (LIVERY) { stripe(g, 0, 230, 57, 7, ORANGE, 7); return; } // no partner logos on the low-signature scheme
     const gw = logoW('gdex-logo', 30), aw = logoW('aws-logo', 27), gap = 22, x0 = (230 - gw - aw - 2 * gap) / 2;
     drawLogo(g, 'gdex-logo', x0, 12, 30);
     g.fillStyle = 'rgba(29,34,38,0.35)'; g.fillRect(x0 + gw + gap - 0.4, 13, 0.8, 28);
@@ -91,7 +97,7 @@
   // hub roof (190 x 70 mm): the maker's lockup
   const roofTex = artwork(190, 70, g => {
     drawAxis(g, 4, 6, 58, INK);
-    text(g, 'ARK-1', 66, 42, `700 44px ${COND}`, INK, 'left', 1);
+    text(g, NAME, 66, 42, `700 44px ${COND}`, INK, 'left', 1);
     stripe(g, 67, 186, 49, 3.2, ORANGE, 3.2);
     text(g, 'SEVENTH AXIS', 67, 62, `600 9.5px ${COND}`, GREY, 'left', 2.4);
   });

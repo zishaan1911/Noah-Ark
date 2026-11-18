@@ -170,6 +170,7 @@ code { font: 0.92em var(--mono); }
 <script>
 (function () {
   const A = window.ARK, R = A.id.result, PT = A.id.pontoon, C = A.chosen;
+  const LIVERY = A.variant && A.variant.livery; // a variant's low-signature scheme (Ark-1M), read by the materials and decals
   const P = Number(C.pack.split('S')[1].replace('P', ''));
   // parts table: every component in the harness (grouped by product), the props, and the pontoon kit
   const esc = v => String(v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -215,7 +216,7 @@ code { font: 0.92em var(--mono); }
     .forEach(([k, v]) => document.getElementById('wstats').insertAdjacentHTML('beforeend', `<dt>${k}</dt><dd>${v}</dd>`));
   if (A.mission) {
     const m = A.mission[C.pack] || {};
-    [['Route', '20 km out with 2 kg, 20 km back'], ['Battery', `${C.pack}, ${C.pack_kwh.toFixed(2)} kWh`],
+    [['Route', A.req ? `${A.req.range_out_km} km out with ${A.req.payload_kg} kg, ${A.req.range_back_km} km back` : '20 km out with 2 kg, 20 km back'], ['Battery', `${C.pack}, ${C.pack_kwh.toFixed(2)} kWh`],
      ['Energy margin', m.energy_margin ? `${((m.energy_margin - 1) * 100).toFixed(1)} % over need + 20 % reserve` : '–'],
      ['Cruise', m.cruise_mps ? `${m.cruise_mps[0]} / ${m.cruise_mps[1]} m/s` : '–'], ['Thrust : weight', m.twr ? m.twr.toFixed(2) : '–'],
      ['Drag area', A.mission.cda_m2.toFixed(3) + ' m²']]
@@ -280,6 +281,12 @@ code { font: 0.92em var(--mono); }
   };
   Object.values(M).forEach(m => { if (m.color) m.color.convertSRGBToLinear(); if (m.emissive) m.emissive.convertSRGBToLinear(); m.envMapIntensity = 0.55; });
   M.shell.envMapIntensity = 0.8; M.steel.envMapIntensity = 1.0; M.carbon.envMapIntensity = 0.35;
+  // a variant's low-signature scheme (Ark-1M): matte camouflage shell instead of the white gloss
+  if (LIVERY) {
+    [M.shell, M.white].forEach(m => { m.color.set(LIVERY.shell_hex).convertSRGBToLinear(); m.roughness = 0.82; m.clearcoat = 0.04; });
+    M.orange.color.set(LIVERY.accent_hex).convertSRGBToLinear(); M.orange.clearcoat = 0.05; M.orange.roughness = 0.8;
+    M.shell.envMapIntensity = 0.45;
+  }
   const shadowed = o => { o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
   const tag = (o, name, info) => { o.traverse(m => { if (m.isMesh) m.userData.part = { name, info }; }); return o; };
   const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };

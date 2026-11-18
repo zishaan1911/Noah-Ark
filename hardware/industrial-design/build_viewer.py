@@ -7,14 +7,19 @@ One geometry edit happens here: the motor pods are widened to the real T-Motor M
 
 import base64
 import json
+import re
 import sys
+from html import escape
 from pathlib import Path
 
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-ARK_JSON = HERE.parent / "ark.json"
-OUT = HERE / "out"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import variant  # ARK_VARIANT picks Ark-1 or a variant folder
+
+ARK_JSON = variant.ARK_JSON
+OUT = variant.OUT
 
 
 def widen_radially(v: np.ndarray, diameter: float) -> np.ndarray:
@@ -61,9 +66,9 @@ def main() -> int:
     # optional inputs owned by the electronics and pontoon work: part models (glTF binary), harness netlist, pontoon system
     models = {p.stem: base64.b64encode(p.read_bytes()).decode() for p in sorted((HERE / "parts").glob("*.glb"))}
     extra = {
-        k: json.loads((HERE / f).read_text(encoding="utf-8"))
+        k: json.loads((variant.ID_DATA / f).read_text(encoding="utf-8"))
         for k, f in (("harness", "harness.json"), ("pontoon_system", "pontoon_system.json"))
-        if (HERE / f).exists()
+        if (variant.ID_DATA / f).exists()
     }
     # flown scenarios from ../../simulation (optional): the water landing keeps its track for the replay
     sitl = {}
@@ -73,7 +78,9 @@ def main() -> int:
             r = {k: v for k, v in r.items() if k not in ("track", "events")}
         sitl[f.stem] = r
     data = {
-        "sitl": sitl or None,
+        "sitl": (sitl or None) if not variant.NAME else None,  # the flown SITL tracks are Ark-1's
+        "variant": {"name": ark.get("name", "Ark-1"), "livery": idc.get("livery")},
+        "req": {k: ark["requirements"][k] for k in ("range_out_km", "range_back_km", "payload_kg")},
         "mission": idc.get("mission", {}).get("result"),
         "models": models,
         **extra,
@@ -100,6 +107,16 @@ def main() -> int:
     # viewer/NN_*.js run inside the page's one function scope, in file-name order (they share its variables)
     modules = "\n".join(p.read_text(encoding="utf-8") for p in sorted((HERE / "viewer").glob("*.js")))
     html = html.replace("/*__MODULES__*/", modules)
+    name, tagline = ark.get("name", "Ark-1"), ark.get("tagline", "amphibious")
+    html = html.replace("<title>Ark-1</title>", f"<title>{name}</title>")
+    html = html.replace("<h1>Ark-1 <span>amphibious</span></h1>", f"<h1>{name} <span>{tagline}</span></h1>")
+    html = html.replace('aria-label="3D model of Ark-1.', f'aria-label="3D model of {name}.')
+    if blurb := ark.get("blurb"):  # a variant's own intro and its changes on top of Ark-1's list
+        html = re.sub(
+            r'<p class="sub">.*?</p>', lambda _: f'<p class="sub">{escape(blurb)}</p>', html, count=1, flags=re.DOTALL
+        )
+    extra = "".join(f"<li><b>{escape(b)}</b> {escape(t)}</li>" for b, t in ark.get("changes", []))
+    html = html.replace('<ul class="changes">', '<ul class="changes">' + extra, 1)
     out = Path(sys.argv[sys.argv.index("--out") + 1]) if "--out" in sys.argv else OUT / "ark_viewer.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html.replace("__ARK_DATA__", json.dumps(data)), encoding="utf-8")
