@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from bedrock import explain_with_bedrock
-from optimiser import DroneState, Order, assign
+from optimiser import Conditions, DroneState, Order, assign, home_key
+from routing import Storm
 
 
 def _num(d: dict[str, Any], key: str, where: str) -> float:
@@ -64,6 +65,33 @@ def _drone(d: Any, i: int) -> DroneState:
     )
 
 
+def _conditions(w: Any) -> Conditions:
+    w = _obj(w, "event: 'weather'")
+    storms = []
+    for i, s in enumerate(_list(w, "storms")):
+        where = f"weather.storms[{i}]"
+        s = _obj(s, where)
+        storms.append(
+            Storm(
+                id=_str(s, "id", where),
+                lat=_num(s, "lat", where),
+                lon=_num(s, "lon", where),
+                radius_km=_num(s, "radiusKm", where),
+                rain_mm_h=_num(s, "rainMmH", where),
+            )
+        )
+    calls: dict[str, tuple[str, str]] = {}
+    for i, h in enumerate(_list(w, "hubs")):
+        where = f"weather.hubs[{i}]"
+        h = _obj(h, where)
+        reason = h.get("reason")
+        calls[home_key(_num(h, "lat", where), _num(h, "lon", where))] = (
+            _str(h, "call", where),
+            reason if isinstance(reason, str) else "",
+        )
+    return Conditions(storms=tuple(storms), hub_calls=calls)
+
+
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     event = _obj(event, "event")
     orders = [_order(o, i) for i, o in enumerate(_list(event, "orders"))]
@@ -73,9 +101,11 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     wind_from = _num(wind, "fromDeg", "wind")
     now_s = _num(event, "nowS", "event")
 
+    conditions = _conditions(event["weather"]) if event.get("weather") is not None else None
+
     by_id = {o.id: o for o in orders}
     out = []
-    for c in assign(orders, drones, wind_ms, wind_from, now_s):
+    for c in assign(orders, drones, wind_ms, wind_from, now_s, conditions=conditions):
         out.append(
             {
                 "orderId": c.order_id,
@@ -83,6 +113,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 "etaMin": c.eta_min,
                 "batteryAfterPct": c.battery_after_pct,
                 "runnerUp": c.runner_up,
+                "route": [{"lat": lat, "lon": lon} for lat, lon in c.route],
                 "aiRationale": explain_with_bedrock(c, by_id[c.order_id]),
             }
         )
