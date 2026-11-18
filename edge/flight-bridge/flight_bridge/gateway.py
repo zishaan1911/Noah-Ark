@@ -13,10 +13,11 @@ import re
 import time
 
 import paho.mqtt.client as mqtt
-from ark_contracts import CommandType, DroneCommand, DroneEvent, Geo, Mission, Telemetry
+from ark_contracts import CommandType, DroneCommand, DroneEvent, Geo, ManualControl, Mission, Telemetry
 from pymavlink import mavutil
 
 from .ids import new_id
+from .manual import SESSION_END_S, WATCHDOG_S, setpoint
 from .mission import Item, reverse, to_items
 from .telemetry import build_telemetry, utc_now
 
@@ -73,7 +74,7 @@ class Gateway:
         self.mav_url, self.drone_id = mav_url, drone_id
         self.topic = f"ark/{drone_id}/"
         self.mav = None
-        self.q: queue.Queue[bytes] = queue.Queue()
+        self.q: queue.Queue[tuple[str, bytes]] = queue.Queue()
         self.proto: list = []  # mission-protocol replies, read by _upload
         self.state: dict = {}
         self.last_hb = 0.0
@@ -89,9 +90,14 @@ class Gateway:
         self.phase = "idle"  # idle -> uploaded -> outbound -> handover -> returning -> idle
         self.handover_at: float | None = None
         self.takeoff_pending = False
+        self.manual_seq = -1
+        self.manual_last = 0.0  # monotonic time of the last stick packet
+        self.manual_on = False  # in a manual session (GUIDED velocity control)
+        self.manual_holding = False
+        self.manual_refused = False
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
-        self.client.on_message = lambda _c, _u, m: self.q.put(m.payload)
+        self.client.on_message = lambda _c, _u, m: self.q.put((m.topic, m.payload))
         self._reset()
 
     # ---- main loop -------------------------------------------------------------------------------------------
@@ -103,7 +109,12 @@ class Gateway:
             try:
                 self._pump(0.05)
                 while not self.q.empty():
-                    self.handle_command(self.q.get())
+                    topic, payload = self.q.get()
+                    if topic.endswith("/manual"):
+                        self.handle_manual(payload)
+                    else:
+                        self.handle_command(payload)
+                self._manual_watchdog()
                 if self.phase == "handover" and self.handover_at and time.monotonic() >= self.handover_at:
                     self._deliver()
             except OSError as e:  # the autopilot link dropped (SITL respawn, cable): reconnect, the reboot resets state
@@ -118,6 +129,7 @@ class Gateway:
     def _on_connect(self, client, _userdata, _flags, reason_code, _properties) -> None:
         print(f"mqtt connected ({reason_code}), subscribing {self.topic}cmd", flush=True)
         client.subscribe(self.topic + "cmd", qos=1)  # here, so a reconnect resubscribes
+        client.subscribe(self.topic + "manual", qos=0)  # a stick stream: latest wins, nothing to retry
 
     def _connect_mav(self) -> None:
         while True:
@@ -241,6 +253,10 @@ class Gateway:
                 self._set_phase("handover")
                 self.handover_at = time.monotonic() + HANDOVER_S
                 return
+        elif self.phase == "manual":
+            self.emit("landed", message="landed in manual control")
+            self._end()
+            return
         elif self.phase == "returning":
             if self.home and self._near(self.home):
                 self.emit("landed", message="returned home")
@@ -276,6 +292,7 @@ class Gateway:
             return
         kind = cmd.type.value
         print(f"command {kind} {ack['commandId']}", flush=True)
+        self._end_manual(f"ended by {kind}")
         handlers = {"upload_mission": self._upload_mission, "start": self._start}
         ok, msg = handlers.get(kind, self._set_flight_mode)(cmd)
         self._ack({"commandId": ack["commandId"], "accepted": ok, "message": msg})
@@ -376,6 +393,62 @@ class Gateway:
                         )  # fmt: skip
                         end = time.monotonic() + 2
         return False
+
+    # ---- manual control (stick stream) ----------------------------------------------------------------------------
+    def handle_manual(self, raw: bytes) -> None:
+        """One stick packet. Not acked: stale, foreign or grounded packets are dropped."""
+        try:
+            m = ManualControl.model_validate_json(raw)
+        except ValueError:
+            return
+        if m.droneId.root != self.drone_id:
+            return
+        now = time.monotonic()
+        if m.seq <= self.manual_seq and now - self.manual_last < SESSION_END_S:  # reordered or stale
+            return
+        gp = self.state.get("GLOBAL_POSITION_INT")
+        if not self.armed or gp is None or gp.relative_alt < 2000:
+            if not self.manual_refused:  # say it once per attempt, not 10 times a second
+                self.manual_refused = True
+                self.emit("manual_ended", "warning", "manual control needs the drone armed and airborne")
+            return
+        self.manual_seq, self.manual_last = m.seq, now
+        if not self.manual_on:
+            if not self._set_mode("GUIDED"):
+                return
+            self.manual_on, self.manual_refused = True, False
+            if self.phase in ("outbound", "returning", "uploaded"):
+                self._set_phase("manual")
+            self.emit("manual_started", "warning", f"operator {m.issuedBy or 'unknown'} has the sticks")
+        self.manual_holding = False
+        self._velocity(*setpoint(m))
+
+    def _velocity(self, fwd: float, right: float, down: float, yaw_rate: float) -> None:
+        """GUIDED velocity + yaw-rate setpoint in the heading-aligned body frame."""
+        mask = 0b0000_0101_1100_0111  # use velocity and yaw rate; ignore position, acceleration and yaw angle
+        self.mav.mav.set_position_target_local_ned_send(
+            0, self.mav.target_system, self.mav.target_component, M.MAV_FRAME_BODY_OFFSET_NED,
+            mask, 0, 0, 0, fwd, right, down, 0, 0, 0, 0, yaw_rate,
+        )  # fmt: skip
+
+    def _manual_watchdog(self) -> None:
+        if not self.manual_on:
+            return
+        quiet = time.monotonic() - self.manual_last
+        if quiet > WATCHDOG_S and not self.manual_holding:  # the operator's link went quiet: stop and hold
+            self.manual_holding = True
+            self._velocity(0, 0, 0, 0)
+        if quiet > SESSION_END_S:
+            self._end_manual("no stick input for 5 s, holding position")
+
+    def _end_manual(self, why: str) -> None:
+        self.manual_refused = False
+        if not self.manual_on:
+            return
+        self.manual_on = False
+        if self.phase == "manual":
+            self._set_phase("idle")
+        self.emit("manual_ended", message=why)
 
     # ---- MQTT out --------------------------------------------------------------------------------------------
     def _telemetry(self) -> None:
