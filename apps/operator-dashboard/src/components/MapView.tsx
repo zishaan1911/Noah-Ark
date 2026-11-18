@@ -19,6 +19,7 @@ import {
 } from '../lib/cameraRig';
 import { createDroneLayer, type DroneLayer, type ModelStatus } from '../lib/droneLayer';
 import { PAPAR } from '../lib/config';
+import { poseKey } from '../lib/geo';
 import {
   BASE_STYLE_URL,
   DEM_SOURCE,
@@ -167,6 +168,7 @@ export function MapView({
       center: [PAPAR.lon, PAPAR.lat],
       zoom: 12,
       maxPitch: 85,
+      pixelRatio: Math.min(devicePixelRatio, 1.5), // 3D terrain at 2x pixels costs ~1.8x the GPU for little visible gain
       attributionControl: { compact: true },
     });
     mapRef.current = map;
@@ -500,6 +502,7 @@ export function MapView({
     let anchorReady = false;
     let last = performance.now();
     let raf = 0;
+    let lastKey = '';
 
     const frame = (now: number) => {
       const dt = Math.min(0.1, (now - last) / 1000);
@@ -507,8 +510,14 @@ export function MapView({
       const pose = getPose();
       if (!pose) {
         el.style.display = 'none';
+        lastKey = '';
         return;
       }
+      // Idle: same pose, same user orbit/gimbal, chase spring at rest -> nothing to redraw, skip jumpTo and repaint.
+      const key = `${poseKey(pose)}|${JSON.stringify(view === 'onboard' ? gimbalRef.current : chaseRef.current)}`;
+      const settled = !anchorReady || Object.values(anchor).every((s) => Math.abs(s.v) < 1e-9);
+      if (key === lastKey && (view !== 'chase' || settled)) return;
+      lastKey = key;
       layer.setPose(pose);
 
       if (view === 'map') {
