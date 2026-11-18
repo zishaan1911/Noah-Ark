@@ -12,6 +12,42 @@ interface Props {
   sim: SimStatus | null;
   theme: Theme;
   onToggleTheme: () => void;
+  /** Which page this header sits on; default 'gdex'. */
+  page?: 'gdex' | 'fleet';
+  /** Fleet page: drones seen so far. */
+  fleetCount?: number;
+  /** Fleet page: the wind line from `fleet/stats`, shown in place of the sim text. */
+  fleetWind?: string | null;
+}
+
+const PAGES = [
+  { id: 'gdex', label: 'Drone', hash: '' },
+  { id: 'fleet', label: 'Fleet', hash: '#/fleet' },
+] as const;
+
+function PageSwitch({ page }: { page: 'gdex' | 'fleet' }) {
+  return (
+    <nav aria-label="Page" className="flex gap-0.5 rounded-xl bg-fill p-0.5">
+      {PAGES.map((p) => {
+        const on = p.id === page;
+        return (
+          <button
+            key={p.id}
+            type="button"
+            aria-current={on ? 'page' : undefined}
+            onClick={() => {
+              location.hash = p.hash;
+            }}
+            className={`min-h-11 min-w-16 cursor-pointer rounded-[10px] border-0 px-3 text-sm font-semibold transition-colors ${
+              on ? 'bg-(--glass-solid) text-ink shadow-sm' : 'bg-transparent text-sub'
+            }`}
+          >
+            {p.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
 }
 
 const CONN_TEXT: Record<MqttState, string> = {
@@ -79,9 +115,22 @@ function ThemeButton({ theme, onToggle }: { theme: Theme; onToggle: () => void }
   );
 }
 
-export function Header({ droneId, view, onView, conn, sim, theme, onToggleTheme }: Props) {
+export function Header({
+  droneId,
+  view,
+  onView,
+  conn,
+  sim,
+  theme,
+  onToggleTheme,
+  page = 'gdex',
+  fleetCount = 0,
+  fleetWind = null,
+}: Props) {
   const ok = conn === 'connected';
-  const simOk = sim?.state === 'ready';
+  const fleet = page === 'fleet';
+  const simOk = fleet ? fleetWind !== null : sim?.state === 'ready';
+  const simLabel = fleet ? (fleetWind ?? 'Sim offline') : simText(sim);
   return (
     <header className="glass flex flex-wrap items-center gap-x-5 gap-y-2 rounded-[18px] py-2 pr-3 pl-3.5">
       <div className="flex items-center gap-2.5">
@@ -106,9 +155,16 @@ export function Header({ droneId, view, onView, conn, sim, theme, onToggleTheme 
       </div>
       <span className="flex min-h-9 items-center gap-2 rounded-full bg-amber-tint px-3 text-[13px] font-semibold text-amber-ink">
         <span className="size-[7px] rounded-full bg-amber" />
-        GDEX · <span className="font-mono">{droneId}</span>
+        {fleet ? (
+          `Fleet · ${fleetCount} drones`
+        ) : (
+          <>
+            GDEX · <span className="font-mono">{droneId}</span>
+          </>
+        )}
       </span>
-      <ViewSwitch view={view} onChange={onView} />
+      <PageSwitch page={page} />
+      {!fleet && <ViewSwitch view={view} onChange={onView} />}
       <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-sub">
         <span className="flex items-center gap-1.5" role="status">
           <span className={`size-2 rounded-full ${ok ? 'bg-green' : 'bg-amber'}`} />
@@ -116,7 +172,7 @@ export function Header({ droneId, view, onView, conn, sim, theme, onToggleTheme 
         </span>
         <span className="flex items-center gap-1.5">
           <span className={`size-2 rounded-full ${simOk ? 'bg-green' : 'bg-amber'}`} />
-          {simText(sim)}
+          {simLabel}
         </span>
         <Clock />
         <ThemeButton theme={theme} onToggle={onToggleTheme} />
