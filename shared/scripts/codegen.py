@@ -31,6 +31,7 @@ ENTRIES = {
     "drone": "drone.schema.json",
     "liveUpdate": "live-update.schema.json",
     "manualControl": "manual-control.schema.json",
+    "weather": "weather.schema.json",
 }
 # Ark SOS only sends and reads SOS requests; quicktype cannot express the LiveUpdate union in Dart anyway.
 DART_ENTRIES = ("sosRequest", "sosReport", "sosTriage")
