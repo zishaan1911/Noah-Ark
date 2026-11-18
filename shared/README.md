@@ -35,7 +35,7 @@ python scripts/codegen.py
 |---|---|---|
 | TypeScript | `generated/typescript/contracts.ts` | the React apps, TS Lambdas, CDK |
 | Python (Pydantic v2) | `generated/python/ark_contracts/` | the Python Lambdas, `edge/`, `simulation/` |
-| Dart | `generated/dart/contracts.dart` (SOS types only) | `apps/sos-mobile` |
+| Dart | `generated/dart/lib/ark_contracts.dart` (SOS types only), a path package (`ark_contracts`) | `apps/sos-mobile` |
 
 Generated types carry the shape only. Rules such as "`upload_mission` needs a `mission`" or "an ack needs `accepted`"
 live in the schemas, so validate untrusted input against the schema with ajv or jsonschema, not just the types.

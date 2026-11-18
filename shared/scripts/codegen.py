@@ -68,7 +68,7 @@ def main() -> None:
             }
         )
 
-    for d in ("typescript", "python", "dart"):
+    for d in ("typescript", "python", "dart/lib"):
         (OUT / d).mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -109,7 +109,7 @@ def main() -> None:
             f"# {HEADER}",
         )
 
-        dart = OUT / "dart" / "contracts.dart"
+        dart = OUT / "dart" / "lib" / "ark_contracts.dart"  # a Dart path package, see generated/dart/pubspec.yaml
         run(
             NPX,
             "-y",
