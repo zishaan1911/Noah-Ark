@@ -895,15 +895,15 @@
     "result": {
       "water_landing": {
         "about": "Planned water landing: take off from the bank, fly 100 m out over the river, LAND. Waves Hs 0.3 m, wind 4 m/s from the west with 1 m/s gusts.",
-        "fire_height_m": 17.2,
-        "fire_t_s": 73.41,
-        "touchdown_t_s": 97.95,
+        "fire_height_m": 17.3,
+        "fire_t_s": 74.9,
+        "touchdown_t_s": 99.77,
         "pressure_ok_t_s": {
-          "L": 77.16,
-          "R": 77.16
+          "L": 78.65,
+          "R": 78.65
         },
         "max_tilt_on_water_deg": 12.4,
-        "min_prop_clearance_m": 0.319,
+        "min_prop_clearance_m": 0.318,
         "fire_rule_m": 17.7,
         "checks": {
           "not_sunk": true,
@@ -915,7 +915,7 @@
         },
         "passed": true,
         "sim_s": 123.1,
-        "frames": 147734,
+        "frames": 147717,
         "model_auw_kg": 16.192,
         "cg_hw_m": [
           -0.0221,
@@ -925,15 +925,15 @@
       },
       "one_side_fails": {
         "about": "Planned water landing with the left inflator jammed: the script retries it, holds in GUIDED and the operator diverts the drone home to land on the bank.",
-        "fire_height_m": 17.2,
-        "fire_t_s": 73.41,
+        "fire_height_m": 17.3,
+        "fire_t_s": 74.93,
         "touchdown_t_s": null,
         "pressure_ok_t_s": {
           "L": null,
-          "R": 77.17
+          "R": 78.68
         },
         "max_tilt_on_water_deg": null,
-        "min_prop_clearance_m": 8.276,
+        "min_prop_clearance_m": 8.401,
         "checks": {
           "not_sunk": true,
           "retried_left": true,
@@ -942,8 +942,8 @@
           "landed_home_on_bank": true
         },
         "passed": true,
-        "sim_s": 152.1,
-        "frames": 182527,
+        "sim_s": 160.1,
+        "frames": 192122,
         "model_auw_kg": 16.192,
         "cg_hw_m": [
           -0.0221,
@@ -959,7 +959,7 @@
           "R": null
         },
         "max_tilt_on_water_deg": 15.2,
-        "min_prop_clearance_m": 0.317,
+        "min_prop_clearance_m": 0.318,
         "max_tilt_takeoff_deg": 15.2,
         "checks": {
           "not_sunk": true,
@@ -970,7 +970,7 @@
         },
         "passed": true,
         "sim_s": 94.1,
-        "frames": 112919,
+        "frames": 112916,
         "model_auw_kg": 16.192,
         "cg_hw_m": [
           -0.0221,
@@ -981,11 +981,11 @@
       "ditching": {
         "about": "Emergency: over the river on a delivery (no water landing planned), the battery hits its low-voltage failsafe and the drone lands where it is. No companion water flag, so stale counts as water.",
         "fire_height_m": 17.1,
-        "fire_t_s": 87.52,
-        "touchdown_t_s": 111.97,
+        "fire_t_s": 89.18,
+        "touchdown_t_s": 113.99,
         "pressure_ok_t_s": {
-          "L": 91.27,
-          "R": 91.27
+          "L": 92.88,
+          "R": 92.88
         },
         "max_tilt_on_water_deg": 12.2,
         "min_prop_clearance_m": 0.319,
@@ -1001,7 +1001,7 @@
         },
         "passed": true,
         "sim_s": 136.1,
-        "frames": 163324,
+        "frames": 163335,
         "model_auw_kg": 16.192,
         "cg_hw_m": [
           -0.0221,

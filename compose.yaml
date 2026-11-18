@@ -1,0 +1,25 @@
+# Noah's Ark local stack: broker + simulated Ark-1 + its companion-computer gateway.
+#   docker build -t noah-ark-sitl simulation      (once; the sim image the other services reuse)
+#   docker compose up --build
+# Then run Ark Command: cd apps/operator-dashboard && npm run dev
+services:
+  broker:
+    # shortcut: Mosquitto stands in for AWS IoT Core (same topics and payloads), swap for the CDK iot stack + Cognito WebSocket auth.
+    image: eclipse-mosquitto:2.0.22
+    ports: ["1883:1883", "9101:9001"]  # 9101 on the host: 9001 is often taken (MinIO)
+    volumes: ["./infra/local/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro"]
+
+  sim:
+    image: noah-ark-sitl
+    command: python -u -m ark_sim.live --broker broker:1883 --drone ARK-006
+    working_dir: /repo/simulation
+    volumes: [".:/repo"]
+    depends_on: [broker]
+    restart: unless-stopped
+
+  gateway:
+    build: edge/flight-bridge
+    command: python -u -m flight_bridge --broker broker:1883 --mav tcp:sim:5760 --drone ARK-006
+    volumes: [".:/repo"]
+    depends_on: [broker, sim]
+    restart: unless-stopped

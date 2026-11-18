@@ -26,6 +26,7 @@ class World:
     gust: float = 0.0  # m/s, std of the gust on each axis
     seed: int = 1
     all_water: bool = False  # start floating: no land anywhere
+    terrain: object | None = None  # an ark_sim.terrain.Terrain: real ground instead of the flat bank (no import: cycle)
 
     def __post_init__(self):
         rng = np.random.default_rng(self.seed)
@@ -41,7 +42,19 @@ class World:
         self._rng = rng
 
     def is_water(self, n: float) -> bool:
-        return self.all_water or n >= self.shore_n
+        # shortcut: rivers and lakes are not water on real terrain, add a water mask (e.g. OSM water polygons)
+        #   for relief landings.
+        return self.all_water or (self.terrain is None and n >= self.shore_n)
+
+    def water_mask(self, n):
+        """is_water for arrays of north positions."""
+        return self.all_water | ((self.terrain is None) & (np.asarray(n) >= self.shore_n))
+
+    def ground(self, n, e):
+        """NED z of the land under (n, e): 0 on the flat bank, the real terrain height when there is one."""
+        if self.terrain is None:
+            return np.zeros_like(np.asarray(n, dtype=float))
+        return self.terrain.ground_z(n, e)
 
     def surface(self, n, e, t: float):
         """(z of the surface, NED; its vertical velocity, NED) under (n, e); scalars or arrays."""
@@ -49,8 +62,8 @@ class World:
         ph = np.multiply.outer(n, self.kx) + np.multiply.outer(e, self.ky) - self.w * t + self.phi
         eta = (self.a * np.cos(ph)).sum(axis=-1)
         deta = (self.a * self.w * np.sin(ph)).sum(axis=-1)
-        water = self.all_water | (n >= self.shore_n)
-        return np.where(water, self.bank_m - eta, 0.0), np.where(water, -deta, 0.0)
+        water = self.water_mask(n)
+        return np.where(water, self.bank_m - eta, self.ground(n, e)), np.where(water, -deta, 0.0)
 
     def wind(self, dt: float) -> np.ndarray:
         # gust: Ornstein-Uhlenbeck, 2 s correlation, std `gust`
@@ -208,11 +221,13 @@ class Sim:
         f, tq = np.zeros(3), np.zeros(3)
         rw = m.skid_pts @ R.T
         P = self.p + rw
-        on = (P[:, 2] > 0) & ~(wd.all_water | (P[:, 0] >= wd.shore_n))  # ground at z = 0
+        gz = wd.ground(P[:, 0], P[:, 1])  # 0 on the flat bank
+        on = (P[:, 2] > gz) & ~wd.water_mask(P[:, 0])
         if on.any():
+            pen = (P[:, 2] - gz)[on]
             rw, P = rw[on], P[on]
             vp = self.v + np.cross(R @ self.w, rw)
-            fn = np.maximum(self.K_GROUND * P[:, 2] + self.C_GROUND * vp[:, 2], 0.0)
+            fn = np.maximum(self.K_GROUND * pen + self.C_GROUND * vp[:, 2], 0.0)
             ft = -self.C_FRICTION * vp[:, :2]
             n_ft = np.linalg.norm(ft, axis=1)
             scale = np.minimum(1.0, self.MU * fn / np.maximum(n_ft, 1e-9))
@@ -226,7 +241,7 @@ class Sim:
             rw = rb @ R.T
             P = self.p + rw
             zs, vzs = wd.surface(P[:, 0], P[:, 1], self.t)
-            water = wd.all_water | (P[:, 0] >= wd.shore_n)
+            water = wd.water_mask(P[:, 0])
             depth = np.clip(P[:, 2] - zs, -r, r)
             h = r + depth
             with np.errstate(invalid="ignore", divide="ignore"):

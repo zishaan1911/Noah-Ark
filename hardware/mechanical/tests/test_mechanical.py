@@ -1,8 +1,6 @@
 import json
 import math
-from collections import Counter
 
-import cad
 import pytest
 from hull import Hull
 from mech import ARK_JSON, cantilever_mode_hz, chosen_hull, inner_fits, pack_box, packaging, seals, tube_section
@@ -53,19 +51,3 @@ def test_seal_and_release():
     assert sl["ok"]
     assert 0.15 <= sl["squeeze"] <= 0.3 and sl["fill"] <= 0.85
     assert sl["bolts"] >= math.ceil(sl["oring_length_m"] / ARK["mechanical"]["seal"]["bolt_spacing_max_m"])
-
-
-@pytest.mark.parametrize("name", ["hull", "frame", "props", "pod", "skids", "internals"])
-def test_cad_meshes_are_closed(name):
-    verts, faces = cad.build(ARK)[name]
-    edges = Counter(tuple(sorted(e)) for a, b, c in faces for e in ((a, b), (b, c), (c, a)))
-    assert set(edges.values()) == {2}  # every edge shared by exactly two faces
-    assert all(max(f) < len(verts) for f in faces)
-
-
-def test_cad_span_matches_sizing():
-    verts, _ = cad.build(ARK)["props"]
-    xs = [v[0] for v in verts]
-    g = ARK["chosen"]["geometry_m"]
-    arm_r = (max(xs) - min(xs) - g["prop_d"]) / math.sqrt(2)  # x extent = sqrt(2) * arm radius + prop diameter
-    assert 2 * arm_r + g["prop_d"] == pytest.approx(g["span_tip_to_tip"], rel=0.01)

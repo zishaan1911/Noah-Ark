@@ -180,7 +180,16 @@ class Telemetry(BaseModel):
     missionId: MissionId | None = None
     ts: Timestamp
     position: Geo
+    altAmslM: float | None = Field(
+        None, description="Metres above mean sea level (position.altM is above home)."
+    )
     headingDeg: confloat(ge=0.0, lt=360.0) | None = None
+    rollDeg: confloat(ge=-180.0, le=180.0) | None = Field(
+        None, description="Right wing down is positive."
+    )
+    pitchDeg: confloat(ge=-90.0, le=90.0) | None = Field(
+        None, description="Nose up is positive."
+    )
     groundSpeedMs: confloat(ge=0.0) | None = None
     climbRateMs: float | None = None
     armed: bool
@@ -228,6 +237,8 @@ class EventType(Enum):
     link_restored = "link_restored"
     offload_decision = "offload_decision"
     fault = "fault"
+    manual_started = "manual_started"
+    manual_ended = "manual_ended"
 
 
 class Severity(Enum):
@@ -324,6 +335,25 @@ class DroneUpdate(BaseModel):
     data: Drone
 
 
+class ManualControl(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    droneId: DroneId
+    ts: Timestamp
+    seq: conint(ge=0) = Field(
+        ...,
+        description="Increments per packet; the drone drops stale or reordered ones.",
+    )
+    forwardMs: confloat(ge=-20.0, le=20.0)
+    rightMs: confloat(ge=-20.0, le=20.0)
+    upMs: confloat(ge=-5.0, le=5.0)
+    yawRateDegS: confloat(ge=-90.0, le=90.0) = Field(
+        ..., description="Clockwise seen from above is positive."
+    )
+    issuedBy: str | None = None
+
+
 class SosRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -412,6 +442,7 @@ class Contracts(BaseModel):
     droneEvent: DroneEvent | None = None
     drone: Drone | None = None
     liveUpdate: Schema | None = None
+    manualControl: ManualControl | None = None
 
 
 class Schema(
