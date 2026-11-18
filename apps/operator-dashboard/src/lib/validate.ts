@@ -33,6 +33,7 @@ function validator(name: string) {
 export const validateCommand = validator('drone-command.schema.json');
 export const validateTelemetry = validator('telemetry.schema.json');
 export const validateEvent = validator('drone-event.schema.json');
+export const validateManual = validator('manual-control.schema.json');
 const validateMissionSchema = validator('mission.schema.json');
 
 /** Schema check plus the rule the schema cannot state: payloadKg equals the sum of the payload lines. */

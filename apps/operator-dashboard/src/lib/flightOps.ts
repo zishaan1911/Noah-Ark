@@ -42,7 +42,12 @@ export async function sendMission(
   let current: StepId = 'position';
   try {
     onStep('position', 'active');
+    // Fail fast: no point waiting two minutes for a sim that is not there.
+    if (drone.conn !== 'connected') throw new Error('Broker not connected.');
     const snap = drone.snapshot();
+    if (!snap.sim)
+      throw new Error('Simulation not running. Start it with `docker compose up` at the repo root.');
+    if (snap.sim.state === 'error') throw new Error(snap.sim.detail ?? 'The simulation reported an error');
     // Where the drone really is decides, not where the sim last spawned it: after a delivery it sits elsewhere.
     const placed =
       snap.sim?.state === 'ready' && snap.telemetry !== null && nearStart(start, snap.telemetry.position);
