@@ -1,4 +1,4 @@
-from energy import RESERVE_PCT, USABLE_WH, ground_speed_ms, pct, trip
+from energy import RESERVE_PCT, ground_speed_ms, trip
 
 
 def test_headwind_slower_than_tailwind():
@@ -14,6 +14,5 @@ def test_design_point_within_budget():
     # ~20 km out and back, 2 kg, no wind (0.18 deg lat ~ 20 km)
     t = trip(0.0, 0.0, 0.18, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0)
     assert 19.0 < t.out_km < 21.0
-    assert t.battery_used_pct < pct(USABLE_WH) - RESERVE_PCT + 20.0  # under 80%
-    assert t.battery_used_pct < 80.0
+    assert 100 - t.battery_used_pct >= RESERVE_PCT  # the design point closes with reserve
     assert t.total_min > t.out_min
