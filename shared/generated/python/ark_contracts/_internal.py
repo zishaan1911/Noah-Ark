@@ -85,20 +85,18 @@ class Channel(Enum):
     voice = "voice"
 
 
-class SosReport(BaseModel):
+class Medicine(RootModel[constr(min_length=1, max_length=100)]):
+    root: constr(min_length=1, max_length=100)
+
+
+class SosVulnerable(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    channel: Channel
-    location: Geo
-    language: str | None = Field(None, description="BCP 47 tag, e.g. ms, en, zh.")
-    rawMessage: constr(max_length=4000) | None = None
-    photoUrl: AnyUrl | None = None
-    contactPhone: constr(pattern=r"^\+[1-9][0-9]{6,14}$") | None = Field(
-        None, description="E.164, used to reply."
-    )
-    peopleCount: conint(ge=1) | None = None
-    needs: list[Need] | None = None
+    children: conint(ge=0) | None = None
+    elderly: conint(ge=0) | None = None
+    disabled: conint(ge=0) | None = None
+    pregnant: conint(ge=0) | None = None
 
 
 class MissionStatus(Enum):
@@ -140,6 +138,13 @@ class MissionRequest(BaseModel):
     payload: list[PayloadItem] | None = None
     landingType: LandingType | None = None
     notes: constr(max_length=2000) | None = None
+
+
+class PayloadKg(RootModel[confloat(le=2.0, gt=0.0)]):
+    root: confloat(le=2.0, gt=0.0) = Field(
+        ...,
+        description="Total payload. Ark-1 is sized for 2 kg (hardware/ark.json). Must equal the sum of payload weights; checked in code.",
+    )
 
 
 class SosLocationUpdate(BaseModel):
@@ -386,6 +391,28 @@ class DroneUpdate(BaseModel):
     data: Drone
 
 
+class SosReport(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    channel: Channel
+    location: Geo
+    language: str | None = Field(None, description="BCP 47 tag, e.g. ms, en, zh.")
+    rawMessage: constr(max_length=4000) | None = None
+    photoUrl: AnyUrl | None = None
+    contactPhone: constr(pattern=r"^\+[1-9][0-9]{6,14}$") | None = Field(
+        None, description="E.164, used to reply."
+    )
+    peopleCount: conint(ge=1) | None = None
+    needs: list[Need] | None = None
+    medicines: list[Medicine] | None = Field(
+        None,
+        description="Medicines the sender asks for, in their words, e.g. insulin, paracetamol.",
+        max_length=20,
+    )
+    vulnerable: SosVulnerable | None = None
+
+
 class SosDelivery(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -393,6 +420,11 @@ class SosDelivery(BaseModel):
     droneId: DroneId
     missionStatus: MissionStatus
     etaMinutes: confloat(ge=0.0) | None = None
+    payload: list[PayloadItem] | None = Field(
+        None,
+        description="What the drone carries for this SOS (the mission's kit), shown to the sender.",
+    )
+    payloadKg: PayloadKg | None = None
 
 
 class SosRequest(BaseModel):

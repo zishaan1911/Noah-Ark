@@ -30,7 +30,26 @@
         "photoUrl": { "type": "string", "format": "uri" },
         "contactPhone": { "type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$", "description": "E.164, used to reply." },
         "peopleCount": { "type": "integer", "minimum": 1 },
-        "needs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/need" } }
+        "needs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/need" } },
+        "medicines": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "description": "Medicines the sender asks for, in their words, e.g. insulin, paracetamol."
+        },
+        "vulnerable": { "$ref": "#/$defs/vulnerable" }
+      }
+    },
+    "vulnerable": {
+      "title": "SosVulnerable",
+      "description": "How many of peopleCount need extra care. Drives what goes in the 2 kg kit (e.g. baby supplies).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "children": { "type": "integer", "minimum": 0 },
+        "elderly": { "type": "integer", "minimum": 0 },
+        "disabled": { "type": "integer", "minimum": 0 },
+        "pregnant": { "type": "integer", "minimum": 0 }
       }
     },
     "delivery": {
@@ -42,7 +61,13 @@
       "properties": {
         "droneId": { "$ref": "common.schema.json#/$defs/droneId" },
         "missionStatus": { "$ref": "mission.schema.json#/properties/status" },
-        "etaMinutes": { "type": "number", "minimum": 0 }
+        "etaMinutes": { "type": "number", "minimum": 0 },
+        "payload": {
+          "type": "array",
+          "items": { "$ref": "mission.schema.json#/$defs/payloadItem" },
+          "description": "What the drone carries for this SOS (the mission's kit), shown to the sender."
+        },
+        "payloadKg": { "$ref": "mission.schema.json#/properties/payloadKg" }
       }
     },
     "locationUpdate": {

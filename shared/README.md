@@ -14,7 +14,7 @@ here first, run codegen, then update the consumers.
 ## The contracts
 | Schema | Where it travels |
 |---|---|
-| `sos-request` (`report`, `triage`, `delivery`, `locationUpdate` in `$defs`) | POST /sos body (`report`), stored SOS, `sos-triage`'s Bedrock output (`triage`), the drone on its way for the sender (`delivery`), POST /sos/{id}/location body (`locationUpdate`) |
+| `sos-request` (`report`, `triage`, `delivery`, `locationUpdate` in `$defs`) | POST /sos body (`report`), stored SOS, `sos-triage`'s Bedrock output (`triage`), the drone on its way and its kit for the sender (`delivery`), POST /sos/{id}/location body (`locationUpdate`), PUT /sos/{id}/report body (`report`) |
 | `mission` (`request` in `$defs`) | POST /missions body (`request`), `mission-planner` output, the operator's approval queue |
 | `telemetry` | `ark/<droneId>/telemetry` |
 | `drone-command` | `ark/<droneId>/cmd`. The drone acks every command and may refuse it |

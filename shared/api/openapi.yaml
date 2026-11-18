@@ -73,6 +73,30 @@ paths:
             application/json:
               schema: { $ref: '../schemas/sos-request.schema.json' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /sos/{sosId}/report:
+    put:
+      tags: [sos]
+      summary: Replace the sender's report with more detail
+      description: Public, like GET /sos/{sosId}. Ark SOS sends the SOS on one button press with only the location, then the details (people, medicines, needs) here. Starts triage and kit planning again.
+      operationId: updateSosReport
+      security: []
+      parameters:
+        - { name: sosId, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/sosId' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/sos-request.schema.json#/$defs/report' }
+      responses:
+        '200':
+          description: Stored.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/sos-request.schema.json' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: The SOS is delivered or closed. }
+        '429': { description: Too many requests }
   /sos/{sosId}/location:
     post:
       tags: [sos]

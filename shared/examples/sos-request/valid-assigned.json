@@ -34,6 +34,19 @@
   "delivery": {
     "droneId": "ARK-001",
     "missionStatus": "in_flight",
-    "etaMinutes": 2.5
+    "etaMinutes": 2.5,
+    "payload": [
+      {
+        "item": "Drinking water 500 ml",
+        "qty": 2,
+        "weightKg": 1.0
+      },
+      {
+        "item": "Insulin cold pack",
+        "qty": 1,
+        "weightKg": 0.4
+      }
+    ],
+    "payloadKg": 1.4
   }
 }

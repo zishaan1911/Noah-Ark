@@ -76,6 +76,145 @@ export interface SosReport {
   contactPhone?: string;
   peopleCount?: number;
   needs?: Need[];
+  /**
+   * Medicines the sender asks for, in their words, e.g. insulin, paracetamol.
+   *
+   * @maxItems 20
+   */
+  medicines?:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+  vulnerable?: SosVulnerable;
 }
 export interface Geo {
   lat: number;
@@ -84,6 +223,15 @@ export interface Geo {
    * Metres above the home point (relative altitude).
    */
   altM?: number;
+}
+/**
+ * How many of peopleCount need extra care. Drives what goes in the 2 kg kit (e.g. baby supplies).
+ */
+export interface SosVulnerable {
+  children?: number;
+  elderly?: number;
+  disabled?: number;
+  pregnant?: number;
 }
 /**
  * sos-triage's Bedrock output. Validated against this schema before it is stored or acted on.
@@ -115,6 +263,22 @@ export interface SosDelivery {
   droneId: string;
   missionStatus: MissionStatus;
   etaMinutes?: number;
+  /**
+   * What the drone carries for this SOS (the mission's kit), shown to the sender.
+   */
+  payload?: PayloadItem[];
+  /**
+   * Total payload. Ark-1 is sized for 2 kg (hardware/ark.json). Must equal the sum of payload weights; checked in code.
+   */
+  payloadKg?: number;
+}
+export interface PayloadItem {
+  item: string;
+  qty: number;
+  /**
+   * Total for this line (qty included).
+   */
+  weightKg: number;
 }
 /**
  * The sender's newer position. Ark SOS sends it in the background while help is on the way (POST /sos/{sosId}/location).
@@ -159,14 +323,6 @@ export interface Mission {
    */
   approvedBy?: string;
   approvedAt?: string;
-}
-export interface PayloadItem {
-  item: string;
-  qty: number;
-  /**
-   * Total for this line (qty included).
-   */
-  weightKg: number;
 }
 /**
  * POST /missions body: ask the planner for a mission. GDEX parcels give a destination; relief missions give sosRequestIds.

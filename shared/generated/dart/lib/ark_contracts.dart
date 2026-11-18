@@ -99,20 +99,26 @@ class SosReport {
     ///BCP 47 tag, e.g. ms, en, zh.
     String? language;
     Geo location;
+    
+    ///Medicines the sender asks for, in their words, e.g. insulin, paracetamol.
+    List<String>? medicines;
     List<Need>? needs;
     int? peopleCount;
     String? photoUrl;
     String? rawMessage;
+    SosVulnerable? vulnerable;
 
     SosReport({
         required this.channel,
         this.contactPhone,
         this.language,
         required this.location,
+        this.medicines,
         this.needs,
         this.peopleCount,
         this.photoUrl,
         this.rawMessage,
+        this.vulnerable,
     });
 
     factory SosReport.fromJson(Map<String, dynamic> json) => SosReport(
@@ -120,10 +126,12 @@ class SosReport {
         contactPhone: json["contactPhone"],
         language: json["language"],
         location: Geo.fromJson(json["location"]),
+        medicines: json["medicines"] == null ? [] : List<String>.from(json["medicines"]!.map((x) => x)),
         needs: json["needs"] == null ? [] : List<Need>.from(json["needs"]!.map((x) => needValues.map[x]!)),
         peopleCount: json["peopleCount"],
         photoUrl: json["photoUrl"],
         rawMessage: json["rawMessage"],
+        vulnerable: json["vulnerable"] == null ? null : SosVulnerable.fromJson(json["vulnerable"]),
     );
 
     Map<String, dynamic> toJson() => {
@@ -131,10 +139,12 @@ class SosReport {
         "contactPhone": contactPhone,
         "language": language,
         "location": location.toJson(),
+        "medicines": medicines == null ? [] : List<dynamic>.from(medicines!.map((x) => x)),
         "needs": needs == null ? [] : List<dynamic>.from(needs!.map((x) => needValues.reverse[x])),
         "peopleCount": peopleCount,
         "photoUrl": photoUrl,
         "rawMessage": rawMessage,
+        "vulnerable": vulnerable?.toJson(),
     };
 }
 
@@ -171,6 +181,37 @@ final needValues = EnumValues({
     "shelter": Need.SHELTER,
     "water": Need.WATER
 });
+
+
+///How many of peopleCount need extra care. Drives what goes in the 2 kg kit (e.g. baby
+///supplies).
+class SosVulnerable {
+    int? children;
+    int? disabled;
+    int? elderly;
+    int? pregnant;
+
+    SosVulnerable({
+        this.children,
+        this.disabled,
+        this.elderly,
+        this.pregnant,
+    });
+
+    factory SosVulnerable.fromJson(Map<String, dynamic> json) => SosVulnerable(
+        children: json["children"],
+        disabled: json["disabled"],
+        elderly: json["elderly"],
+        pregnant: json["pregnant"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "children": children,
+        "disabled": disabled,
+        "elderly": elderly,
+        "pregnant": pregnant,
+    };
+}
 
 
 ///A call for help as stored: what the sender said (report), what sos-triage (Bedrock)
@@ -222,23 +263,33 @@ class SosDelivery {
     String droneId;
     double? etaMinutes;
     MissionStatus missionStatus;
+    
+    ///What the drone carries for this SOS (the mission's kit), shown to the sender.
+    List<PayloadItem>? payload;
+    double? payloadKg;
 
     SosDelivery({
         required this.droneId,
         this.etaMinutes,
         required this.missionStatus,
+        this.payload,
+        this.payloadKg,
     });
 
     factory SosDelivery.fromJson(Map<String, dynamic> json) => SosDelivery(
         droneId: json["droneId"],
         etaMinutes: json["etaMinutes"]?.toDouble(),
         missionStatus: missionStatusValues.map[json["missionStatus"]]!,
+        payload: json["payload"] == null ? [] : List<PayloadItem>.from(json["payload"]!.map((x) => PayloadItem.fromJson(x))),
+        payloadKg: json["payloadKg"]?.toDouble(),
     );
 
     Map<String, dynamic> toJson() => {
         "droneId": droneId,
         "etaMinutes": etaMinutes,
         "missionStatus": missionStatusValues.reverse[missionStatus],
+        "payload": payload == null ? [] : List<dynamic>.from(payload!.map((x) => x.toJson())),
+        "payloadKg": payloadKg,
     };
 }
 
@@ -263,6 +314,32 @@ final missionStatusValues = EnumValues({
     "pending_approval": MissionStatus.PENDING_APPROVAL,
     "returned": MissionStatus.RETURNED
 });
+
+class PayloadItem {
+    String item;
+    int qty;
+    
+    ///Total for this line (qty included).
+    double weightKg;
+
+    PayloadItem({
+        required this.item,
+        required this.qty,
+        required this.weightKg,
+    });
+
+    factory PayloadItem.fromJson(Map<String, dynamic> json) => PayloadItem(
+        item: json["item"],
+        qty: json["qty"],
+        weightKg: json["weightKg"]?.toDouble(),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "item": item,
+        "qty": qty,
+        "weightKg": weightKg,
+    };
+}
 
 enum SosStatus {
     ASSIGNED,

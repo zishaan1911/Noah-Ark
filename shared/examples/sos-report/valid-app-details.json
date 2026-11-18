@@ -1,0 +1,23 @@
+{
+  "channel": "app",
+  "language": "ms",
+  "rawMessage": "Banjir naik, 4 orang di atas bumbung, perlu air dan ubat insulin",
+  "location": {
+    "lat": 4.5975,
+    "lon": 101.0901
+  },
+  "peopleCount": 4,
+  "needs": [
+    "water",
+    "medicine"
+  ],
+  "contactPhone": "+60123456789",
+  "medicines": [
+    "insulin"
+  ],
+  "vulnerable": {
+    "children": 1,
+    "elderly": 1,
+    "pregnant": 0
+  }
+}
