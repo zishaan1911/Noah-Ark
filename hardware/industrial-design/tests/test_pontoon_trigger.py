@@ -24,7 +24,7 @@ millis = function() return {tofloat = function() return sim.t end} end
 gcs = {send_text = function(self, sev, msg) sim.texts[#sim.texts + 1] = {sev, msg} end}
 rangefinder = {has_data_orient = function(self, o) return sim.rng ~= nil end,
                status_orient = function(self, o) return sim.rng_status end,
-               distance_cm_orient = function(self, o) return sim.rng end}
+               distance_orient = function(self, o) return sim.rng / 100 end}
 ahrs = {get_velocity_NED = function(self) return {z = function() return sim.vz end} end,
         get_hagl = function(self) return sim.hagl end}
 relay = {on = function(self, i) sim.relays[i] = true; sim.relay_log[#sim.relay_log + 1] = {sim.t, i, true} end,
@@ -65,7 +65,7 @@ class Flight:
 
     def step(self, n=1):
         for _ in range(n):
-            if self.sim.mode != 5:  # LOITER holds height
+            if self.sim.mode != 4:  # GUIDED holds height
                 self.h -= self.sim.vz * 0.05
             self.set_radar()
             self.update()
@@ -154,7 +154,7 @@ def test_one_side_fails_retries_that_side_once_then_aborts_the_planned_landing()
     assert len(f.fired_at["R"]) == 2  # first fire + one retry
     retry = f.fired_at["R"][1] - f.fired_at["R"][0]
     assert retry == pytest.approx(f.p("RETRY_T") * 1000, abs=60)
-    assert f.sim.mode == 5  # LOITER: landing aborted
+    assert f.sim.mode == 4  # GUIDED hold: landing aborted
     assert any("FAILED" in t and "aborted" in t for t in f.texts())
 
 
@@ -163,6 +163,14 @@ def test_spent_kit_blocks_arming_and_firing():
     f.step(200)
     assert not f.fired_at
     assert "spent" in f.sim.auth
+
+
+def test_floating_on_inflated_tubes_may_take_off_again_but_never_refires():
+    f = Flight(h=0.0, PLAN_WTR=1, FIRED=1)
+    f.sim.ps[55] = f.sim.ps[56] = True
+    f.step(100)
+    assert f.sim.auth == "ok"
+    assert not f.fired_at
 
 
 def test_lua_defaults_match_the_generated_params():

@@ -1,4 +1,4 @@
--- Ark-1 pontoon trigger (ArduPilot Copter 4.5+ Lua, runs on the Pixhawk 6X)
+-- Ark-1 pontoon trigger (ArduPilot Copter 4.7+ Lua, SITL-tested on 4.7.2, runs on the Pixhawk 6X)
 --
 -- Arms the inflatable pontoons for a planned water landing (PONT_PLAN_WTR = 1 and the vehicle is landing)
 -- or an emergency ditching (battery failsafe while the companion says "over water", or the flag is stale).
@@ -24,12 +24,12 @@ local ENABLE    = p('ENABLE', 1, 1)
 local PLAN_WTR  = p('PLAN_WTR', 2, 0)     -- set by the mission planner (Ark Brain) for a planned water landing
 local OVERWTR   = p('OVERWTR', 3, 0)      -- companion water classifier: 1 = water under the drone
 local WTR_SEQ   = p('WTR_SEQ', 4, 0)      -- companion bumps this with every OVERWTR update (staleness check)
-local FIRE_ALT  = p('FIRE_ALT', 5, 7.5)   -- m, minimum firing height (skid to water)
-local INF_T     = p('INF_T', 6, 7.4)      -- s, fire to pressure-OK, cold case (pontoon_system.json)
+local FIRE_ALT  = p('FIRE_ALT', 5, 7.0)   -- m, minimum firing height (skid to water)
+local INF_T     = p('INF_T', 6, 7.2)      -- s, fire to pressure-OK, cold case (pontoon_system.json)
 local MARGIN    = p('MARGIN', 7, 1.5)
 local ABORT_ALT = p('ABORT_ALT', 8, 1.5)  -- m, lowest height at which a planned landing is still aborted
-local OK_TMO    = p('OK_TMO', 9, 14.7)    -- s, give up waiting for pressure
-local RETRY_T   = p('RETRY_T', 10, 8.4)   -- s, re-pulse a side with no pressure yet
+local OK_TMO    = p('OK_TMO', 9, 14.5)    -- s, give up waiting for pressure
+local RETRY_T   = p('RETRY_T', 10, 8.2)   -- s, re-pulse a side with no pressure yet
 local RNG_OFS   = p('RNG_OFS', 11, 0.34)  -- m, radar face to skid bottom
 local PULSE_MS  = p('PULSE_MS', 12, 300)
 local FIRED     = p('FIRED', 13, 0)       -- latch, saved: ground crew clears it after re-arming the kit
@@ -39,7 +39,8 @@ local RLY_ARM   = p('RLY_ARM', 16, 0)
 local RLY_L     = p('RLY_L', 17, 1)
 local RLY_R     = p('RLY_R', 18, 2)
 
-local MODE_AUTO, MODE_LOITER, MODE_LAND = 3, 5, 9
+-- the hold is GUIDED, not LOITER: with no pilot radio LOITER reads the missing throttle as full down (found in SITL)
+local MODE_AUTO, MODE_GUIDED, MODE_LAND = 3, 4, 9
 local NAV_LAND = 21
 local ROT_DOWN = 25          -- ROTATION_PITCH_270
 local RNG_GOOD = 4
@@ -63,7 +64,7 @@ end
 local function height()
   -- skid height above the water from the radar; terrain/EKF height as a fallback
   if rangefinder:has_data_orient(ROT_DOWN) and rangefinder:status_orient(ROT_DOWN) == RNG_GOOD then
-    return rangefinder:distance_cm_orient(ROT_DOWN) / 100 - RNG_OFS:get(), 'radar'
+    return rangefinder:distance_orient(ROT_DOWN) - RNG_OFS:get(), 'radar'   -- metres (4.7: the _cm_ form fails pre-arm)
   end
   local hagl = ahrs:get_hagl()
   if hagl then return hagl, 'hagl' end
@@ -123,9 +124,13 @@ local function update()
   local t = now()
   if #pulse_sides > 0 and t >= t_pulse_off then pulse_end() end
 
-  -- pre-arm: no take-off with a spent kit or a pressure switch already closed (bag out or wiring short)
+  -- pre-arm: no take-off with a spent kit or a pressure switch already closed (bag out or wiring short).
+  -- A fired kit with both tubes still holding pressure is the drone floating after a water landing: it may take
+  -- off again (no ditching protection left; the tubes stay out).
   if auth_id then
-    if FIRED:get() ~= 0 then arming:set_aux_auth_failed(auth_id, 'PONT: kit spent, re-arm and clear PONT_FIRED')
+    local floats_up = pressure_ok(PS_L_PIN) and pressure_ok(PS_R_PIN)
+    if FIRED:get() ~= 0 and floats_up then arming:set_aux_auth_passed(auth_id)
+    elseif FIRED:get() ~= 0 then arming:set_aux_auth_failed(auth_id, 'PONT: kit spent, re-arm and clear PONT_FIRED')
     elseif state == IDLE and (pressure_ok(PS_L_PIN) or pressure_ok(PS_R_PIN)) then
       arming:set_aux_auth_failed(auth_id, 'PONT: pressure switch closed on ground')
     else arming:set_aux_auth_passed(auth_id) end
@@ -169,7 +174,7 @@ local function update()
       retried = true
       fire(m)                                    -- one retry: the latch may have stuck, the cylinder is still full
       if planned and h and h > ABORT_ALT:get() then
-        vehicle:set_mode(MODE_LOITER); holding = true
+        vehicle:set_mode(MODE_GUIDED); holding = true   -- holds position and height on entry
         say(SEV_CRIT, 'no pressure ' .. table.concat(m) .. ': holding, retry fired')
       else
         say(SEV_CRIT, 'no pressure ' .. table.concat(m) .. ': retry fired')
