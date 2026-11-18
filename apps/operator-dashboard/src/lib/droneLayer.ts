@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {
   MercatorCoordinate,
   type CustomLayerInterface,
@@ -72,7 +73,7 @@ export function createDroneLayer(onStatus: (status: ModelStatus) => void): Drone
       renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
       renderer.autoClear = false;
       onStatus('loading');
-      new GLTFLoader().load(
+      new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
         MODEL_URL,
         (gltf) => {
           gltf.scene.traverse((o) => {
