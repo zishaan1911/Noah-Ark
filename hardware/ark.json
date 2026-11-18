@@ -286,72 +286,72 @@
   ],
   "power_chain": {
     "hover": {
-      "thrust_n": 39.6324,
-      "rpm": 2392.3477,
-      "wm_rad_s": 250.5261,
+      "thrust_n": 39.7109,
+      "rpm": 2394.7152,
+      "wm_rad_s": 250.774,
       "ke_v_s_rad": 0.0796,
-      "p_shaft_w": 333.1964,
-      "p_target_w": 355.1262,
+      "p_shaft_w": 334.1866,
+      "p_target_w": 356.1381,
       "eta_drive_assumed": 0.85
     },
     "esc_hover_low_pack": {
-      "vbus_v": 40.1348,
-      "duty": 0.5923,
-      "p_mech_w": 355.759,
-      "p_in_w": 386.6641,
-      "ibus_a": 9.6341,
-      "iph_rms_a": 14.962,
-      "efficiency": 0.8617,
+      "vbus_v": 40.1311,
+      "duty": 0.5934,
+      "p_mech_w": 356.4644,
+      "p_in_w": 387.6988,
+      "ibus_a": 9.6608,
+      "iph_rms_a": 14.9202,
+      "efficiency": 0.862,
       "sweep": [
         {
-          "duty": 0.4967,
-          "p_mech_w": 51.5386
+          "duty": 0.4973,
+          "p_mech_w": 50.3165
         },
         {
-          "duty": 0.5167,
-          "p_mech_w": 113.6491
+          "duty": 0.5173,
+          "p_mech_w": 112.323
         },
         {
-          "duty": 0.5367,
-          "p_mech_w": 176.7726
+          "duty": 0.5373,
+          "p_mech_w": 174.6157
         },
         {
-          "duty": 0.5567,
-          "p_mech_w": 239.7222
+          "duty": 0.5573,
+          "p_mech_w": 238.9461
         },
         {
-          "duty": 0.5767,
-          "p_mech_w": 304.4809
+          "duty": 0.5773,
+          "p_mech_w": 303.9614
         },
         {
-          "duty": 0.5967,
-          "p_mech_w": 369.3003
+          "duty": 0.5973,
+          "p_mech_w": 368.8134
         }
       ]
     },
     "bus": {
       "full": {
-        "vavg_hover": 47.9821,
-        "vmin_hover": 47.9255,
-        "vmin_peak": 45.8651,
-        "vavg_peak": 45.9605,
-        "ipack_hover": 32.2503,
-        "ipack_peak": 90.245,
-        "icap_rms_peak": 2.5349,
+        "vavg_hover": 47.9769,
+        "vmin_hover": 47.9207,
+        "vmin_peak": 45.8526,
+        "vavg_peak": 45.9497,
+        "ipack_hover": 32.3743,
+        "ipack_peak": 90.5301,
+        "icap_rms_peak": 2.5373,
         "vocv": 49.8,
-        "vcell_min_peak": 3.8221,
+        "vcell_min_peak": 3.821,
         "cutoff_load_v": 2.8
       },
       "low": {
-        "vavg_hover": 39.0145,
-        "vmin_hover": 38.8976,
-        "vmin_peak": 36.4559,
-        "vavg_peak": 36.5816,
-        "ipack_hover": 38.7931,
-        "ipack_peak": 108.5868,
-        "icap_rms_peak": 3.0432,
+        "vavg_hover": 39.0092,
+        "vmin_hover": 38.8933,
+        "vmin_peak": 36.446,
+        "vavg_peak": 36.5697,
+        "ipack_hover": 38.9105,
+        "ipack_peak": 108.8926,
+        "icap_rms_peak": 3.0523,
         "vocv": 41.4,
-        "vcell_min_peak": 3.038,
+        "vcell_min_peak": 3.0372,
         "cutoff_load_v": 2.8
       }
     },
@@ -736,12 +736,13 @@
     "model": "industrial-design/drone-model/Drone.obj",
     "skid_z_below_m": -0.5,
     "pontoon": {
-      "d_m": 0.19,
-      "length_m": 0.66,
+      "d_m": 0.15,
+      "length_m": 1.0,
       "below_skid_m": 0.0,
       "stowed_d_m": 0.05,
       "stowed_length_m": 0.42,
-      "inflation": "2 x 60 g CO2 cartridges, fired by the flight controller before a water touchdown"
+      "inflation": "2 x 60 g CO2 cartridges, fired by the flight controller before a water touchdown",
+      "length_note": "1.0 m (was 0.66): phase 5 sim found the 0.66 m tubes pitch over in 0.3 m waves (pitch righting peaked at 3 N m and vanished at 25 deg); 1.0 m keeps righting to 40 deg and rides 0.5 m waves"
     },
     "added_mass_kg": {
       "inflatable_pontoon_kit": 0.65,
@@ -796,14 +797,14 @@
       "triangles": 238400,
       "body_area_m2": 1.6187,
       "structure_kg": 2.428,
-      "auw_estimate_kg": 16.16,
+      "auw_estimate_kg": 16.192,
       "mass_kg": {
         "structure": 2.428,
         "pack": 6.665,
         "electrical_parts": 3.262,
         "copper": 0.187,
         "props": 0.24,
-        "pontoon_kit": 1.128,
+        "pontoon_kit": 1.16,
         "mounting_hardware": 0.25,
         "payload": 2.0
       },
@@ -841,14 +842,14 @@
       },
       "deck_z_m": -0.1467,
       "pontoons": {
-        "volume_l_each": 16.92,
-        "reserve_buoyancy": 1.094,
-        "draft_m": 0.0918,
-        "waterline_z_m": -0.4882,
-        "prop_clearance_m": 0.4244,
-        "hub_clearance_m": 0.2488,
+        "volume_l_each": 16.79,
+        "reserve_buoyancy": 1.074,
+        "draft_m": 0.0729,
+        "waterline_z_m": -0.507,
+        "prop_clearance_m": 0.4432,
+        "hub_clearance_m": 0.2676,
         "skid_y_m": 0.2809,
-        "tube_centre_z_m": -0.485
+        "tube_centre_z_m": -0.505
       },
       "mounts": {
         "hub_bottom_z_m": -0.2394,
@@ -869,18 +870,18 @@
         "cd_body": 0.9,
         "cda_m2": 0.166,
         "cda_payload_m2": 0.0144,
-        "auw_kg": 16.16,
+        "auw_kg": 16.192,
         "12S7P": {
-          "mission_wh": 1007.6,
-          "needed_with_reserve_wh": 1259.5,
+          "mission_wh": 1009.9,
+          "needed_with_reserve_wh": 1262.4,
           "usable_wh": 1360.8,
-          "energy_margin": 1.0804,
+          "energy_margin": 1.078,
           "cruise_mps": [
             17.0,
             16.0
           ],
-          "twr": 2.592,
-          "auw_kg": 16.16
+          "twr": 2.586,
+          "auw_kg": 16.192
         },
         "closes_with": "12S7P"
       }
@@ -888,5 +889,126 @@
     "mounting_hardware_kg": 0.25,
     "pack": "12S7P",
     "pack_note": "12S7P: the smallest pack that flies the 20 km out / 20 km back mission with 20 % reserve on this airframe's own drag (mission_check.py). Overrides sizing's 12S4P, which assumed the old low-drag hull."
+  },
+  "simulation": {
+    "note": "simulation/ark_sim: ArduCopter 4.7.2 SITL + Ark-1 physics",
+    "result": {
+      "water_landing": {
+        "about": "Planned water landing: take off from the bank, fly 100 m out over the river, LAND. Waves Hs 0.3 m, wind 4 m/s from the west with 1 m/s gusts.",
+        "fire_height_m": 17.2,
+        "fire_t_s": 73.41,
+        "touchdown_t_s": 97.95,
+        "pressure_ok_t_s": {
+          "L": 77.16,
+          "R": 77.16
+        },
+        "max_tilt_on_water_deg": 12.4,
+        "min_prop_clearance_m": 0.319,
+        "fire_rule_m": 17.7,
+        "checks": {
+          "not_sunk": true,
+          "fired_once": true,
+          "fired_at_rule_height": true,
+          "both_tubes_up_before_touchdown": true,
+          "floats_level": true,
+          "props_clear_of_water": true
+        },
+        "passed": true,
+        "sim_s": 123.1,
+        "frames": 147734,
+        "model_auw_kg": 16.192,
+        "cg_hw_m": [
+          -0.0221,
+          0.0001,
+          -0.2073
+        ]
+      },
+      "one_side_fails": {
+        "about": "Planned water landing with the left inflator jammed: the script retries it, holds in GUIDED and the operator diverts the drone home to land on the bank.",
+        "fire_height_m": 17.2,
+        "fire_t_s": 73.41,
+        "touchdown_t_s": null,
+        "pressure_ok_t_s": {
+          "L": null,
+          "R": 77.17
+        },
+        "max_tilt_on_water_deg": null,
+        "min_prop_clearance_m": 8.276,
+        "checks": {
+          "not_sunk": true,
+          "retried_left": true,
+          "aborted_and_held": true,
+          "never_touched_water": true,
+          "landed_home_on_bank": true
+        },
+        "passed": true,
+        "sim_s": 152.1,
+        "frames": 182527,
+        "model_auw_kg": 16.192,
+        "cg_hw_m": [
+          -0.0221,
+          0.0001,
+          -0.2073
+        ]
+      },
+      "water_takeoff": {
+        "about": "Floating on the inflated tubes after a landing (kit fired): take off from the water, fly 30 m, land on the water again. Waves Hs 0.3 m, wind 6 m/s with 1.5 m/s gusts.",
+        "touchdown_t_s": 0.0,
+        "pressure_ok_t_s": {
+          "L": null,
+          "R": null
+        },
+        "max_tilt_on_water_deg": 15.2,
+        "min_prop_clearance_m": 0.317,
+        "max_tilt_takeoff_deg": 15.2,
+        "checks": {
+          "not_sunk": true,
+          "climbed_to_10_m": true,
+          "takeoff_level": true,
+          "props_clear_of_water": true,
+          "landed_on_water_again": true
+        },
+        "passed": true,
+        "sim_s": 94.1,
+        "frames": 112919,
+        "model_auw_kg": 16.192,
+        "cg_hw_m": [
+          -0.0221,
+          0.0001,
+          -0.2073
+        ]
+      },
+      "ditching": {
+        "about": "Emergency: over the river on a delivery (no water landing planned), the battery hits its low-voltage failsafe and the drone lands where it is. No companion water flag, so stale counts as water.",
+        "fire_height_m": 17.1,
+        "fire_t_s": 87.52,
+        "touchdown_t_s": 111.97,
+        "pressure_ok_t_s": {
+          "L": 91.27,
+          "R": 91.27
+        },
+        "max_tilt_on_water_deg": 12.2,
+        "min_prop_clearance_m": 0.319,
+        "fire_rule_m": 17.7,
+        "checks": {
+          "not_sunk": true,
+          "fired_once": true,
+          "fired_at_rule_height": true,
+          "both_tubes_up_before_touchdown": true,
+          "floats_level": true,
+          "props_clear_of_water": true,
+          "fired_for_failsafe": true
+        },
+        "passed": true,
+        "sim_s": 136.1,
+        "frames": 163324,
+        "model_auw_kg": 16.192,
+        "cg_hw_m": [
+          -0.0221,
+          0.0001,
+          -0.2073
+        ]
+      }
+    }
   }
 }

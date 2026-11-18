@@ -32,9 +32,10 @@ python industrial-design/build_viewer.py
 ```
 
 ## Current design (ark.json -> industrial_design)
-- 16.2 kg all-up with a 2 kg payload; 12S7P pack (84 x Samsung 50S, 1.51 kWh) in the belly well; mission margin 8 %
+- 16.19 kg all-up with a 2 kg payload; 12S7P pack (84 x Samsung 50S, 1.51 kWh) in the belly well; mission margin 8 %
   over need + 20 % reserve; thrust-to-weight 2.6.
-- Pontoons: 2 x 16.9 L inflatable tubes, 109 % buoyancy reserve, 92 mm draft; fired at 7.5 m above the water
+- Pontoons: 2 x 16.8 L inflatable tubes (1.0 m x 150 mm, lengthened after the SITL wave runs), 107 % buoyancy
+  reserve, 73 mm draft; fired at 7.0 m above the water
   (`../flight/scripts/pontoon_trigger.lua`).
 - Electronics: 51 parts, 75 wires (`harness.json`), Holybro PM08D power module and AMASS AS150U arming plug for the
   ~108 A peak.

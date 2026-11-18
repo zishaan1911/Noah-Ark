@@ -3875,12 +3875,12 @@
   },
   "component_mass_kg": 7.784,
   "design_currents_a": {
-   "pack": 38.8,
-   "pack_peak": 108.6,
+   "pack": 38.9,
+   "pack_peak": 108.9,
    "esc": 9.7,
-   "esc_peak": 27.1,
-   "phase": 15.0,
-   "phase_peak": 31.9
+   "esc_peak": 27.2,
+   "phase": 14.9,
+   "phase_peak": 32.0
   },
   "wire_lengths_m": {
    "pw_pack_pos": 0.121,

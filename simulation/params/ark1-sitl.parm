@@ -1,0 +1,86 @@
+# Ark-1 in ArduCopter 4.7.2 SITL with the JSON physics (simulation/ark_sim). Loaded with --defaults.
+# The pontoon PONT_* params come from hardware/flight/pontoon.parm at run time (they exist only once the Lua
+# script has started); the real FMU pin numbers are remapped here because SITL GPIO only has pins 0..15.
+
+# ---- SITL basics (from ArduPilot Tools/autotest/default_params/copter.parm)
+FRAME_CLASS 1
+FRAME_TYPE 1
+INS_ACCOFFS_X 0.001
+INS_ACCOFFS_Y 0.001
+INS_ACCOFFS_Z 0.001
+INS_ACCSCAL_X 1.001
+INS_ACCSCAL_Y 1.001
+INS_ACCSCAL_Z 1.001
+INS_ACC2OFFS_X 0.001
+INS_ACC2OFFS_Y 0.001
+INS_ACC2OFFS_Z 0.001
+INS_ACC2SCAL_X 1.001
+INS_ACC2SCAL_Y 1.001
+INS_ACC2SCAL_Z 1.001
+RC1_MIN 1000
+RC1_MAX 2000
+RC2_MIN 1000
+RC2_MAX 2000
+RC3_MIN 1000
+RC3_MAX 2000
+RC4_MIN 1000
+RC4_MAX 2000
+SIM_BARO_RND 0
+LOG_DISARMED 0
+# autonomous: no pilot radio (Ark Command over the telemetry link instead), so no RC failsafe
+FS_THR_ENABLE 0
+
+# ---- Ark-1 power: 12S7P Samsung 50S (ark.json), T-Motor MN801-S + G28
+BATT_MONITOR 4
+BATT_CAPACITY 35000
+BATT_LOW_VOLT 39.6
+BATT_CRT_VOLT 37.2
+BATT_FS_LOW_ACT 1
+BATT_FS_CRT_ACT 1
+MOT_BAT_VOLT_MAX 49.8
+MOT_BAT_VOLT_MIN 36.0
+MOT_THST_EXPO 0.8
+MOT_SPIN_ARM 0.08
+MOT_SPIN_MIN 0.12
+MOT_THST_HOVER 0.45
+MOT_HOVER_LEARN 2
+
+# ---- attitude control for a 16 kg quad on 28 in props (sim starting point, not flight-tuned)
+ATC_RAT_RLL_P 0.12
+ATC_RAT_RLL_I 0.12
+ATC_RAT_RLL_D 0.004
+ATC_RAT_PIT_P 0.12
+ATC_RAT_PIT_I 0.12
+ATC_RAT_PIT_D 0.004
+ATC_RAT_YAW_P 0.5
+ATC_RAT_YAW_I 0.05
+ATC_ACCEL_R_MAX 40000
+ATC_ACCEL_P_MAX 40000
+ATC_ACCEL_Y_MAX 15000
+
+# ---- navigation and landing
+WPNAV_SPEED 800
+WPNAV_SPEED_DN 150
+LAND_SPEED 50
+LAND_ALT_LOW 1000
+RTL_ALT 2000
+
+# ---- radar altimeter (Ainstein US-D1 in the design): SITL rangefinder fed by the physics' rng_1
+RNGFND1_TYPE 100
+RNGFND1_ORIENT 25
+RNGFND1_MAX 50
+RNGFND1_MIN 0.2
+
+# ---- pontoon outputs and inputs on SITL GPIO: relays on pins 0..2, pressure switches on 3 and 4.
+# Switches are active low (closed = pressure), so bits 3 and 4 start high (open).
+SCR_ENABLE 1
+RELAY1_FUNCTION 1
+RELAY1_PIN 0
+RELAY1_DEFAULT 0
+RELAY2_FUNCTION 1
+RELAY2_PIN 1
+RELAY2_DEFAULT 0
+RELAY3_FUNCTION 1
+RELAY3_PIN 2
+RELAY3_DEFAULT 0
+SIM_PIN_MASK 24
