@@ -13,12 +13,16 @@ flight/README.md says how to replace them with measurements.
 
 import json
 import math
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ARK_JSON = HERE.parent / "ark.json"
-OUT_JSON = HERE / "pontoon_system.json"
-OUT_PARM = HERE.parent / "flight" / "pontoon.parm"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import variant  # ARK_VARIANT picks Ark-1 or a variant folder
+
+ARK_JSON = variant.ARK_JSON
+OUT_JSON = variant.ID_DATA / "pontoon_system.json"
+OUT_PARM = variant.FLIGHT / "pontoon.parm"
 
 # ---- CO2 properties (Span & Wagner 1996 ancillary equations, valid triple point .. critical point)
 R_CO2 = 188.92  # J/kg K
@@ -290,7 +294,7 @@ def main() -> int:
 
     # bladder: hoop tension at the relief setting vs fabric
     r = pt["d_m"] / 2
-    fab = d["fabric"]
+    fab = pt.get("fabric", d["fabric"])  # a variant may name its own tube fabric (Ark-1M: self-sealing liner)
     hoop_n_per_50mm = d["relief_gauge_kpa"] * 1e3 * r * 0.05
     sf_fabric = fab["tensile_n_per_50mm"] / hoop_n_per_50mm
     sf_seam = sf_fabric * fab["seam_efficiency"]
