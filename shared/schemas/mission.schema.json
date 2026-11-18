@@ -1,83 +1,64 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Mission",
+  "description": "A planned flight. mission-planner (Bedrock) writes it as pending_approval; an operator approves it in Ark Command before dispatch.",
   "type": "object",
-  "required": [
-    "id",
-    "mode",
-    "droneId",
-    "origin",
-    "destination",
-    "payload"
-  ],
+  "required": ["id", "mode", "droneId", "createdAt", "status", "origin", "destination", "landingType", "payload", "payloadKg"],
+  "additionalProperties": false,
   "properties": {
-    "id": {
-      "type": "string"
-    },
-    "mode": {
-      "enum": [
-        "gdex",
-        "relief",
-        "military"
-      ]
-    },
-    "droneId": {
-      "type": "string"
-    },
-    "sosRequestIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "origin": {
-      "$ref": "sos-request.schema.json#/$defs/geo"
-    },
-    "destination": {
-      "$ref": "sos-request.schema.json#/$defs/geo"
-    },
-    "waypoints": {
-      "type": "array",
-      "items": {
-        "$ref": "sos-request.schema.json#/$defs/geo"
-      }
-    },
-    "landingType": {
-      "enum": [
-        "ground",
-        "water",
-        "winch",
-        "drop"
-      ]
-    },
-    "payload": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "item": {
-            "type": "string"
-          },
-          "qty": {
-            "type": "number"
-          },
-          "weightKg": {
-            "type": "number"
-          }
-        }
-      }
-    },
-    "aiRationale": {
-      "type": "string"
-    },
+    "id": { "$ref": "common.schema.json#/$defs/missionId" },
+    "mode": { "$ref": "common.schema.json#/$defs/mode" },
+    "droneId": { "$ref": "common.schema.json#/$defs/droneId" },
+    "createdAt": { "$ref": "common.schema.json#/$defs/timestamp" },
     "status": {
-      "enum": [
-        "planned",
-        "in_flight",
-        "delivered",
-        "returned",
-        "aborted"
-      ]
+      "title": "MissionStatus",
+      "enum": ["pending_approval", "approved", "dispatched", "in_flight", "delivered", "returned", "aborted", "cancelled"]
+    },
+    "sosRequestIds": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/sosId" } },
+    "origin": { "$ref": "common.schema.json#/$defs/geo" },
+    "destination": { "$ref": "common.schema.json#/$defs/geo" },
+    "waypoints": { "type": "array", "maxItems": 50, "items": { "$ref": "common.schema.json#/$defs/geo" } },
+    "landingType": { "enum": ["ground", "water", "winch", "drop"] },
+    "payload": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/payloadItem" } },
+    "payloadKg": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 2.0,
+      "description": "Total payload. Ark-1 is sized for 2 kg (hardware/ark.json). Must equal the sum of payload weights; checked in code."
+    },
+    "distanceKm": { "type": "number", "minimum": 0, "maximum": 20, "description": "One way. Ark-1 range is 20 km out and back." },
+    "etaMinutes": { "type": "number", "minimum": 0 },
+    "aiRationale": { "type": "string", "maxLength": 2000 },
+    "approvedBy": { "type": "string", "description": "Operator user id; set on approve." },
+    "approvedAt": { "$ref": "common.schema.json#/$defs/timestamp" }
+  },
+  "$defs": {
+    "payloadItem": {
+      "title": "PayloadItem",
+      "type": "object",
+      "required": ["item", "qty", "weightKg"],
+      "additionalProperties": false,
+      "properties": {
+        "item": { "type": "string", "minLength": 1 },
+        "qty": { "type": "integer", "minimum": 1 },
+        "weightKg": { "type": "number", "exclusiveMinimum": 0, "description": "Total for this line (qty included)." }
+      }
+    },
+    "request": {
+      "title": "MissionRequest",
+      "description": "POST /missions body: ask the planner for a mission. GDEX parcels give a destination; relief missions give sosRequestIds.",
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "$ref": "common.schema.json#/$defs/mode" },
+        "sosRequestIds": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/sosId" } },
+        "destination": { "$ref": "common.schema.json#/$defs/geo" },
+        "payload": { "type": "array", "items": { "$ref": "#/$defs/payloadItem" } },
+        "landingType": { "enum": ["ground", "water", "winch", "drop"] },
+        "notes": { "type": "string", "maxLength": 2000 }
+      },
+      "anyOf": [{ "required": ["sosRequestIds"] }, { "required": ["destination"] }]
     }
   }
 }

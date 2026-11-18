@@ -1,0 +1,12 @@
+{
+  "id": "evt_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "droneId": "ARK-001",
+  "ts": "2026-11-18T09:36:20Z",
+  "type": "offload_decision",
+  "severity": "info",
+  "offload": {
+    "task": "landing_classification",
+    "target": "onboard",
+    "reason": "link quality 0.21 below 0.4"
+  }
+}

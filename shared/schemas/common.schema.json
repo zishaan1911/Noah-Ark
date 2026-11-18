@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Common",
+  "description": "Shared building blocks referenced by the other schemas. Not a message on its own.",
+  "$defs": {
+    "geo": {
+      "title": "Geo",
+      "type": "object",
+      "required": ["lat", "lon"],
+      "additionalProperties": false,
+      "properties": {
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "altM": { "type": "number", "description": "Metres above the home point (relative altitude)." }
+      }
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "mode": { "title": "MissionMode", "enum": ["gdex", "relief", "military"] },
+    "droneId": { "type": "string", "pattern": "^ARK-[0-9]{3}$" },
+    "sosId": { "type": "string", "pattern": "^sos_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "missionId": { "type": "string", "pattern": "^msn_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "commandId": { "type": "string", "pattern": "^cmd_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "eventId": { "type": "string", "pattern": "^evt_[0-9A-HJKMNP-TV-Z]{26}$" }
+  }
+}

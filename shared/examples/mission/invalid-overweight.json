@@ -1,0 +1,35 @@
+{
+  "id": "msn_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "mode": "relief",
+  "droneId": "ARK-001",
+  "createdAt": "2026-11-18T09:31:10Z",
+  "status": "pending_approval",
+  "sosRequestIds": [
+    "sos_01JD8X5Q2M9VTRC3B7K4N6P0WY"
+  ],
+  "origin": {
+    "lat": 4.6012,
+    "lon": 101.0777
+  },
+  "destination": {
+    "lat": 4.5975,
+    "lon": 101.0901
+  },
+  "landingType": "water",
+  "payload": [
+    {
+      "item": "Drinking water 500 ml",
+      "qty": 2,
+      "weightKg": 1.0
+    },
+    {
+      "item": "Insulin cold pack",
+      "qty": 1,
+      "weightKg": 0.4
+    }
+  ],
+  "payloadKg": 2.5,
+  "distanceKm": 1.4,
+  "etaMinutes": 3.5,
+  "aiRationale": "Roof is surrounded by water; water landing beside the house, closest available drone."
+}

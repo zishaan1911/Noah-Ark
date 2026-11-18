@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Drone",
+  "description": "One drone in the fleet registry. dispatch-agent picks from available drones; Ark Care tracks health.",
+  "type": "object",
+  "required": ["id", "model", "status", "home", "maxPayloadKg"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/droneId" },
+    "model": { "type": "string", "description": "Airframe, e.g. Ark-1." },
+    "status": { "title": "DroneStatus", "enum": ["available", "assigned", "in_flight", "charging", "maintenance", "offline"] },
+    "home": { "$ref": "common.schema.json#/$defs/geo" },
+    "maxPayloadKg": { "type": "number", "exclusiveMinimum": 0 },
+    "rangeKm": { "type": "number", "exclusiveMinimum": 0, "description": "One way, with reserve." },
+    "missionId": { "$ref": "common.schema.json#/$defs/missionId" },
+    "batteryPct": { "type": "number", "minimum": 0, "maximum": 100 },
+    "lastSeenAt": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "flightHours": { "type": "number", "minimum": 0 },
+    "pontoonKitArmed": { "type": "boolean", "description": "False after the kit has fired until it is repacked." }
+  }
+}

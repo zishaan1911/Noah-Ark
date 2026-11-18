@@ -1,0 +1,10 @@
+{
+  "channel": "whatsapp",
+  "language": "ms",
+  "rawMessage": "Banjir naik, 4 orang di atas bumbung, perlu air dan ubat insulin",
+  "peopleCount": 4,
+  "needs": [
+    "water",
+    "medicine"
+  ]
+}

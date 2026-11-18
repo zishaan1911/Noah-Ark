@@ -1,97 +1,50 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "SosRequest",
+  "description": "A call for help as stored: what the sender said (report), what sos-triage (Bedrock) concluded (triage), and where it is in the flow.",
   "type": "object",
-  "required": [
-    "id",
-    "createdAt",
-    "location",
-    "channel"
-  ],
+  "required": ["id", "createdAt", "status", "report"],
+  "additionalProperties": false,
   "properties": {
-    "id": {
-      "type": "string"
-    },
-    "createdAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "channel": {
-      "enum": [
-        "app",
-        "sms",
-        "whatsapp",
-        "voice"
-      ]
-    },
-    "language": {
-      "type": "string"
-    },
-    "rawMessage": {
-      "type": "string"
-    },
-    "photoUrl": {
-      "type": "string"
-    },
-    "location": {
-      "$ref": "#/$defs/geo"
-    },
-    "peopleCount": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "needs": {
-      "type": "array",
-      "items": {
-        "enum": [
-          "food",
-          "water",
-          "medicine",
-          "baby_supplies",
-          "shelter",
-          "rescue",
-          "other"
-        ]
-      }
-    },
-    "medicalConditions": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "urgency": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 5
-    },
-    "aiSummary": {
-      "type": "string"
-    },
-    "status": {
-      "enum": [
-        "new",
-        "triaged",
-        "assigned",
-        "delivered",
-        "closed"
-      ]
-    }
+    "id": { "$ref": "common.schema.json#/$defs/sosId" },
+    "createdAt": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "status": { "title": "SosStatus", "enum": ["new", "triaged", "assigned", "delivered", "closed"] },
+    "report": { "$ref": "#/$defs/report" },
+    "triage": { "$ref": "#/$defs/triage" },
+    "missionId": { "$ref": "common.schema.json#/$defs/missionId" }
   },
   "$defs": {
-    "geo": {
+    "need": { "title": "Need", "enum": ["food", "water", "medicine", "baby_supplies", "shelter", "rescue", "other"] },
+    "report": {
+      "title": "SosReport",
+      "description": "What the sender submits: the POST /sos body, or parsed from SMS / WhatsApp / voice.",
       "type": "object",
-      "required": [
-        "lat",
-        "lon"
-      ],
+      "required": ["channel", "location"],
+      "additionalProperties": false,
       "properties": {
-        "lat": {
-          "type": "number"
-        },
-        "lon": {
-          "type": "number"
-        }
+        "channel": { "enum": ["app", "sms", "whatsapp", "voice"] },
+        "location": { "$ref": "common.schema.json#/$defs/geo" },
+        "language": { "type": "string", "description": "BCP 47 tag, e.g. ms, en, zh." },
+        "rawMessage": { "type": "string", "maxLength": 4000 },
+        "photoUrl": { "type": "string", "format": "uri" },
+        "contactPhone": { "type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$", "description": "E.164, used to reply." },
+        "peopleCount": { "type": "integer", "minimum": 1 },
+        "needs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/need" } }
+      }
+    },
+    "triage": {
+      "title": "SosTriage",
+      "description": "sos-triage's Bedrock output. Validated against this schema before it is stored or acted on.",
+      "type": "object",
+      "required": ["urgency", "needs", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "urgency": { "type": "integer", "minimum": 1, "maximum": 5, "description": "5 = life-threatening." },
+        "needs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/need" } },
+        "peopleCount": { "type": "integer", "minimum": 1 },
+        "medicalConditions": { "type": "array", "items": { "type": "string" } },
+        "summary": { "type": "string", "maxLength": 1000, "description": "One or two sentences in English for the operator." },
+        "language": { "type": "string", "description": "Detected language of rawMessage, BCP 47." }
       }
     }
   }

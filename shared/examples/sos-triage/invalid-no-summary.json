@@ -1,0 +1,12 @@
+{
+  "urgency": 4,
+  "needs": [
+    "water",
+    "medicine"
+  ],
+  "peopleCount": 4,
+  "medicalConditions": [
+    "diabetes"
+  ],
+  "language": "ms"
+}

@@ -1,0 +1,13 @@
+{
+  "urgency": 6,
+  "needs": [
+    "water",
+    "medicine"
+  ],
+  "peopleCount": 4,
+  "medicalConditions": [
+    "diabetes"
+  ],
+  "summary": "4 people stranded on a roof by flood water; one diabetic needs insulin.",
+  "language": "ms"
+}

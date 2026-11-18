@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DroneEvent",
+  "description": "Drone to cloud, on ark/<droneId>/events. Something happened that the cloud should act on or log. Queued onboard while the link is down and sent on reconnect.",
+  "type": "object",
+  "required": ["id", "droneId", "ts", "type", "severity"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/eventId" },
+    "droneId": { "$ref": "common.schema.json#/$defs/droneId" },
+    "missionId": { "$ref": "common.schema.json#/$defs/missionId" },
+    "ts": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "type": {
+      "title": "EventType",
+      "enum": [
+        "command_ack",
+        "mission_started",
+        "takeoff",
+        "waypoint_reached",
+        "pontoons_fired",
+        "pontoon_failure",
+        "landed",
+        "payload_released",
+        "delivered",
+        "aborted",
+        "rtl",
+        "low_battery",
+        "link_lost",
+        "link_restored",
+        "offload_decision",
+        "fault"
+      ]
+    },
+    "severity": { "enum": ["info", "warning", "critical"] },
+    "position": { "$ref": "common.schema.json#/$defs/geo" },
+    "message": { "type": "string", "maxLength": 500 },
+    "commandId": { "$ref": "common.schema.json#/$defs/commandId" },
+    "accepted": { "type": "boolean", "description": "command_ack only." },
+    "waypointIndex": { "type": "integer", "minimum": 0 },
+    "offload": {
+      "type": "object",
+      "description": "offload_decision only: where the offload manager ran a task.",
+      "required": ["task", "target", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "task": { "type": "string", "description": "e.g. landing_classification, recipient_detection." },
+        "target": { "enum": ["onboard", "cloud"] },
+        "reason": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "command_ack" } } },
+      "then": { "required": ["commandId", "accepted"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "offload_decision" } } },
+      "then": { "required": ["offload"] }
+    }
+  ]
+}

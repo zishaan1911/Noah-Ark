@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LiveUpdate",
+  "description": "Server to dashboard over the WebSocket API. One message per change; `kind` says what `data` is.",
+  "oneOf": [
+    { "$ref": "#/$defs/telemetryUpdate" },
+    { "$ref": "#/$defs/droneEventUpdate" },
+    { "$ref": "#/$defs/sosUpdate" },
+    { "$ref": "#/$defs/missionUpdate" },
+    { "$ref": "#/$defs/droneUpdate" }
+  ],
+  "$defs": {
+    "telemetryUpdate": {
+      "title": "TelemetryUpdate",
+      "type": "object",
+      "required": ["kind", "data"],
+      "additionalProperties": false,
+      "properties": { "kind": { "const": "telemetry" }, "data": { "$ref": "telemetry.schema.json" } }
+    },
+    "droneEventUpdate": {
+      "title": "DroneEventUpdate",
+      "type": "object",
+      "required": ["kind", "data"],
+      "additionalProperties": false,
+      "properties": { "kind": { "const": "drone_event" }, "data": { "$ref": "drone-event.schema.json" } }
+    },
+    "sosUpdate": {
+      "title": "SosUpdate",
+      "type": "object",
+      "required": ["kind", "data"],
+      "additionalProperties": false,
+      "properties": { "kind": { "const": "sos" }, "data": { "$ref": "sos-request.schema.json" } }
+    },
+    "missionUpdate": {
+      "title": "MissionUpdate",
+      "type": "object",
+      "required": ["kind", "data"],
+      "additionalProperties": false,
+      "properties": { "kind": { "const": "mission" }, "data": { "$ref": "mission.schema.json" } }
+    },
+    "droneUpdate": {
+      "title": "DroneUpdate",
+      "type": "object",
+      "required": ["kind", "data"],
+      "additionalProperties": false,
+      "properties": { "kind": { "const": "drone" }, "data": { "$ref": "drone.schema.json" } }
+    }
+  }
+}

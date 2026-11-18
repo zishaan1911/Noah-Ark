@@ -1,0 +1,15 @@
+{
+  "mode": "gdex",
+  "destination": {
+    "lat": 4.21,
+    "lon": 101.97
+  },
+  "payload": [
+    {
+      "item": "Parcel GDX-88231",
+      "qty": 1,
+      "weightKg": 1.2
+    }
+  ],
+  "landingType": "ground"
+}

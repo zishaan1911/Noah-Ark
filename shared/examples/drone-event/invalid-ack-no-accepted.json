@@ -1,0 +1,9 @@
+{
+  "id": "evt_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "droneId": "ARK-001",
+  "missionId": "msn_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "ts": "2026-11-18T09:32:01Z",
+  "type": "command_ack",
+  "severity": "info",
+  "commandId": "cmd_01JD8X5Q2M9VTRC3B7K4N6P0WY"
+}

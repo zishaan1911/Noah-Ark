@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DroneCommand",
+  "description": "Cloud to drone, on ark/<droneId>/cmd. A request, not an order: flight safety stays onboard, so the drone answers every command with a command_ack event and may refuse it.",
+  "type": "object",
+  "required": ["id", "droneId", "issuedAt", "type"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/commandId" },
+    "droneId": { "$ref": "common.schema.json#/$defs/droneId" },
+    "issuedAt": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "issuedBy": { "type": "string", "description": "Operator user id, or the service name for automatic commands." },
+    "type": { "title": "CommandType", "enum": ["upload_mission", "start", "hold", "abort", "rtl", "land"] },
+    "mission": { "$ref": "mission.schema.json" },
+    "reason": { "type": "string", "maxLength": 500 }
+  },
+  "if": { "properties": { "type": { "const": "upload_mission" } } },
+  "then": { "required": ["mission"] },
+  "else": { "not": { "required": ["mission"] } }
+}

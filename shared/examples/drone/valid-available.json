@@ -1,0 +1,15 @@
+{
+  "id": "ARK-001",
+  "model": "Ark-1",
+  "status": "available",
+  "home": {
+    "lat": 4.6012,
+    "lon": 101.0777
+  },
+  "maxPayloadKg": 2.0,
+  "rangeKm": 20,
+  "batteryPct": 100,
+  "lastSeenAt": "2026-11-18T09:29:00Z",
+  "flightHours": 12.5,
+  "pontoonKitArmed": true
+}
