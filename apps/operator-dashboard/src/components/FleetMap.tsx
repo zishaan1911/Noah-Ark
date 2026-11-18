@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Map as MapLibreMap, type ExpressionSpecification, type GeoJSONSource } from 'maplibre-gl';
+import type { FlyCall, Weather } from '@contracts';
 import { hubsOf, type FleetState } from '../lib/fleet';
+import { destinationPoint } from '../lib/geo';
 import { BASE_STYLE_URL, EMPTY_FC, applyTheme, hideBuildingExtrusions } from '../lib/mapStyle';
 import type { Theme } from '../lib/types';
 import '../styles/map.css';
@@ -10,7 +12,18 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
   theme: Theme;
+  weather: Weather | null;
+  radar: boolean;
 }
+
+const RADAR_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
+const RADAR_REFRESH_MS = 10 * 60 * 1000;
+const RADAR_SOURCE = 'fleet-radar';
+const STORMS = 'fleet-storms';
+const STORM_LABELS = 'fleet-storm-labels';
+const STORM_POINTS = 48;
+
+const key3 = (lat: number, lon: number) => `${lat.toFixed(3)},${lon.toFixed(3)}`;
 
 const HUBS = 'fleet-hubs';
 const ROUTES = 'fleet-routes';
@@ -34,7 +47,7 @@ const point = (coords: Coord, properties: Record<string, string | number>) => ({
 const collection = <T,>(features: T[]) => ({ type: 'FeatureCollection' as const, features });
 
 /** A flat fleet overview. Everything is a GeoJSON layer (24+ drones), updated from props, never per frame. */
-export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
+export function FleetMap({ state, selectedId, onSelect, theme, weather, radar }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const themeRef = useRef(theme);
@@ -53,9 +66,40 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
     const active = Object.values(state.missions).filter(
       (m) => m.status === 'dispatched' || m.status === 'in_flight',
     );
+    const calls = new Map<string, FlyCall>((weather?.hubs ?? []).map((w) => [key3(w.lat, w.lon), w.call]));
     return {
       hubs: collection(
-        hubs.map((h) => point([h.lon, h.lat], { count: h.drones, label: `Hub · ${h.drones}` })),
+        hubs.map((h) => {
+          const call = calls.get(key3(h.lat, h.lon));
+          return point([h.lon, h.lat], {
+            count: h.drones,
+            call: call ?? '',
+            label: `Hub · ${h.drones}${call === 'no_go' ? ' · on hold' : ''}`,
+          });
+        }),
+      ),
+      storms: collection(
+        (weather?.storms ?? []).map((s) => {
+          const centre = { lat: s.lat, lon: s.lon };
+          const ring: Coord[] = [];
+          for (let i = 0; i < STORM_POINTS; i++) {
+            const p = destinationPoint(centre, (i * 360) / STORM_POINTS, s.radiusKm * 1000);
+            ring.push([p.lon, p.lat]);
+          }
+          ring.push(ring[0]);
+          return {
+            type: 'Feature' as const,
+            properties: { id: s.id },
+            geometry: { type: 'Polygon' as const, coordinates: [ring] },
+          };
+        }),
+      ),
+      stormLabels: collection(
+        (weather?.storms ?? []).map((s) =>
+          point([s.lon, s.lat], {
+            label: `${s.id} · ${Math.round(s.rainMmH)} mm/h${s.thunder ? ' ⚡' : ''}`,
+          }),
+        ),
       ),
       routes: collection(
         active.map((m) => ({
@@ -63,10 +107,7 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
           properties: { mode: m.mode },
           geometry: {
             type: 'LineString' as const,
-            coordinates: [
-              [m.origin.lon, m.origin.lat],
-              [m.destination.lon, m.destination.lat],
-            ] as Coord[],
+            coordinates: [m.origin, ...(m.waypoints ?? []), m.destination].map((p): Coord => [p.lon, p.lat]),
           },
         })),
       ),
@@ -78,7 +119,7 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
         }),
       ),
     };
-  }, [state, hubs]);
+  }, [state, hubs, weather]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -94,7 +135,41 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
     mapRef.current = map;
     map.on('load', () => {
       hideBuildingExtrusions(map);
-      for (const id of [HUBS, ROUTES, DESTS, DRONES]) map.addSource(id, { type: 'geojson', data: EMPTY_FC });
+      for (const id of [STORMS, STORM_LABELS, HUBS, ROUTES, DESTS, DRONES])
+        map.addSource(id, { type: 'geojson', data: EMPTY_FC });
+      map.addLayer({
+        id: 'fleet-storm-fill',
+        type: 'fill',
+        source: STORMS,
+        paint: { 'fill-color': RED, 'fill-opacity': 0.18 },
+      });
+      map.addLayer({
+        id: 'fleet-storm-line',
+        type: 'line',
+        source: STORMS,
+        paint: { 'line-color': RED, 'line-width': 2, 'line-dasharray': [2, 2] },
+      });
+      map.addLayer({
+        id: 'fleet-hub-ring',
+        type: 'circle',
+        source: HUBS,
+        paint: {
+          'circle-radius': 15,
+          'circle-color': 'rgba(0,0,0,0)',
+          'circle-stroke-width': 3,
+          'circle-stroke-color': [
+            'match',
+            ['get', 'call'],
+            'go',
+            GREEN,
+            'caution',
+            AMBER,
+            'no_go',
+            RED,
+            'rgba(0,0,0,0)',
+          ],
+        },
+      });
       map.addLayer({
         id: 'fleet-hubs',
         type: 'circle',
@@ -118,6 +193,18 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
           'text-allow-overlap': true,
         },
         paint: { 'text-color': '#1C1C1E', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 },
+      });
+      map.addLayer({
+        id: 'fleet-storm-label',
+        type: 'symbol',
+        source: STORM_LABELS,
+        layout: {
+          'text-field': ['get', 'label'],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': 12,
+          'text-allow-overlap': true,
+        },
+        paint: { 'text-color': '#B23A26', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 },
       });
       map.addLayer({
         id: 'fleet-routes',
@@ -195,6 +282,8 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
     const map = mapRef.current;
     if (!ready || !map) return;
     const sources: [string, Parameters<GeoJSONSource['setData']>[0]][] = [
+      [STORMS, data.storms],
+      [STORM_LABELS, data.stormLabels],
       [HUBS, data.hubs],
       [ROUTES, data.routes],
       [DESTS, data.dests],
@@ -202,6 +291,52 @@ export function FleetMap({ state, selectedId, onSelect, theme }: Props) {
     ];
     for (const [id, fc] of sources) (map.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
   }, [ready, data]);
+
+  // Rain radar: newest past frame from RainViewer, refreshed every 10 min, removed when switched off.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map || !radar) return;
+    let cancelled = false;
+    const remove = () => {
+      if (map.getLayer(RADAR_SOURCE)) map.removeLayer(RADAR_SOURCE);
+      if (map.getSource(RADAR_SOURCE)) map.removeSource(RADAR_SOURCE);
+    };
+    const load = async () => {
+      try {
+        const res = await fetch(RADAR_INDEX);
+        if (!res.ok) throw new Error(`RainViewer answered ${res.status}`);
+        const index = (await res.json()) as { host?: string; radar?: { past?: { path?: string }[] } };
+        const path = index.radar?.past?.at(-1)?.path;
+        if (!index.host || !path) throw new Error('RainViewer sent no radar frames');
+        if (cancelled) return;
+        remove();
+        map.addSource(RADAR_SOURCE, {
+          type: 'raster',
+          tiles: [`${index.host}${path}/256/{z}/{x}/{y}/2/1_1.png`],
+          tileSize: 256,
+          maxzoom: 7, // the free API stops at zoom 7; MapLibre overscales
+          attribution: 'Radar © RainViewer',
+        });
+        map.addLayer(
+          { id: RADAR_SOURCE, type: 'raster', source: RADAR_SOURCE, paint: { 'raster-opacity': 0.6 } },
+          'fleet-storm-fill',
+        );
+      } catch (err) {
+        if (!cancelled) console.warn('Rain radar unavailable', err);
+      }
+    };
+    void load();
+    const id = setInterval(() => void load(), RADAR_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      try {
+        remove();
+      } catch {
+        // the map was already torn down with the page
+      }
+    };
+  }, [ready, radar]);
 
   useEffect(() => {
     const map = mapRef.current;

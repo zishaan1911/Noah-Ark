@@ -42,7 +42,7 @@ const SKY = {
 };
 
 // Layers this file adds; applyTheme handles them by name, never by the base-style regexes.
-const OWN_LAYERS = new Set(['hillshade', 'route-casing', 'route', 'track']);
+const OWN_LAYERS = new Set(['hillshade', 'route-casing', 'route', 'track', 'fleet-storm-label']);
 
 export const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] };
 export const lineFeature = (coords: [number, number][]) => ({
