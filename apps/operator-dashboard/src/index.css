@@ -1,0 +1,174 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: Inter, -apple-system, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --color-ink: #1c1c1e;
+  --color-sub: #5e6570;
+  --color-accent: #0a84ff;
+  --color-action: #0a6cde;
+  --color-accent-ink: #0a66d1;
+  --color-accent-deep: #084e9f;
+  --color-accent-tint: #eaf3ff;
+  --color-amber: #f5a524;
+  --color-amber-tint: #fff1d6;
+  --color-amber-ink: #7a4a00;
+  --color-green: #34a853;
+  --color-green-ink: #1e7b3a;
+  --color-green-tint: #e6f4ea;
+  --color-red: #e0604a;
+  --color-red-ink: #b23a26;
+  --color-red-tint: #fdedea;
+  --color-fill: rgb(118 118 128 / 0.12);
+  --color-hair: rgb(60 60 67 / 0.12);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #eef0ea;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  /* layered so Tailwind utilities (px-0, w-11...) can override these */
+  .glass {
+    background: rgb(255 255 255 / 0.78);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgb(255 255 255 / 0.9);
+    box-shadow:
+      0 8px 32px rgb(30 40 50 / 0.12),
+      0 1px 2px rgb(30 40 50 / 0.08);
+  }
+
+  .btn {
+    font: inherit;
+    cursor: pointer;
+    border: 0;
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    transition:
+      transform 100ms ease-out,
+      background-color 100ms ease-out;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .btn-primary {
+    background: var(--color-action);
+    color: #fff;
+  }
+  .btn-quiet {
+    background: var(--color-fill);
+    color: var(--color-ink);
+  }
+}
+:where(button, input, a):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Map pins (DOM markers built in MapView) */
+.ark-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ark-pin-label {
+  font:
+    600 12px Inter,
+    system-ui,
+    sans-serif;
+  color: var(--color-ink);
+  text-shadow:
+    0 0 3px #fff,
+    0 0 3px #fff,
+    0 0 3px #fff;
+}
+.ark-pin-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ark-drone-pin {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ark-drone-pin .core {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 3px solid #fff;
+  box-shadow:
+    0 0 0 8px rgb(10 132 255 / 0.18),
+    0 2px 6px rgb(0 0 0 / 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ark-drone-pin .heading {
+  position: absolute;
+  inset: 0;
+}
+
+.hud-text {
+  font-family: var(--font-mono);
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.85),
+    0 0 6px rgb(0 0 0 / 0.5);
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
