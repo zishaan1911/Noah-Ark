@@ -1,0 +1,10 @@
+{
+  "droneId": "ARK-006",
+  "ts": "2026-11-18T09:40:00.100Z",
+  "seq": 42,
+  "forwardMs": 8.0,
+  "rightMs": 0.0,
+  "upMs": 1.5,
+  "yawRateDegS": -20.0,
+  "issuedBy": "Zishaan Ahmed"
+}

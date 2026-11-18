@@ -44,6 +44,7 @@ export interface Contracts {
   droneEvent?: DroneEvent;
   drone?: Drone;
   liveUpdate?: LiveUpdate;
+  manualControl?: ManualControl;
 }
 /**
  * A call for help as stored: what the sender said (report), what sos-triage (Bedrock) concluded (triage), and where it is in the flow.
@@ -307,4 +308,23 @@ export interface MissionUpdate {
 export interface DroneUpdate {
   kind: "drone";
   data: Drone;
+}
+/**
+ * Operator stick input, on ark/<droneId>/manual at about 10 Hz (QoS 0, not acked, like an RC link). Body-frame velocity and yaw-rate requests; the drone clamps them and holds position if packets stop for 1 s.
+ */
+export interface ManualControl {
+  droneId: string;
+  ts: string;
+  /**
+   * Increments per packet; the drone drops stale or reordered ones.
+   */
+  seq: number;
+  forwardMs: number;
+  rightMs: number;
+  upMs: number;
+  /**
+   * Clockwise seen from above is positive.
+   */
+  yawRateDegS: number;
+  issuedBy?: string;
 }

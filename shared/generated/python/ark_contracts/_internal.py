@@ -333,6 +333,25 @@ class DroneUpdate(BaseModel):
     data: Drone
 
 
+class ManualControl(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    droneId: DroneId
+    ts: Timestamp
+    seq: conint(ge=0) = Field(
+        ...,
+        description="Increments per packet; the drone drops stale or reordered ones.",
+    )
+    forwardMs: confloat(ge=-20.0, le=20.0)
+    rightMs: confloat(ge=-20.0, le=20.0)
+    upMs: confloat(ge=-5.0, le=5.0)
+    yawRateDegS: confloat(ge=-90.0, le=90.0) = Field(
+        ..., description="Clockwise seen from above is positive."
+    )
+    issuedBy: str | None = None
+
+
 class SosRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -421,6 +440,7 @@ class Contracts(BaseModel):
     droneEvent: DroneEvent | None = None
     drone: Drone | None = None
     liveUpdate: Schema | None = None
+    manualControl: ManualControl | None = None
 
 
 class Schema(

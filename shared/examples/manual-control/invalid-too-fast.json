@@ -1,0 +1,9 @@
+{
+  "droneId": "ARK-006",
+  "ts": "2026-11-18T09:40:00.100Z",
+  "seq": 43,
+  "forwardMs": 45.0,
+  "rightMs": 0.0,
+  "upMs": 0.0,
+  "yawRateDegS": 0.0
+}
