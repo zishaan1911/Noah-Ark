@@ -1,0 +1,283 @@
+openapi: 3.1.0
+info:
+  title: Ark Brain API
+  version: 0.1.0
+  description: |
+    REST API for Ark SOS, Ark Command and Ark Care. Bodies are the JSON Schemas in ../schemas/
+    (the single source of truth); this file only adds paths, parameters and status codes.
+    Live updates go over the WebSocket API (see channels.md), not this API.
+# shortcut: external $refs to ../schemas; bundle them (e.g. `npx @redocly/cli bundle`) before importing into API Gateway.
+servers:
+  - url: https://api.dev.noah-ark.example/v1
+    description: dev (placeholder until infra/ deploys the API stage)
+security:
+  - operatorJwt: []
+tags:
+  - name: sos
+  - name: missions
+  - name: drones
+paths:
+  /sos:
+    post:
+      tags: [sos]
+      summary: Submit a call for help
+      description: Public (Ark SOS app). Starts the SOS -> triage -> plan Step Functions flow. Throttled per IP.
+      operationId: createSos
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/sos-request.schema.json#/$defs/report' }
+      responses:
+        '201':
+          description: Stored with status `new`. Triage runs asynchronously.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/sos-request.schema.json' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { description: Too many requests }
+    get:
+      tags: [sos]
+      summary: List SOS requests
+      operationId: listSos
+      parameters:
+        - { name: status, in: query, schema: { enum: [new, triaged, assigned, delivered, closed] } }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/NextToken' }
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '../schemas/sos-request.schema.json' } }
+                  nextToken: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /sos/{sosId}:
+    get:
+      tags: [sos]
+      summary: Get one SOS request
+      description: The sender may poll this with no JWT (ids are unguessable ULIDs); operators get the same view.
+      operationId: getSos
+      security: [{}, { operatorJwt: [] }]
+      parameters:
+        - { name: sosId, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/sosId' } }
+      responses:
+        '200':
+          description: Found.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/sos-request.schema.json' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /missions:
+    post:
+      tags: [missions]
+      summary: Ask the planner for a mission
+      description: mission-planner (Bedrock) builds it and stores it as `pending_approval`. Watch the WebSocket or poll GET /missions/{id}.
+      operationId: requestMission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/mission.schema.json#/$defs/request' }
+      responses:
+        '202':
+          description: Planning started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [missionId]
+                properties:
+                  missionId: { $ref: '../schemas/common.schema.json#/$defs/missionId' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    get:
+      tags: [missions]
+      summary: List missions
+      operationId: listMissions
+      parameters:
+        - name: status
+          in: query
+          schema: { enum: [pending_approval, approved, dispatched, in_flight, delivered, returned, aborted, cancelled] }
+        - { name: mode, in: query, schema: { $ref: '../schemas/common.schema.json#/$defs/mode' } }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/NextToken' }
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '../schemas/mission.schema.json' } }
+                  nextToken: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /missions/{missionId}:
+    get:
+      tags: [missions]
+      summary: Get one mission
+      operationId: getMission
+      parameters: [{ $ref: '#/components/parameters/MissionId' }]
+      responses:
+        '200':
+          description: Found.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/mission.schema.json' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /missions/{missionId}/approve:
+    post:
+      tags: [missions]
+      summary: Approve a planned mission and dispatch it
+      description: Only from `pending_approval`. Sends `upload_mission` then `start` to the drone; status becomes `dispatched` once the drone acks.
+      operationId: approveMission
+      parameters: [{ $ref: '#/components/parameters/MissionId' }]
+      responses:
+        '200':
+          description: Approved.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/mission.schema.json' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /missions/{missionId}/abort:
+    post:
+      tags: [missions]
+      summary: Cancel a mission, or ask the drone to abort it
+      description: Before dispatch the mission becomes `cancelled`. In flight this sends an `abort` command; the drone decides how to abort safely and reports it with an `aborted` event.
+      operationId: abortMission
+      parameters: [{ $ref: '#/components/parameters/MissionId' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '202':
+          description: Cancelled, or abort sent.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/mission.schema.json' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /drones:
+    get:
+      tags: [drones]
+      summary: List the fleet
+      operationId: listDrones
+      responses:
+        '200':
+          description: All drones.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '../schemas/drone.schema.json' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /drones/{droneId}:
+    get:
+      tags: [drones]
+      summary: Get one drone
+      operationId: getDrone
+      parameters: [{ $ref: '#/components/parameters/DroneId' }]
+      responses:
+        '200':
+          description: Found.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/drone.schema.json' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /drones/{droneId}/telemetry:
+    get:
+      tags: [drones]
+      summary: Telemetry history
+      description: From Timestream. Defaults to the last 15 minutes; the window is capped at 24 h.
+      operationId: getTelemetry
+      parameters:
+        - { $ref: '#/components/parameters/DroneId' }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: Oldest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '../schemas/telemetry.schema.json' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /drones/{droneId}/events:
+    get:
+      tags: [drones]
+      summary: Event log
+      operationId: listDroneEvents
+      parameters:
+        - { $ref: '#/components/parameters/DroneId' }
+        - { name: missionId, in: query, schema: { $ref: '../schemas/common.schema.json#/$defs/missionId' } }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/NextToken' }
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '../schemas/drone-event.schema.json' } }
+                  nextToken: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    operatorJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito user pool token (operators and maintainers).
+  parameters:
+    MissionId: { name: missionId, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/missionId' } }
+    DroneId: { name: droneId, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/droneId' } }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+    NextToken: { name: nextToken, in: query, schema: { type: string } }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string, description: Machine code, e.g. invalid_body, not_found, wrong_status. }
+        message: { type: string }
+  responses:
+    BadRequest:
+      description: Body or parameters do not match the schema.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: Missing or invalid JWT.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: No such resource.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Conflict:
+      description: The mission is not in a status that allows this action.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
