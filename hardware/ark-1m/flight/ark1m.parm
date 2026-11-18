@@ -1,0 +1,4 @@
+# Ark-1M flight parameters, layered after Ark-1's (flight/pontoon.parm is regenerated per variant).
+# cap the motor current: keeps the AS150U arming plug inside its 140 A instantaneous rating (hardware/ark-1m/ark.json electrical)
+MOT_BAT_CURR_MAX 130
+MOT_BAT_CURR_TC 5
