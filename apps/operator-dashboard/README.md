@@ -28,6 +28,12 @@ If it is missing the view still works and shows a "3D model not loaded" chip.
   - End manual offers Hold, Return home or Land.
 - **Theme:** the sun/moon button in the header switches light and dark.
 
+## Fleet view
+Open `#/fleet` (or the **Drone | Fleet** switch in the header) to see the 24-drone fleet (ARK-101..124) at 6 hubs:
+drones on a flat map, active missions as dashed lines (blue GDEX, red relief), KPIs, and the dispatcher feed with the
+AI's reason for each pick. Needs the fleet simulator (`docker compose up fleet`). It reads `ark/+/telemetry`,
+`fleet/live` and `fleet/stats`; state is batched and shown every 500 ms (`hooks/useFleet.ts`, `lib/fleet.ts`).
+
 ## Test
 `npm run lint && npm test && npm run build`
 
