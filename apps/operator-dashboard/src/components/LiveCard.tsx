@@ -15,7 +15,7 @@ const fmt = (v: number | undefined, digits = 1, unit = '') =>
 
 function Cell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col rounded-xl bg-white p-2.5">
+    <div className="flex flex-col rounded-xl bg-card p-2.5">
       <span className="text-xs text-sub">{label}</span>
       <span className="font-mono text-base">{value}</span>
     </div>
@@ -25,7 +25,7 @@ function Cell({ label, value }: { label: string; value: string }) {
 export function LiveCard({ droneId, telemetry: t, dest, groundM }: Props) {
   if (!t) {
     return (
-      <section aria-label="Live flight" className="glass rounded-[22px] p-[18px]">
+      <section aria-label="Live flight">
         <span className="text-[13px] font-semibold text-accent-ink">{droneId} · no telemetry yet</span>
         <p className="m-0 mt-1 text-sm text-sub">Waiting for the drone to report in.</p>
       </section>
@@ -38,7 +38,7 @@ export function LiveCard({ droneId, telemetry: t, dest, groundM }: Props) {
   const batt = Math.max(0, Math.min(100, t.batteryPct));
 
   return (
-    <section aria-label="Live flight" className="glass flex flex-col gap-3 rounded-[22px] p-[18px]">
+    <section aria-label="Live flight" className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <span className="text-[13px] font-semibold text-accent-ink">

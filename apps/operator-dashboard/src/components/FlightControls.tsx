@@ -37,7 +37,7 @@ export function FlightControls({ droneId, drone }: Props) {
   }
 
   return (
-    <section aria-label="Flight controls" className="glass flex flex-col gap-2.5 rounded-[22px] p-4">
+    <section aria-label="Flight controls" className="flex flex-col gap-2.5">
       <div className="grid grid-cols-2 gap-2">
         {BUTTONS.map((b) => (
           <button
@@ -69,7 +69,7 @@ export function FlightControls({ droneId, drone }: Props) {
           <div className="flex gap-2">
             <button
               type="button"
-              className="btn flex-1 bg-red-ink text-white"
+              className="btn flex-1 bg-danger text-white"
               disabled={off}
               onClick={() => run('abort', 'Abort')}
             >
