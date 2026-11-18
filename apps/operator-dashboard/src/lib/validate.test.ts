@@ -5,7 +5,7 @@ import { buildCommand, buildMission } from './commands';
 import { destinationPoint } from './geo';
 import { planRoute } from './planRoute';
 import type { Point } from './types';
-import { validateCommand, validateMission, validateTelemetry } from './validate';
+import { validateCommand, validateMission, validateTelemetry, validateWeather } from './validate';
 
 const examples = (dir: string) =>
   fileURLToPath(new URL(`../../../../shared/examples/${dir}/`, import.meta.url));
@@ -24,6 +24,7 @@ function checkExamples(dir: string, validate: (v: unknown) => { ok: boolean; err
 
 checkExamples('drone-command', validateCommand);
 checkExamples('telemetry', validateTelemetry);
+checkExamples('weather', validateWeather);
 
 describe('a planned GDEX mission', () => {
   const start: Point = { lat: 5.7346, lon: 115.9302 };

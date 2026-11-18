@@ -28,6 +28,9 @@ export interface FleetStats {
   windMs: number;
   windFromDeg: number;
   speedup: number;
+  /** Orders held back by the weather. */
+  held?: number;
+  weatherCalls?: { go: number; caution: number; no_go: number };
 }
 
 export interface Hub {
@@ -155,7 +158,21 @@ export function parseFleetStats(raw: unknown): FleetStats | null {
     !isNum(speedup)
   )
     return null;
-  return { flying, queued, deliveredTotal, avgDeliveryMin, onTimePct, windMs, windFromDeg, speedup };
+  const stats: FleetStats = {
+    flying,
+    queued,
+    deliveredTotal,
+    avgDeliveryMin,
+    onTimePct,
+    windMs,
+    windFromDeg,
+    speedup,
+  };
+  if (isNum(r.held)) stats.held = r.held;
+  const c = r.weatherCalls as Record<string, unknown> | null | undefined;
+  if (typeof c === 'object' && c !== null && isNum(c.go) && isNum(c.caution) && isNum(c.no_go))
+    stats.weatherCalls = { go: c.go, caution: c.caution, no_go: c.no_go };
+  return stats;
 }
 
 export const fleetWindText = (s: FleetStats | null) =>

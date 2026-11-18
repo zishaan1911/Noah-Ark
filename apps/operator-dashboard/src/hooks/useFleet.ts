@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Mission, Telemetry } from '@contracts';
+import type { Mission, Telemetry, Weather } from '@contracts';
 import { MQTT_URL } from '../lib/config';
 import {
   applyDrone,
@@ -11,10 +11,10 @@ import {
   type FleetState,
   type FleetStats,
 } from '../lib/fleet';
-import { validateMission, validateTelemetry } from '../lib/validate';
+import { validateMission, validateTelemetry, validateWeather } from '../lib/validate';
 import { useMqtt, type MqttState } from './useMqtt';
 
-const TOPICS = ['ark/+/telemetry', 'fleet/live', 'fleet/stats'] as const;
+const TOPICS = ['ark/+/telemetry', 'fleet/live', 'fleet/stats', 'fleet/weather'] as const;
 const FLUSH_MS = 500;
 const TELEMETRY_TOPIC = /^ark\/[^/]+\/telemetry$/;
 
@@ -22,15 +22,23 @@ export interface FleetApi {
   conn: MqttState;
   state: FleetState;
   stats: FleetStats | null;
+  weather: Weather | null;
 }
 
 /** The whole fleet over MQTT. Messages pile up in a ref and reach React at most every 500 ms. */
 export function useFleet(): FleetApi {
   const [state, setState] = useState<FleetState>(emptyFleet);
   const [stats, setStats] = useState<FleetStats | null>(null);
-  const latest = useRef<{ state: FleetState; stats: FleetStats | null; dirty: boolean }>({
+  const [weather, setWeather] = useState<Weather | null>(null);
+  const latest = useRef<{
+    state: FleetState;
+    stats: FleetStats | null;
+    weather: Weather | null;
+    dirty: boolean;
+  }>({
     state,
     stats: null,
+    weather: null,
     dirty: false,
   });
 
@@ -56,6 +64,10 @@ export function useFleet(): FleetApi {
       const s = parseFleetStats(raw);
       if (!s) return console.warn('Dropped invalid fleet stats', raw);
       cur.stats = s;
+    } else if (topic === 'fleet/weather') {
+      const v = validateWeather(raw);
+      if (!v.ok) return console.warn('Dropped invalid weather', v.errors);
+      cur.weather = raw as Weather;
     } else {
       return;
     }
@@ -71,9 +83,10 @@ export function useFleet(): FleetApi {
       cur.dirty = false;
       setState(cur.state);
       setStats(cur.stats);
+      setWeather(cur.weather);
     }, FLUSH_MS);
     return () => clearInterval(id);
   }, []);
 
-  return { conn, state, stats };
+  return { conn, state, stats, weather };
 }

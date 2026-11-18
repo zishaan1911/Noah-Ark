@@ -1,14 +1,16 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { DroneEvent } from '@contracts';
 import type { DroneApi } from '../hooks/useDrone';
 import { ARK1 } from '../lib/ark1';
 import { buildMission, payloadTotalKg } from '../lib/commands';
-import { parseLatLon } from '../lib/geo';
+import { bearingDeg, parseLatLon } from '../lib/geo';
 import { sendMission, type StepId, type StepStatus } from '../lib/flightOps';
 import { planRoute, type Plan } from '../lib/planRoute';
 import { elevationAt } from '../lib/terrain';
 import type { PayloadRow, PickTarget, Point } from '../lib/types';
 import { validateMission } from '../lib/validate';
+import { fetchPointWeather, flyCall, windAdjustedMinutes, type PointWeather } from '../lib/weather';
+import { CALL } from './FleetWeather';
 import { deliveryStage, StageChips } from './EventFeed';
 import { windText } from './Header';
 import { TerrainProfile } from './TerrainProfile';
@@ -39,6 +41,7 @@ interface Props {
 type StepState = { status: StepStatus; detail?: string };
 type Steps = Record<StepId, StepState>;
 type Phase = 'idle' | 'sending' | 'flying';
+type DestWeather = { status: 'loading' } | { status: 'failed' } | { status: 'ok'; w: PointWeather };
 
 /** What was sent, kept so the flying card survives the operator touching the map. */
 interface Flight {
@@ -243,12 +246,31 @@ export function DeliveryCard({
   const [phase, setPhase] = useState<Phase>('idle');
   const [flight, setFlight] = useState<Flight | null>(null);
   const sending = phase === 'sending' && Object.values(steps).some((s) => s.status === 'active');
+  // Flying weather at the destination, fetched when the review opens (and again if the destination changes).
+  // Each result is keyed by its destination, so a stale one reads as loading without a reset in the effect.
+  const wxKey = review && dest ? `${dest.lat},${dest.lon}` : null;
+  const [wx, setWx] = useState<{ key: string; result: DestWeather } | null>(null);
+  useEffect(() => {
+    if (!wxKey) return;
+    const [lat, lon] = wxKey.split(',').map(Number);
+    const ctl = new AbortController();
+    fetchPointWeather(lat, lon, ctl.signal)
+      .then((w) => setWx({ key: wxKey, result: { status: 'ok', w } }))
+      .catch(() => {
+        if (!ctl.signal.aborted) setWx({ key: wxKey, result: { status: 'failed' } });
+      });
+    return () => ctl.abort();
+  }, [wxKey]);
+  const destWeather: DestWeather = wx && wx.key === wxKey ? wx.result : { status: 'loading' };
+  const call = destWeather.status === 'ok' ? flyCall(destWeather.w) : null;
+  const held = call?.call === 'no_go';
 
   const total = payloadTotalKg(rows);
   const over = total > ARK1.maxPayloadKg;
   const rowsOk = rows.length > 0 && rows.every((r) => r.item.trim() && r.qty >= 1 && r.kgEach > 0);
   const canPlan = !!start && !!dest && rowsOk && !over && !planning;
   const canSend = !!review && review.errors.length === 0 && !sending && drone.conn === 'connected';
+  const canSendNow = canSend && !held;
 
   // Events from this flight only.
   const baseIdx = flight?.baselineId ? drone.events.findIndex((e) => e.id === flight.baselineId) : -1;
@@ -441,6 +463,47 @@ export function DeliveryCard({
           <Stat label="Climb" value={`${Math.round(review.plan.climbM)} m`} />
         </dl>
         <TerrainProfile profile={review.plan.profile} liveKm={null} />
+        <div className="flex flex-col gap-1 rounded-xl bg-fill p-2.5" aria-label="Flying weather">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold">Flying weather</span>
+            {call && (
+              <span
+                className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${CALL[call.call].cls}`}
+              >
+                {CALL[call.call].label}
+              </span>
+            )}
+          </div>
+          {destWeather.status === 'loading' && (
+            <span className="text-xs text-sub">Checking the weather…</span>
+          )}
+          {destWeather.status === 'failed' && <span className="text-xs text-sub">Weather unavailable</span>}
+          {destWeather.status === 'ok' && start && dest && (
+            <>
+              <span className="text-xs text-sub">
+                wind {destWeather.w.windMs.toFixed(1)} m/s from {Math.round(destWeather.w.windFromDeg)}° ·
+                gust {destWeather.w.gustMs.toFixed(0)} · rain {destWeather.w.rainMmH.toFixed(0)} mm/h
+              </span>
+              <span className="text-xs text-sub">
+                ETA with wind:{' '}
+                {Math.round(
+                  windAdjustedMinutes(
+                    review.plan.distanceKm,
+                    bearingDeg(start, dest),
+                    destWeather.w.windMs,
+                    destWeather.w.windFromDeg,
+                  ),
+                )}{' '}
+                min
+              </span>
+              {held && call && (
+                <span id="wx-hold-reason" className="text-[13px] font-semibold text-red-ink" role="alert">
+                  {call.reason}
+                </span>
+              )}
+            </>
+          )}
+        </div>
         {review.errors.length > 0 && (
           <ul
             className="m-0 list-disc rounded-xl bg-red-tint py-3 pr-3 pl-7 text-[13px] text-red-ink"
@@ -452,7 +515,13 @@ export function DeliveryCard({
           </ul>
         )}
         <div className="flex flex-col gap-2">
-          <button type="button" className="btn btn-primary" disabled={!canSend} onClick={send}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!canSendNow}
+            aria-describedby={held ? 'wx-hold-reason' : undefined}
+            onClick={send}
+          >
             Send to {droneId}
           </button>
           <button type="button" className="btn btn-quiet" onClick={() => onReview(null)}>
