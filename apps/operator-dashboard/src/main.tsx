@@ -5,12 +5,13 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // MapLibre 6 finds its worker next to its own module; Vite's dep bundling moves that, so bundle the worker ourselves.
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import './index.css';
+import { DefenceOps } from './pages/DefenceOps';
 import { FleetOps } from './pages/FleetOps';
 import { GdexOps } from './pages/GdexOps';
 
 setWorkerUrl(maplibreWorkerUrl);
 
-/** Two pages, picked by the URL hash; no router library. */
+/** Three pages, picked by the URL hash; no router library. */
 function App() {
   const [hash, setHash] = useState(location.hash);
   useEffect(() => {
@@ -18,7 +19,9 @@ function App() {
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
-  return hash === '#/fleet' ? <FleetOps /> : <GdexOps />;
+  if (hash === '#/fleet') return <FleetOps />;
+  if (hash === '#/defence') return <DefenceOps />;
+  return <GdexOps />;
 }
 
 const root = document.getElementById('root');

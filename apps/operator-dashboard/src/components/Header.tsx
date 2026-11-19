@@ -13,7 +13,7 @@ interface Props {
   theme: Theme;
   onToggleTheme: () => void;
   /** Which page this header sits on; default 'gdex'. */
-  page?: 'gdex' | 'fleet';
+  page?: 'gdex' | 'fleet' | 'defence';
   /** Fleet page: drones seen so far. */
   fleetCount?: number;
   /** Fleet page: the wind line from `fleet/stats`, shown in place of the sim text. */
@@ -23,9 +23,10 @@ interface Props {
 const PAGES = [
   { id: 'gdex', label: 'Drone', hash: '' },
   { id: 'fleet', label: 'Fleet', hash: '#/fleet' },
+  { id: 'defence', label: 'Defence', hash: '#/defence' },
 ] as const;
 
-function PageSwitch({ page }: { page: 'gdex' | 'fleet' }) {
+function PageSwitch({ page }: { page: 'gdex' | 'fleet' | 'defence' }) {
   return (
     <nav aria-label="Page" className="flex gap-0.5 rounded-xl bg-fill p-0.5">
       {PAGES.map((p) => {
