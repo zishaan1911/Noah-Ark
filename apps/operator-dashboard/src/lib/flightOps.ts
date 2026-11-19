@@ -9,7 +9,8 @@ export type StepId = 'position' | 'upload' | 'start';
 export type StepStatus = 'pending' | 'active' | 'done' | 'failed';
 
 const NEAR_M = 50;
-const POSITION_TIMEOUT_MS = 120_000;
+// A respawn somewhere new boots SITL and waits for a GPS fix: about 1 min on a quiet machine, 3+ under load.
+const POSITION_TIMEOUT_MS = 300_000;
 const ACK_TIMEOUT_MS = 20_000;
 
 const nearStart = (start: Point, p: Point) => haversineKm(start, p) * 1000 <= NEAR_M;
