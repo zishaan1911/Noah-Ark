@@ -14,6 +14,8 @@ Simulation only (never on a real drone):
 | Topic | Direction | QoS | Payload | Publisher | Subscribers |
 |---|---|---|---|---|---|
 | `sim/<droneId>/spawn` | app → sim | 1 | `{"lat": n, "lon": n}` | Ark Command (sim mode) | `simulation/ark_sim/live.py`: reboots SITL there on real terrain and current wind |
+| `fleet/live` | fleet sim → app | 1 | `live-update` (`kind` `drone` or `mission` only) | `simulation/ark_fleet` | Ark Command Fleet page. Stands in for the WebSocket feed |
+| `fleet/stats` | fleet sim → app | 1, retained | `{"flying", "queued", "deliveredTotal", "avgDeliveryMin", "onTimePct", "promiseMin", "windMs", "windFromDeg", "speedup"}` | `simulation/ark_fleet` | Ark Command Fleet page |
 | `sim/<droneId>/status` | sim → app | 1, retained | `{"state": "booting" \| "ready" \| "error", "lat", "lon", "groundAmslM", "windMs", "windFromDeg", "detail"?}` | `live.py` | Ark Command |
 
 Locally the broker is Mosquitto (`compose.yaml`, MQTT 1883, WebSocket on host port 9101) with the same topics and payloads as IoT Core.

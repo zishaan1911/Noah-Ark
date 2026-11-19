@@ -51,6 +51,29 @@ SITL running for Ark Command. It spawns at the given point (default Papar, Sabah
 a gateway connects to `tcp:<sim>:5760`. Progress is the retained `sim/<drone>/status`; the real-time factor prints
 every 10 s. Rivers and lakes are not water on real terrain (`shortcut:` in `physics.py`).
 
+## Fleet sim (ark_fleet)
+A cheap **kinematic** simulation of the whole fleet: 24 Ark-1 drones (ARK-101..ARK-124), 4 at each of 6 Sabah hubs
+(Kota Kinabalu, Papar, Beaufort, Keningau, Kota Belud, Ranau), flying to about 36 named drop points. It is the opposite
+of `ark_sim`: no physics, no SITL, one tick per second of plain math, so 24 drones fit on a laptop at well under 5% of
+one CPU core and Ark Command can show fleet-scale logistics.
+```bash
+python -m ark_fleet --broker broker:1883 [--drones-per-hub 4] [--speedup 4] [--seed 7]
+```
+Orders arrive at 0.7 per sim-minute (75% GDEX parcels, 25% relief kits). Each tick calls the dispatch optimiser
+(`backend/functions/dispatch-agent`, found via `ARK_DISPATCH_PATH` or the repo path) and flies the chosen drone:
+climb to 60 m, outbound, hover for the drop, inbound, descend, then a 3 min pack swap at the hub. Wind is the current Open-Meteo wind at Papar
+(calm if it is unreachable).
+
+| Topic | Direction | QoS | Payload |
+|---|---|---|---|
+| `ark/<droneId>/telemetry` | sim → app | 0 | `telemetry.schema.json`, every second per drone, `ts` is wall clock |
+| `fleet/live` | sim → app | 1 | `{"kind": "mission" \| "drone", "data": ...}` on every change; every drone record again every 10 s |
+| `fleet/stats` | sim → app | 1, retained | `flying`, `queued`, `deliveredTotal`, `avgDeliveryMin`, `onTimePct` (order to drop within `promiseMin`, 30), `windMs`, `windFromDeg`, `speedup` |
+
+`--speedup` scales sim time only. Shortcuts: missions are auto-approved (the real flow waits for an operator); the
+optimiser runs in-process instead of as a Lambda behind Step Functions; powers are Ark-1's at 17 m/s and hover
+(`energy.py`), interpolated by payload; flat ground at 10 m AMSL; drop-point coordinates are accurate to about 1 km. Test: `pytest tests/test_fleet_sim.py`.
+
 ## Test
 ```bash
 pip install -r requirements.txt
