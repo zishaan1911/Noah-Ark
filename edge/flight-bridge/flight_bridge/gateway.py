@@ -456,8 +456,9 @@ class Gateway:
         if now < self.next_tel:
             return
         self.next_tel = now + 0.2  # 5 Hz
-        if "GLOBAL_POSITION_INT" not in self.state or now - self.last_hb > 15:  # no stale telemetry (slow sims stay)
-            return
+        # build_telemetry needs both; after a respawn a position can arrive before the first heartbeat
+        if not {"GLOBAL_POSITION_INT", "HEARTBEAT"} <= self.state.keys() or now - self.last_hb > 15:
+            return  # also no stale telemetry (slow sims stay)
         try:
             t = Telemetry.model_validate(
                 build_telemetry(self.state, self.drone_id, self.mission.id.root if self.mission else None)
