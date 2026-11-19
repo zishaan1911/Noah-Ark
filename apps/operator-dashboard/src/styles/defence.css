@@ -1,0 +1,141 @@
+/* Defence terminal: phosphor green on black. Scoped under .dt so the other pages keep their look. */
+.dt {
+  --dt-bg: #040805;
+  --dt-panel: #0a1a0e;
+  --dt-line: #1c4a28;
+  --dt-green: #4dff7a;
+  --dt-bright: #b6ffc8;
+  --dt-dim: #36a556;
+  --dt-amber: #ffb000;
+  --dt-red: #ff6a55;
+  position: relative;
+  min-height: 100dvh;
+  background: var(--dt-bg);
+  color: var(--dt-green);
+  font-family: 'IBM Plex Mono', Consolas, ui-monospace, monospace;
+  font-size: 13px;
+  text-shadow: 0 0 6px rgba(77, 255, 122, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+.dt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+}
+.dt-big {
+  font-family: 'VT323', ui-monospace, monospace;
+  line-height: 1;
+  color: var(--dt-bright);
+  text-shadow: 0 0 10px rgba(182, 255, 200, 0.4);
+}
+.dt-panel {
+  border: 1px solid var(--dt-line);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dt-h2 {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  background: var(--dt-panel);
+  border-bottom: 1px solid var(--dt-line);
+}
+.dt-label {
+  color: var(--dt-dim);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.dt-btn {
+  background: transparent;
+  color: var(--dt-green);
+  border: 1px solid var(--dt-green);
+  font:
+    600 13px 'IBM Plex Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+  min-height: 44px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+.dt-btn:hover:not(:disabled) {
+  background: rgba(77, 255, 122, 0.12);
+}
+.dt-btn:focus-visible,
+.dt a:focus-visible,
+.dt-row:focus-visible {
+  outline: 2px solid var(--dt-bright);
+  outline-offset: 2px;
+}
+.dt-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dt-btn-solid {
+  background: var(--dt-green);
+  color: var(--dt-bg);
+  border-color: var(--dt-green);
+  text-shadow: none;
+}
+.dt-btn-solid:hover:not(:disabled) {
+  background: var(--dt-bright);
+}
+.dt-btn-amber {
+  color: var(--dt-amber);
+  border-color: var(--dt-amber);
+}
+.dt-row {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-shadow: inherit;
+  border: 0;
+  border-bottom: 1px dashed var(--dt-line);
+  border-left: 3px solid transparent;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+.dt-row[aria-pressed='true'] {
+  border-left-color: var(--dt-green);
+  background: rgba(77, 255, 122, 0.07);
+}
+.dt a {
+  color: var(--dt-green);
+}
+@keyframes dt-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.dt-cursor {
+  animation: dt-blink 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dt-cursor {
+    animation: none;
+  }
+}
+
+/* MapLibre's attribution box, in the terminal colours instead of white */
+.dt .maplibregl-ctrl-attrib,
+.dt .maplibregl-ctrl-attrib.maplibregl-compact {
+  background: rgba(4, 8, 5, 0.85);
+  color: var(--dt-dim);
+}
+.dt .maplibregl-ctrl-attrib a {
+  color: var(--dt-green);
+}
+.dt .maplibregl-ctrl-attrib-button {
+  filter: invert(1) hue-rotate(180deg);
+}
