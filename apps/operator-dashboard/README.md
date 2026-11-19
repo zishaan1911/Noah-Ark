@@ -34,6 +34,25 @@ drones on a flat map, active missions as dashed lines (blue GDEX, red relief), K
 AI's reason for each pick. Needs the fleet simulator (`docker compose up fleet`). It reads `ark/+/telemetry`,
 `fleet/live` and `fleet/stats`; state is batched and shown every 500 ms (`hooks/useFleet.ts`, `lib/fleet.ts`).
 
+## Defence terminal
+`#/defence` (or **Defence** in the page switch) is military resupply in a green-on-black console, on the same live
+simulated flight (ARK-006). The sector is Darvel Bay around Lahad Datu, eastern Sabah. The outposts and threat zones
+are exercise data in `src/lib/defence.ts`, and every request's route bends around the no-fly zones with at least 1 km
+to spare (tested).
+- **Queue:** pick a request. REQ-0415 is held because its drop is inside a threat zone.
+- **Plan route:** each leg of the bent route is terrain-followed and the legs are joined. The go / no-go list checks
+  payload, range, threat-zone clearance, the sim's wind, the broker link and a second operator.
+- **Authorise launch** needs the second-operator box. It respawns the sim at the main base, uploads a `military`
+  mission and starts it. The drone flies home along the same bent route.
+- **Live telemetry:** altitude, speed, heading, climb, pack and bus voltage, an attitude indicator, mode, pontoons,
+  motor temperatures, vibration and link. It reads stale after 5 s without data.
+- **Commands:** hold, return to base and land, while airborne. The log at the bottom shows the drone's events and the
+  terminal's own entries.
+
+The live flight is the Ark-1 SITL airframe, so requests stay under its 2 kg. Ark-1M (4 kg) is the design in
+`hardware/ark-1m/`. A headless browser that renders the map in software can starve the sim of CPU; a normal
+browser with a GPU does not.
+
 ## Test
 `npm run lint && npm test && npm run build`
 
