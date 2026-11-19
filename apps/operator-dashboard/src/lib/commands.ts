@@ -18,15 +18,17 @@ export interface MissionInput {
   dest: Point;
   plan: Plan;
   payload: PayloadRow[];
+  /** Default gdex; the defence terminal sends military resupply. */
+  mode?: Mission['mode'];
 }
 
-/** An approved GDEX mission: the operator pressing Send is the approval. */
-export function buildMission({ droneId, start, dest, plan, payload }: MissionInput): Mission {
+/** An approved mission: the operator pressing Send (or Authorise) is the approval. */
+export function buildMission({ droneId, start, dest, plan, payload, mode = 'gdex' }: MissionInput): Mission {
   const now = new Date().toISOString();
   const items = toPayloadItems(payload);
   return {
     id: newId('msn'),
-    mode: 'gdex',
+    mode,
     droneId,
     createdAt: now,
     status: 'approved',
