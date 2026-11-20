@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import generate as g
+import generate as g  # noqa: I001  (puts simulation/ on the path for ark_fleet below)
+from ark_fleet import health
 
 SCHEMAS = g.REPO / "shared" / "schemas"
 
@@ -39,13 +40,13 @@ def test_samples_match_the_telemetry_contract():
 def hover(kind: str | None, steps: int = 240, rain: float = 0.0) -> list[dict]:
     """A drone hovering 20 min, healthy or with `kind` at full severity on motor 1."""
     fleet = g.Fleet(1, wind_ms=0.0, wind_from_deg=0.0, drones_per_hub=1, storms_enabled=False)
-    layer = g.HealthLayer(fleet, 1, random.Random(0))
+    layer = health.HealthLayer(fleet.drones, 1, random.Random(0))
     d = fleet.drones[0]
     d.phase, d.status = "deliver", "in_flight"
-    faults = [g.Fault("x#1", kind, 1, -1e6, 1e4)] if kind else []
-    layer.health[d.id] = g.Health(faults)
+    faults = [health.Fault("x#1", kind, 1, -1e6, 1e4)] if kind else []
+    layer.health[d.id] = health.Health(faults)
     layer.rain[d.hub] = [(0.0, 1e9, rain)]
-    return [layer.step(d, i * g.DT_S) for i in range(steps)]
+    return [layer.step(d, i * g.DT_S, g.DT_S) for i in range(steps)]
 
 
 def mean(samples: list[dict], f) -> float:
@@ -76,7 +77,10 @@ def test_each_fault_moves_its_signal():
 
 def test_remaining_life_counts_down_to_failure(tmp_path, monkeypatch):
     # every drone gets a prop fault that fails 40 min in, so the short run sees it through
-    monkeypatch.setattr(g, "schedule", lambda _rng, drone, _end: [g.Fault(f"{drone}#1", "prop_damage", 2, 0, 2400)])
+    from ark_fleet import health
+
+    quick = lambda _rng, drone, _end, _healthy: [health.Fault(f"{drone}#1", "prop_damage", 2, 0, 2400)]
+    monkeypatch.setattr(health, "schedule", quick)
     monkeypatch.setattr(sys, "argv", ["generate", "--days", "0.05", "--out", str(tmp_path)])
     g.main()
     with gzip.open(tmp_path / "telemetry.csv.gz", "rt", encoding="utf-8") as fh:
