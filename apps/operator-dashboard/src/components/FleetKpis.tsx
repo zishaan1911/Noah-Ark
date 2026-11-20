@@ -38,6 +38,8 @@ export function FleetKpis({ kpis, stats }: Props) {
       </div>
       <p className="m-0 text-xs text-sub">
         {wind ? `${wind} · sim ×${stats?.speedup}` : 'Waiting for fleet stats'}
+        {kpis.maintenance > 0 && <span className="text-red-ink"> · {kpis.maintenance} in maintenance</span>}
+        {kpis.watch > 0 && <span className="text-amber-ink"> · {kpis.watch} to inspect</span>}
       </p>
     </section>
   );

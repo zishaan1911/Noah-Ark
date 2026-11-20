@@ -1,4 +1,4 @@
-import type { Drone, DroneStatus, Mission, Telemetry } from '@contracts';
+import type { Drone, DroneStatus, FaultKind, Health, Mission, Telemetry } from '@contracts';
 
 export const MAX_MISSIONS = 200;
 
@@ -10,6 +10,8 @@ export interface FleetDrone {
   missionId?: string;
   lastSeenAt?: string;
   pos?: { lat: number; lon: number; headingDeg: number; altM: number; groundSpeedMs: number };
+  /** Latest health-monitor verdict, from the registry's drone record. */
+  health?: Health;
 }
 
 export interface FleetState {
@@ -48,6 +50,10 @@ export interface FleetKpis {
   reliefShare: number;
   /** 0 to 100, from fleet/stats; null until the sim reports it. */
   onTimePct: number | null;
+  /** Drones grounded for repair by the health monitor. */
+  maintenance: number;
+  /** Drones still flying that the health monitor wants inspected. */
+  watch: number;
 }
 
 export const emptyFleet = (): FleetState => ({ drones: {}, missions: {} });
@@ -71,6 +77,7 @@ export function applyTelemetry(state: FleetState, t: Telemetry): FleetState {
     missionId: t.missionId ?? prev?.missionId,
     lastSeenAt: t.ts,
     pos,
+    health: prev?.health,
   };
   return { ...state, drones: { ...state.drones, [t.droneId]: drone } };
 }
@@ -85,6 +92,7 @@ export function applyDrone(state: FleetState, d: Drone): FleetState {
     missionId: d.missionId,
     lastSeenAt: d.lastSeenAt ?? prev?.lastSeenAt,
     pos: prev?.pos,
+    health: d.health,
   };
   return { ...state, drones: { ...state.drones, [d.id]: drone } };
 }
@@ -139,7 +147,37 @@ export function kpis(state: FleetState, stats: FleetStats | null): FleetKpis {
     avgDeliveryMin: stats ? stats.avgDeliveryMin : null,
     reliefShare: active.length ? active.filter((m) => m.mode === 'relief').length / active.length : 0,
     onTimePct: stats ? Math.round(stats.onTimePct) : null,
+    maintenance: Object.values(state.drones).filter((d) => d.status === 'maintenance').length,
+    watch: Object.values(state.drones).filter(
+      (d) => d.status !== 'maintenance' && d.health?.state === 'watch',
+    ).length,
   };
+}
+
+const FAULT_LABEL: Record<FaultKind, string> = {
+  none: 'No fault',
+  bearing_wear: 'Bearing wear',
+  prop_damage: 'Prop damage',
+  weak_cell: 'Weak cell',
+  seal_leak: 'Seal leak',
+  unknown: 'Unusual flight',
+};
+
+/** One line for a health verdict, e.g. "Bearing wear · ~6 h left"; null when there is nothing to say. */
+export function healthText(h: Health | undefined): string | null {
+  if (!h || h.state === 'ok') return null;
+  const left = h.rulH === undefined ? '' : ` · ~${Math.round(h.rulH)} h left`;
+  return `${FAULT_LABEL[h.fault] ?? h.fault}${left}`;
+}
+
+const HEALTH_STATES = new Set(['ok', 'watch', 'ground']);
+
+function isHealth(v: unknown): v is Health {
+  if (typeof v !== 'object' || v === null) return false;
+  const h = v as Record<string, unknown>;
+  return (
+    HEALTH_STATES.has(h.state as string) && typeof h.fault === 'string' && typeof h.checkedAt === 'string'
+  );
 }
 
 /** `fleet/stats` has no JSON schema, so check the fields by hand. Every number must be finite. */
@@ -189,6 +227,7 @@ export function isDrone(v: unknown): v is Drone {
     typeof home === 'object' &&
     home !== null &&
     isNum(home.lat) &&
-    isNum(home.lon)
+    isNum(home.lon) &&
+    (d.health === undefined || isHealth(d.health))
   );
 }

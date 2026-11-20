@@ -1,5 +1,5 @@
 import type { DroneStatus } from '@contracts';
-import type { FleetState } from '../lib/fleet';
+import { healthText, type FleetState } from '../lib/fleet';
 
 interface Props {
   state: FleetState;
@@ -46,6 +46,8 @@ export function FleetList({ state, selectedId, onSelect }: Props) {
             const eta = d.missionId ? state.missions[d.missionId]?.etaMinutes : undefined;
             const pct = Math.max(0, Math.min(100, Math.round(d.batteryPct)));
             const on = d.id === selectedId;
+            const health = healthText(d.health);
+            const grounded = d.health?.state === 'ground';
             return (
               <tr key={d.id} className={on ? 'bg-accent-tint' : undefined}>
                 <th scope="row" className="py-0.5 pr-1 font-normal">
@@ -66,6 +68,11 @@ export function FleetList({ state, selectedId, onSelect }: Props) {
                     />
                     {d.status.replace(/_/g, ' ')}
                   </span>
+                  {health && (
+                    <span className={`block text-[11px] ${grounded ? 'text-red-ink' : 'text-amber-ink'}`}>
+                      {grounded ? 'Grounded' : 'Inspect'}: {health}
+                    </span>
+                  )}
                 </td>
                 <td className="py-0.5 pr-1">
                   <span className="flex items-center gap-1.5">

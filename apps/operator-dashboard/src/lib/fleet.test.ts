@@ -3,9 +3,11 @@ import type { Drone, Mission, Telemetry } from '@contracts';
 import {
   MAX_MISSIONS,
   applyDrone,
+  healthText,
   applyMission,
   applyTelemetry,
   emptyFleet,
+  isDrone,
   hubsOf,
   kpis,
   parseFleetStats,
@@ -154,5 +156,43 @@ describe('parseFleetStats', () => {
     expect(parseFleetStats({ ...ok, onTimePct: undefined })).toBeNull();
     expect(parseFleetStats(null)).toBeNull();
     expect(parseFleetStats('stats')).toBeNull();
+  });
+});
+
+describe('health', () => {
+  const checkedAt = '2026-11-20T09:41:05Z';
+
+  it('counts grounded and to-inspect drones', () => {
+    let s = emptyFleet();
+    s = applyDrone(s, {
+      ...drone('ARK-101', 5.7, 116.1, 'maintenance'),
+      health: { state: 'ground', fault: 'bearing_wear', checkedAt },
+    });
+    s = applyDrone(s, {
+      ...drone('ARK-102', 5.7, 116.1, 'in_flight'),
+      health: { state: 'watch', fault: 'weak_cell', checkedAt },
+    });
+    s = applyDrone(s, { ...drone('ARK-103', 5.7, 116.1), health: { state: 'ok', fault: 'none', checkedAt } });
+    const k = kpis(s, null);
+    expect(k.maintenance).toBe(1);
+    expect(k.watch).toBe(1);
+  });
+
+  it('says what is wrong and how long is left', () => {
+    expect(healthText({ state: 'ground', fault: 'bearing_wear', rulH: 6.2, checkedAt })).toBe(
+      'Bearing wear · ~6 h left',
+    );
+    expect(healthText({ state: 'watch', fault: 'unknown', checkedAt })).toBe('Unusual flight');
+    expect(healthText({ state: 'ok', fault: 'none', checkedAt })).toBeNull();
+    expect(healthText(undefined)).toBeNull();
+  });
+
+  it('drops a drone update with a malformed verdict', () => {
+    expect(
+      isDrone({ ...drone('ARK-101', 5.7, 116.1), health: { state: 'broken', fault: 'x', checkedAt } }),
+    ).toBe(false);
+    expect(
+      isDrone({ ...drone('ARK-101', 5.7, 116.1), health: { state: 'watch', fault: 'seal_leak', checkedAt } }),
+    ).toBe(true);
   });
 });
