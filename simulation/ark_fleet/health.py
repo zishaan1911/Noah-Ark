@@ -206,6 +206,7 @@ def sensor_fields(s: dict[str, Any]) -> dict[str, Any]:
     return {
         "batteryVoltageV": round(s["volts"], 2),
         "batteryTempC": round(s["pack_c"], 1),
+        "airTempC": round(s["ambient"], 1),
         "motorTempC": [round(c, 1) for c in s["motor_c"]],
         "vibration": [round(v, 2) for v in s["vibe"]],
         "rainIntensity": round(s["rain"], 1),

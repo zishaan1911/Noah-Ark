@@ -33,12 +33,13 @@ FEATURES = [
     "motorRiseMax", "motorRiseMedian", "motorRiseSpread",
     "vibXYMean", "vibZMean", "vibXYP90", "vibXYoverZ",
     "voltsMean", "voltsMin", "battPctMean", "voltsPerPct", "packRiseMax",
-    "moistRate", "rainMean", "payloadMean", "ambientMean", "samples",
+    "moistRate", "rainMean", "ambientMean", "samples",
 ]  # fmt: skip
 
 
 def flight_features(rows: pd.DataFrame) -> pd.DataFrame:
-    """One row per flight (droneId, missionId): health features plus the labels at the end of the flight."""
+    """One row per flight (droneId, missionId): health features, plus the labels at the end of the flight when the
+    rows carry them (training) - live telemetry does not (health-monitor)."""
     d = rows.copy()
     rise = d[[f"motorTempC{i}" for i in range(1, 5)]].sub(d["ambientC"], axis=0)
     d["rMax"], d["rMed"] = rise.max(axis=1), rise.median(axis=1)
@@ -58,22 +59,23 @@ def flight_features(rows: pd.DataFrame) -> pd.DataFrame:
             "packRiseMax": g["packRise"].max(),
             "moistRate": g["moistureDetected"].mean(),
             "rainMean": g["rainIntensity"].mean(),
-            "payloadMean": g["payloadKg"].mean(),
             "ambientMean": g["ambientC"].mean(),
             "samples": g.size(),
             "ts": g["ts"].first(),
-            "fault": g["label_fault"].last(),
-            "severity": g["label_severity"].max(),
-            "rulH": g["label_rul_h"].min(),
         }
     )
+    if "label_fault" in d:
+        f["fault"] = g["label_fault"].last()
+        f["severity"] = g["label_severity"].max()
+        f["rulH"] = g["label_rul_h"].min()
     f["motorRiseSpread"] = f["motorRiseMax"] - f["motorRiseMedian"]  # one motor hotter than its siblings
     f["vibXYoverZ"] = f["vibXYMean"] / f["vibZMean"].clip(lower=0.1)  # imbalance is lateral, wear is not
     # weak cell: volts drop faster per % used; covariance over variance is the least-squares slope
     cov = d.groupby(["droneId", "missionId"], sort=False)[["batteryVoltageV", "batteryPct"]].cov()
     pct_var = cov.xs("batteryPct", level=2)["batteryPct"]
     f["voltsPerPct"] = (cov.xs("batteryPct", level=2)["batteryVoltageV"] / pct_var.where(pct_var > 0)).fillna(0)
-    f["target"] = np.where(f["severity"] >= VISIBLE_SEV, f["fault"], "none")
+    if "fault" in f:
+        f["target"] = np.where(f["severity"] >= VISIBLE_SEV, f["fault"], "none")
     return f.reset_index()
 
 

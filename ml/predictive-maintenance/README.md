@@ -49,13 +49,14 @@ The training features should stay within what the drone streams today. Motor cur
 generator, because it isn't in the telemetry contract.
 
 ## Models (`train.py` → `out/model.joblib`)
-Each flight becomes one row of 17 features:
+Each flight becomes one row of 16 features, all from fields the drone streams:
 - **Motors:** the temperature over ambient of the hottest motor and of the median motor, and the gap
   between them (one motor hotter than its siblings).
 - **Vibration:** x/y mean, z mean, x/y 90th percentile, and x/y over z (imbalance is sideways, worn
   bearings are not).
 - **Pack:** mean and minimum voltage, the volts-per-% slope within the flight, and the pack temperature rise.
-- **Moisture and context:** moisture rate, rain, payload, ambient temperature, sample count.
+- **Moisture and context:** moisture rate, rain, outside air temperature (`airTempC`), sample count. Payload
+  is left out because telemetry does not carry it.
 
 The flight's label is its fault at the end of the flight. A fault below severity 0.05 leaves nothing above
 the sensor noise, so it trains as `none`.
@@ -72,31 +73,31 @@ script-mode job (sklearn container).
 ## Metrics (`evaluate.py`, 4-fold cross-validation grouped by drone, 14,155 flights, 2026-11-20)
 Each fold refits on 18 drones and scores the other 6, so no drone is ever scored by a model that saw it.
 
-**Classifier: macro F1 0.925**
+**Classifier: macro F1 0.924**
 
 | Class | Precision | Recall | Flights |
 |---|---|---|---|
-| none | 0.952 | 0.971 | 9551 |
-| bearing_wear | 0.986 | 0.995 | 1303 |
-| prop_damage | 0.984 | 0.995 | 1176 |
-| weak_cell | 0.982 | 0.954 | 901 |
-| seal_leak | 0.783 | 0.659 | 1224 |
+| none | 0.952 | 0.970 | 9551 |
+| bearing_wear | 0.989 | 0.995 | 1303 |
+| prop_damage | 0.983 | 0.996 | 1176 |
+| weak_cell | 0.983 | 0.958 | 901 |
+| seal_leak | 0.770 | 0.655 | 1224 |
 
 - **Recall at severity 0.05–0.3**, early in a fault's life:
   - bearing wear 0.99
   - prop damage 0.99
   - weak cell 0.90
-  - seal leak 0.44
+  - seal leak 0.43
 - **Seal leak:** recall is 0.89 on rainy flights and 0.65 on dry ones, because the moisture sensor is the
   only signal.
 
 **RUL:**
-- MAE 10.1 h overall, against a median true remaining life of 18.2 h.
+- MAE 10.0 h overall, against a median true remaining life of 18.2 h.
 - MAE 5.4 h when the failure is within 10 h.
 
 **Anomaly detector:**
-- AUROC 0.93 for severity ≥ 0.3 against healthy flights, with 0.9 % false alarms.
-- It catches every severe bearing fault but only 23 % of prop faults and almost none of the weak-cell or
+- AUROC 0.92 for severity ≥ 0.3 against healthy flights, with 1.1 % false alarms.
+- It catches every severe bearing fault but only 22 % of prop faults and almost none of the weak-cell or
   seal faults. So it is a backstop; the classifier does the work.
 
 These numbers are on simulated faults. Read them as "the features carry the signal". They are not a
@@ -124,6 +125,6 @@ ruff check . && ruff format --check . && pytest
   obvious hint. Prop damage can't be localised from one body IMU.
 - **RUL scored on the true fault type:** in service it gets the classifier's call, which names the right fault on about
   90 % of flights once a fault is visible (seal leaks pull it down).
-- **Not deployed:** there is no SageMaker endpoint or `inference.py` yet, and there are no AWS credentials
-  on this machine.
+- **Served in-process:** `backend/functions/health-monitor` loads `out/model.joblib` itself. There is no
+  SageMaker endpoint yet, and there are no AWS credentials on this machine.
 - **Not checked against real data yet.** See `ml/datasets/predictive-maintenance.md` for the external sets.

@@ -53,3 +53,12 @@ def test_flight_features():
     assert f.loc["msn_b", "voltsPerPct"] == pytest.approx(0.12)
     assert list(f["target"]) == ["none", "bearing_wear", "none"]
     assert set(t.FEATURES) <= set(f.columns)
+
+
+def test_flight_features_without_labels():
+    """Live telemetry has no labels: features only, the shape health-monitor feeds the models."""
+    rows = flight("ARK-101", "msn_a", 20.0, 0.05, "none", 0.0).drop(
+        columns=["label_fault", "label_severity", "label_rul_h", "payloadKg"]
+    )
+    f = t.flight_features(rows)
+    assert len(f) == 1 and "target" not in f and set(t.FEATURES) <= set(f.columns)
