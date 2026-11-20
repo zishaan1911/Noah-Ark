@@ -1,0 +1,2 @@
+# generate.py uses the standard library plus the sim's own deps (numpy via ark_sim)
+numpy>=2.0
