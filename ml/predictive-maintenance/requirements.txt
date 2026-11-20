@@ -1,2 +1,5 @@
-# generate.py uses the standard library plus the sim's own deps (numpy via ark_sim)
+# generate.py: the standard library plus numpy (via ark_sim); train.py / evaluate.py: scikit-learn, pandas
 numpy>=2.0
+scikit-learn>=1.5
+pandas>=2.2
+joblib>=1.4
