@@ -16,6 +16,7 @@
     "batteryPct": { "type": "number", "minimum": 0, "maximum": 100 },
     "lastSeenAt": { "$ref": "common.schema.json#/$defs/timestamp" },
     "flightHours": { "type": "number", "minimum": 0 },
-    "pontoonKitArmed": { "type": "boolean", "description": "False after the kit has fired until it is repacked." }
+    "pontoonKitArmed": { "type": "boolean", "description": "False after the kit has fired until it is repacked." },
+    "health": { "$ref": "common.schema.json#/$defs/health" }
   }
 }

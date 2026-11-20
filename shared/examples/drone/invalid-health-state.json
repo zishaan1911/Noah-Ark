@@ -1,0 +1,8 @@
+{
+  "id": "ARK-104",
+  "model": "Ark-1",
+  "status": "available",
+  "home": { "lat": 5.9804, "lon": 116.0735 },
+  "maxPayloadKg": 2.0,
+  "health": { "state": "broken", "fault": "bearing_wear", "checkedAt": "2026-11-20T09:41:05Z" }
+}

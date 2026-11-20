@@ -1,0 +1,18 @@
+{
+  "id": "evt_01JD8X7A4C2VTRC3B7K4N6P0WY",
+  "droneId": "ARK-104",
+  "missionId": "msn_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+  "ts": "2026-11-20T09:41:05Z",
+  "type": "fault",
+  "severity": "critical",
+  "message": "Bearing wear (motor running hot), about 6 flight-hours left: ground after landing",
+  "health": {
+    "state": "ground",
+    "fault": "bearing_wear",
+    "confidence": 0.97,
+    "rulH": 6.2,
+    "anomaly": true,
+    "missionId": "msn_01JD8X5Q2M9VTRC3B7K4N6P0WY",
+    "checkedAt": "2026-11-20T09:41:05Z"
+  }
+}

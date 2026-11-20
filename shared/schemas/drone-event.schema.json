@@ -49,7 +49,8 @@
         "target": { "enum": ["onboard", "cloud"] },
         "reason": { "type": "string" }
       }
-    }
+    },
+    "health": { "$ref": "common.schema.json#/$defs/health" }
   },
   "allOf": [
     {

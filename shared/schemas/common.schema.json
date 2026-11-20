@@ -20,6 +20,30 @@
     "sosId": { "type": "string", "pattern": "^sos_[0-9A-HJKMNP-TV-Z]{26}$" },
     "missionId": { "type": "string", "pattern": "^msn_[0-9A-HJKMNP-TV-Z]{26}$" },
     "commandId": { "type": "string", "pattern": "^cmd_[0-9A-HJKMNP-TV-Z]{26}$" },
-    "eventId": { "type": "string", "pattern": "^evt_[0-9A-HJKMNP-TV-Z]{26}$" }
+    "eventId": { "type": "string", "pattern": "^evt_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "health": {
+      "title": "Health",
+      "description": "Predictive-maintenance verdict for a drone after a flight (backend/functions/health-monitor).",
+      "type": "object",
+      "required": ["state", "fault", "checkedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "title": "HealthState",
+          "enum": ["ok", "watch", "ground"],
+          "description": "watch: fly, inspect soon. ground: maintenance after landing, dispatch skips it."
+        },
+        "fault": {
+          "title": "FaultKind",
+          "enum": ["none", "bearing_wear", "prop_damage", "weak_cell", "seal_leak", "unknown"],
+          "description": "unknown: unlike healthy flights, but not a fault the classifier knows."
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rulH": { "type": "number", "minimum": 0, "description": "Predicted flight hours until the part fails." },
+        "anomaly": { "type": "boolean", "description": "The anomaly detector flagged the flight." },
+        "missionId": { "$ref": "#/$defs/missionId", "description": "The flight that was scored." },
+        "checkedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    }
   }
 }

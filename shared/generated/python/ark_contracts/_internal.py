@@ -68,6 +68,46 @@ class EventId(RootModel[constr(pattern=r"^evt_[0-9A-HJKMNP-TV-Z]{26}$")]):
     root: constr(pattern=r"^evt_[0-9A-HJKMNP-TV-Z]{26}$")
 
 
+class HealthState(Enum):
+    ok = "ok"
+    watch = "watch"
+    ground = "ground"
+
+
+class FaultKind(Enum):
+    none = "none"
+    bearing_wear = "bearing_wear"
+    prop_damage = "prop_damage"
+    weak_cell = "weak_cell"
+    seal_leak = "seal_leak"
+    unknown = "unknown"
+
+
+class Health(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    state: HealthState = Field(
+        ...,
+        description="watch: fly, inspect soon. ground: maintenance after landing, dispatch skips it.",
+        title="HealthState",
+    )
+    fault: FaultKind = Field(
+        ...,
+        description="unknown: unlike healthy flights, but not a fault the classifier knows.",
+        title="FaultKind",
+    )
+    confidence: confloat(ge=0.0, le=1.0) | None = None
+    rulH: confloat(ge=0.0) | None = Field(
+        None, description="Predicted flight hours until the part fails."
+    )
+    anomaly: bool | None = Field(
+        None, description="The anomaly detector flagged the flight."
+    )
+    missionId: MissionId | None = Field(None, description="The flight that was scored.")
+    checkedAt: Timestamp
+
+
 class Need(Enum):
     food = "food"
     water = "water"
@@ -281,6 +321,7 @@ class DroneEvent(BaseModel):
     offload: Offload | None = Field(
         None, description="offload_decision only: where the offload manager ran a task."
     )
+    health: Health | None = None
 
 
 class DroneStatus(Enum):
@@ -309,6 +350,7 @@ class Drone(BaseModel):
     pontoonKitArmed: bool | None = Field(
         None, description="False after the kit has fired until it is repacked."
     )
+    health: Health | None = None
 
 
 class TelemetryUpdate(BaseModel):

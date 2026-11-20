@@ -8,6 +8,7 @@ Everything asynchronous in Noah's Ark. REST is in [openapi.yaml](openapi.yaml). 
 |---|---|---|---|---|---|
 | `ark/<droneId>/telemetry` | drone → cloud | 0 | `telemetry` | `edge/flight-bridge` (or the SITL bridge) | IoT rule → `telemetry-ingest` → Timestream + WebSocket |
 | `ark/<droneId>/events` | drone → cloud | 1 | `drone-event` | `edge/flight-bridge`, `edge/offload-manager` | IoT rule → EventBridge (`drone.event`) |
+| `ark/<droneId>/events` (`fault` + `health`) | cloud → registry | 1 | `drone-event` | `health-monitor`, one verdict per finished flight | the fleet registry (locally `simulation/ark_fleet`): `ground` → `maintenance` after landing |
 | `ark/<droneId>/cmd` | cloud → drone | 1 | `drone-command` | `dispatch-agent`, the approve and abort handlers | `edge/flight-bridge` |
 
 Simulation only (never on a real drone):

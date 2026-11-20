@@ -26,6 +26,14 @@ export type EventType =
   | "fault"
   | "manual_started"
   | "manual_ended";
+/**
+ * watch: fly, inspect soon. ground: maintenance after landing, dispatch skips it.
+ */
+export type HealthState = "ok" | "watch" | "ground";
+/**
+ * unknown: unlike healthy flights, but not a fault the classifier knows.
+ */
+export type FaultKind = "none" | "bearing_wear" | "prop_damage" | "weak_cell" | "seal_leak" | "unknown";
 export type DroneStatus = "available" | "assigned" | "in_flight" | "charging" | "maintenance" | "offline";
 /**
  * Server to dashboard over the WebSocket API. One message per change; `kind` says what `data` is.
@@ -270,6 +278,28 @@ export interface DroneEvent {
     target: "onboard" | "cloud";
     reason: string;
   };
+  health?: Health;
+}
+/**
+ * Predictive-maintenance verdict for a drone after a flight (backend/functions/health-monitor).
+ */
+export interface Health {
+  state: HealthState;
+  fault: FaultKind;
+  confidence?: number;
+  /**
+   * Predicted flight hours until the part fails.
+   */
+  rulH?: number;
+  /**
+   * The anomaly detector flagged the flight.
+   */
+  anomaly?: boolean;
+  /**
+   * The flight that was scored.
+   */
+  missionId?: string;
+  checkedAt: string;
 }
 /**
  * One drone in the fleet registry. dispatch-agent picks from available drones; Ark Care tracks health.
@@ -295,6 +325,7 @@ export interface Drone {
    * False after the kit has fired until it is repacked.
    */
   pontoonKitArmed?: boolean;
+  health?: Health;
 }
 export interface TelemetryUpdate {
   kind: "telemetry";
