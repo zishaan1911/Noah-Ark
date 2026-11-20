@@ -1,7 +1,7 @@
 # Noah's Ark local stack: broker + simulated Ark-1 + its companion-computer gateway.
 #   docker build -t noah-ark-sitl simulation      (once; the sim image the other services reuse)
 #   docker compose up --build
-# Then run Ark Command: cd apps/operator-dashboard && npm run dev   (Fleet page: #/fleet; fleet only: docker compose up broker fleet)
+# Then run Ark Command: cd apps/operator-dashboard && npm run dev   (Fleet page: #/fleet; fleet only: docker compose up broker fleet health)
 services:
   broker:
     # shortcut: Mosquitto stands in for AWS IoT Core (same topics and payloads), swap for the CDK iot stack + Cognito WebSocket auth.
@@ -23,6 +23,15 @@ services:
     image: noah-ark-sitl
     command: python -u -m ark_fleet --broker broker:1883 --speedup 4
     working_dir: /repo/simulation
+    volumes: [".:/repo"]
+    depends_on: [broker]
+    restart: unless-stopped
+
+  health:
+    # Predictive maintenance: scores each finished fleet flight, publishes fault verdicts; the fleet grounds drones.
+    # Needs ml/predictive-maintenance/out/model.joblib (python generate.py && python train.py there, once).
+    build: backend/functions/health-monitor
+    command: python -u local.py --broker broker:1883
     volumes: [".:/repo"]
     depends_on: [broker]
     restart: unless-stopped
