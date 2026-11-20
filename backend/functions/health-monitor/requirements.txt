@@ -1,0 +1,8 @@
+# scikit-learn pinned to the version the model was trained with (joblib pickles are version-bound)
+scikit-learn==1.9.0
+pandas>=2.2
+joblib>=1.4
+paho-mqtt>=2.1
+pytest>=8
+ruff>=0.6
+jsonschema>=4.23
