@@ -18,6 +18,7 @@
   "batteryPct": 81.5,
   "batteryVoltageV": 47.9,
   "batteryTempC": 34.2,
+  "airTempC": 29.5,
   "motorTempC": [
     51,
     52,

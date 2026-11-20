@@ -21,6 +21,7 @@
     "batteryPct": { "type": "number", "minimum": 0, "maximum": 100 },
     "batteryVoltageV": { "type": "number", "minimum": 0 },
     "batteryTempC": { "type": "number" },
+    "airTempC": { "type": "number", "description": "Outside air, from the shaded OAT probe; the health monitor reads motor and pack heat against it." },
     "motorTempC": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
     "vibration": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "x, y, z in m/s^2." },
     "rainIntensity": { "type": "number", "minimum": 0, "description": "mm/h." },

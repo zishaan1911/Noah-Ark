@@ -213,6 +213,10 @@ export interface Telemetry {
   batteryVoltageV?: number;
   batteryTempC?: number;
   /**
+   * Outside air, from the shaded OAT probe; the health monitor reads motor and pack heat against it.
+   */
+  airTempC?: number;
+  /**
    * @minItems 4
    * @maxItems 4
    */

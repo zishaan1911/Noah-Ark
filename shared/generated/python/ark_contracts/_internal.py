@@ -239,6 +239,10 @@ class Telemetry(BaseModel):
     batteryPct: confloat(ge=0.0, le=100.0)
     batteryVoltageV: confloat(ge=0.0) | None = None
     batteryTempC: float | None = None
+    airTempC: float | None = Field(
+        None,
+        description="Outside air, from the shaded OAT probe; the health monitor reads motor and pack heat against it.",
+    )
     motorTempC: list[float] | None = Field(None, max_length=4, min_length=4)
     vibration: list[float] | None = Field(
         None, description="x, y, z in m/s^2.", max_length=3, min_length=3
