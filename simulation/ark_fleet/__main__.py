@@ -1,20 +1,24 @@
 """MQTT runner for the fleet sim.
 
-    python -m ark_fleet --broker broker:1883 [--drones-per-hub 4] [--speedup 4] [--seed 7] [--no-storm]
+    python -m ark_fleet --broker broker:1883 [--drones-per-hub 4] [--speedup 4] [--seed 7] [--no-storm] [--wear-warp 100]
 
-Publishes telemetry to `ark/<droneId>/telemetry`, changes to `fleet/live`, and the retained `fleet/stats` and `fleet/weather`.
+Publishes telemetry (with health sensors) to `ark/<droneId>/telemetry`, changes to `fleet/live`, and the retained
+`fleet/stats` and `fleet/weather`. Listens on `ark/+/events` for health-monitor `fault` verdicts and grounds drones.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import queue
+import random
 import time
 import urllib.request
 from datetime import UTC, datetime
 
 import paho.mqtt.client as mqtt
 
+from .health import HealthLayer, sensor_fields
 from .network import HUBS
 from .sim import Fleet
 from .weather import fetch_hub_weather
@@ -47,6 +51,7 @@ def main() -> None:
     ap.add_argument("--speedup", type=float, default=4.0)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--no-storm", action="store_true", help="skip the demo storm cell")
+    ap.add_argument("--wear-warp", type=float, default=100.0, help="wear-clock speed: faults grow over a few flights")
     a = ap.parse_args()
     host, _, port = a.broker.rpartition(":")
 
@@ -63,8 +68,26 @@ def main() -> None:
 
     refresh_weather()
     last_wx = time.monotonic()
+    # shortcut: 30 days of showers and fault schedule; restart the sim for longer runs.
+    # Healthy spells of ~20 wear-days: at warp 100 about one drone in six is wearing out at any time.
+    health = HealthLayer(fleet.drones, 30, random.Random(a.seed + 1), warp=a.wear_warp, healthy_days=20.0)
+    verdicts: queue.SimpleQueue[tuple[str, dict]] = queue.SimpleQueue()  # MQTT thread -> sim loop
+
+    def on_connect(c, _userdata, _flags, _reason, _props) -> None:
+        c.subscribe("ark/+/events", qos=1)
+
+    def on_message(_c, _userdata, msg) -> None:
+        try:
+            ev = json.loads(msg.payload)
+        except ValueError:
+            return
+        h = ev.get("health") if isinstance(ev, dict) and ev.get("type") == "fault" else None
+        if isinstance(h, dict) and h.get("state") in ("ok", "watch", "ground") and isinstance(ev.get("droneId"), str):
+            verdicts.put((ev["droneId"], h))
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.on_connect = on_connect
+    client.on_message = on_message
     client.connect(host, int(port))
     client.loop_start()
 
@@ -93,10 +116,21 @@ def main() -> None:
         while True:
             tick_n += 1
             time.sleep(max(0.0, start + tick_n - time.monotonic()))  # fixed 1 s cadence, no drift
-            sim_s += 1.0 * a.speedup
-            for ev in fleet.tick(1.0 * a.speedup, sim_s):
+            dt = 1.0 * a.speedup
+            sim_s += dt
+            while not verdicts.empty():
+                drone_id, h = verdicts.get()
+                if (rec := fleet.apply_health(drone_id, h)) is not None:
+                    live("drone", rec)
+            for ev in fleet.tick(dt, sim_s):
                 live(ev["kind"], ev["data"])
+            for drone_id in fleet.repaired:
+                health.repair(drone_id, sim_s)
+            fleet.repaired.clear()
+            samples = {d.id: s for d in fleet.drones if (s := health.step(d, sim_s, dt)) is not None}
             for t in fleet.telemetry(now_iso()):
+                if (s := samples.get(t["droneId"])) is not None:
+                    t |= sensor_fields(s)
                 client.publish(f"ark/{t['droneId']}/telemetry", json.dumps(t), qos=0)
             if tick_n % 10 == 0:
                 publish_records()  # a dashboard that opens late fills in

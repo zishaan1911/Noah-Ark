@@ -19,6 +19,7 @@ from .weather import DemoStorm, HubWx, calm, conditions_at, weather_message
 CRUISE_ALT_M = 60.0
 CLIMB_MS = 4.0
 SWAP_S = 180.0  # hub crew swaps the 12S7P pack for a charged one; the flat pack charges off-line
+REPAIR_S = 20 * 60.0  # hub crew replaces the part the health monitor named (motor, prop, pack or seal)
 MAX_PAYLOAD_KG = 2.0
 RANGE_KM = 20
 KM_PER_DEG = 111.19
@@ -39,13 +40,16 @@ class FleetDrone:
     battery_pct: float
     alt_m: float = 0.0
     heading_deg: float = 0.0
-    status: str = "available"  # available | assigned | in_flight | charging
+    status: str = "available"  # available | assigned | in_flight | charging | maintenance
     phase: str = "idle"  # idle | climb | outbound | deliver | inbound | descend
     mission: dict[str, Any] | None = None
     route: list[tuple[float, float]] = field(default_factory=list)  # remaining points, the first is the target
     ground_speed_ms: float = 0.0
     hover_left_s: float = 0.0
     swap_left_s: float = 0.0
+    health: dict[str, Any] | None = None  # latest verdict from the health monitor (common.schema.json#/$defs/health)
+    ground_pending: bool = False  # grounded mid-mission: goes to maintenance on landing
+    repair_left_s: float = 0.0
 
 
 @dataclass
@@ -106,6 +110,7 @@ class Fleet:
         self._next_order_s = self.rng.expovariate(ORDERS_PER_MIN / 60)
         self._delivered = 0
         self.held: dict[str, str] = {}  # queued order id -> why it waits (weather), for stats
+        self.repaired: list[str] = []  # drones back from maintenance since the caller last drained this
         self._refresh_weather(0.0)
 
     # --- weather -------------------------------------------------------------------------------------------------
@@ -174,6 +179,8 @@ class Fleet:
         }
         if d.mission:
             rec["missionId"] = d.mission["id"]
+        if d.health:
+            rec["health"] = d.health
         return rec
 
     def records(self) -> list[dict[str, Any]]:
@@ -217,6 +224,25 @@ class Fleet:
             "onTimePct": round(100 * on_time / len(done), 1) if done else 100.0,
             "promiseMin": PROMISE_MIN,
         }
+
+    # --- maintenance ---------------------------------------------------------------------------------------------
+
+    def apply_health(self, drone_id: str, health: dict[str, Any]) -> dict[str, Any] | None:
+        """A health-monitor verdict: `ground` sends the drone to maintenance (now if on the ground, else on landing).
+        Returns the drone's updated record, or None for an unknown drone."""
+        d = self._by_id.get(drone_id)
+        if d is None:
+            return None
+        d.health = health
+        if health["state"] == "ground":
+            if d.status in ("available", "charging"):
+                self._start_repair(d)
+            elif d.status != "maintenance":
+                d.ground_pending = True
+        return self.drone_record(d)
+
+    def _start_repair(self, d: FleetDrone) -> None:
+        d.status, d.repair_left_s, d.ground_pending = "maintenance", REPAIR_S, False
 
     # --- simulation ----------------------------------------------------------------------------------------------
 
@@ -331,6 +357,13 @@ class Fleet:
                 d.status, d.phase = "in_flight", "climb"
                 self._set_mission(d, "in_flight", events)
                 self._drone_event(d, events)
+            elif d.status == "maintenance":
+                d.repair_left_s -= dt_s
+                if d.repair_left_s <= 0:
+                    d.battery_pct, d.status = 100.0, "available"
+                    d.health = {"state": "ok", "fault": "none", "checkedAt": self.iso(now_s)}
+                    self.repaired.append(d.id)
+                    self._drone_event(d, events)
             elif d.status == "charging":  # pack swap at the hub
                 d.swap_left_s -= dt_s
                 if d.swap_left_s <= 0:
@@ -366,6 +399,8 @@ class Fleet:
             self._drain_hover(d, dt_s)
             if d.alt_m <= 0.0:
                 d.phase, d.status, d.mission, d.swap_left_s = "idle", "charging", None, SWAP_S
+                if d.ground_pending:
+                    self._start_repair(d)
                 self._drone_event(d, events)
 
 
