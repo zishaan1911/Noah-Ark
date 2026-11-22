@@ -49,7 +49,6 @@ Keep these in sync: if a limit, the fleet or the schema changes in the repo, cha
 | 9 | AI Output | Dispatch | Claude Sonnet 5.5 |
 | 10 | AI Output | Drone kit | Claude Sonnet 5.5 |
 | 10b | AI Output | Drone flight log | Claude Sonnet 5.5 |
-| 12 | Image Output | Drone on the way | default |
 | 11 | AI Output | Reply to sender | Claude Sonnet 5.5 |
 | 13 | AI Output | Mission for Ark Brain | Claude Sonnet 5.5 |
 | 14 | Chat Box | Ask the drone | Claude Sonnet 5.5 |
@@ -220,13 +219,6 @@ At most 5 short lines. Say help is coming and the ETA. Say what is in the box. F
 For a parcel: give the ETA and say the drone lands near them.
 If the dispatch says HOLD because of the weather, give no ETA: say the storm is too strong to fly safely right now, their request is first in the queue and checked every 10 minutes, and say the rescue team was told only if the dispatch says so.
 End with a sign-off from the drone that is coming, in their language, e.g. - ARK-117, Noah's Ark drone.
-```
-
-### 12. Drone on the way (image)
-```
-Photo-realistic, cinematic: a Noah's Ark drone (model Ark-1): a large quad-X delivery drone with an off-white sealed shell, orange accent stripes, four big 28-inch propellers, two bright yellow inflatable pontoon tubes in orange covers along its skids, and a small cargo pod slung beneath, flying low in heavy rain over the place below. If the triage says relief, the village is flooded to the rooftops and a family waves from a roof. If it says gdex, the drone flies over dense Borneo rainforest towards a longhouse clearing. No text in the image.
-Place: @Where
-Triage: @Triage
 ```
 
 ### 13. Mission for Ark Brain
