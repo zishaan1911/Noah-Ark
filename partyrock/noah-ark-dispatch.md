@@ -317,6 +317,14 @@ the viewer is published somewhere judges can open.
 6. Drone-centred run (flood, monsoon): the flight log ran 13 lines from PREFLIGHT at 90 % through PONTOONS FIRE at
    17.3 m, WATER LANDING, POD RELEASED (1.96 kg), water take-off, to LANDED at Kota Belud with 43.6 %; the Malay
    reply ends "ARK-117, dron Noah's Ark".
+7. Full re-run of the released app (fleet wording, no image widget), flood SOS:
+   - Storm (wind 15, gusts 24, rain 50): NO-GO on rain 50 (limit 30); ARK-117 held, no pod swap; the flight log
+     switches to its hub log (preflight, pod still loaded, weather NO-GO, 0 km flown); rescue team alerted.
+   - Monsoon (wind 9, gusts 12, rain 15): CAUTION, ARK-117 from Kota Belud (13 km, ETA 15 min), Sembirai parcel
+     re-queued, ARK-118 skipped; kit 1.95 kg; log through PONTOONS OK, POD RELEASED, LANDED HUB at 44.1 % after
+     28 min 30 s and 26 km; Malay reply signed by ARK-117; mission JSON produced.
+
+Released and snapshotted on 2026-11-23.
 
 Known gaps:
 - PartyRock has no current-date source (a Variable is fixed text), so the mission prompt hard-codes the date.
