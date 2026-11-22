@@ -193,7 +193,7 @@ Rules:
 - id: msn_ followed by 26 characters from 0123456789ABCDEFGHJKMNPQRSTVWXYZ.
 - mode: gdex, relief or military, from the triage.
 - droneId: from the dispatch, e.g. ARK-117. If the dispatch says HOLD, use the drone it would send once the weather clears and say so in aiRationale.
-- createdAt: an ISO 8601 UTC timestamp for today.
+- createdAt: today is 2026-11-23, so an ISO 8601 UTC timestamp on that date, e.g. 2026-11-23T06:30:00Z.
 - status: pending_approval.
 - origin: the hub's lat and lon. Kota Kinabalu 5.9804, 116.0735; Papar 5.7346, 115.9302; Beaufort 5.3473, 115.7455; Keningau 5.3378, 116.1602; Kota Belud 6.3510, 116.4305; Ranau 5.9538, 116.6640.
 - destination: lat and lon of the place (Kampung Tempasuk 6.4200, 116.3400; Kundasang 6.0100, 116.5800; otherwise your best estimate).
@@ -268,7 +268,13 @@ the viewer is published somewhere judges can open.
 3. **Parcel while idle.** Message `GDEX parcel for Kundasang: a phone charger and 1 kg of rice, recipient Encik Daniel.`,
    Where `Kundasang, Ranau, Sabah`, wind 4, gusts 6, rain 5.
    Got: gdex, urgency 1; GO; idle ARK-121 from Ranau, 11 km, ground landing.
-4. In Ask Ark, ask "What if a pontoon fails?" for the SITL answer.
+4. In Ask Ark, ask "What if a pontoon fails?".
+   Got: the SITL sequence (retry once, abort, hold in GUIDED, operator sends it home to the bank), applied to this
+   mission, plus what was not tested (no-signal abort, floating on one tube).
+5. Photo: attached the app's own rainforest image to the parcel run. Got a `Photo:` line in the triage describing a
+   calm brown river in a forested valley, steep jungle banks, no dry landing spot.
 
-Known gaps: `createdAt` comes out with a made-up date (the model does not know today's date); the fleet state is a
-fixed scene, not live MQTT; the photo path is untested with a real image.
+Known gaps:
+- PartyRock has no current-date source (a Variable is fixed text), so the mission prompt hard-codes the date.
+  shortcut: date fixed to 2026-11-23, update the createdAt line in the Mission prompt on pitch day.
+- The fleet state is a fixed scene, not live MQTT, so the demo behaves the same every run.
