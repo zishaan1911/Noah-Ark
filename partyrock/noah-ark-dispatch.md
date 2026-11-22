@@ -28,6 +28,7 @@ Keep these in sync: if a limit, the fleet or the schema changes in the repo, cha
   `@Can`, not `@Can Ark`.
 - A public app keeps edits as a draft until **Release changes** is clicked.
 - Sliders: Numeric type, min 0. The value is set in the app, not in the widget settings.
+- Fast typing into the Static Text box drops characters. Paste the content in one go and read it back.
 
 ## Widgets (top to bottom)
 | # | Type | Title | Settings |
@@ -249,8 +250,10 @@ This app runs the same rules as our AWS backend and simulation:
 | Water take-off, 6 m/s wind | Passed |
 | Battery failsafe over water | Passed: inflates and floats |
 
-[Ark-1 in 3D](https://claude.ai/artifact/QkDvBwiLNF4JMxze58t72x) · [Source on GitHub](https://github.com/zishaan1911/Noah-Ark)
+[Source code on GitHub](https://github.com/zishaan1911/Noah-Ark)
 ```
+The Ark-1 3D viewer link (claude.ai/artifact/QkDvBwiLNF4JMxze58t72x) was dropped: it is not public. Re-add it once
+the viewer is published somewhere judges can open.
 
 ## Pitch demo (runs of 2026-11-23)
 1. **Flood SOS in a monsoon.** Message: the pre-filled Malay SOS
