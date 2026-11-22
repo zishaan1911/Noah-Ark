@@ -1,6 +1,6 @@
 # noah-ark-dispatch (flagship pitch app)
 
-**PartyRock app:** "Noah's Ark: SOS & Delivery Drone" on khoryz666's PartyRock (public, plus a snapshot).
+**PartyRock app:** "Noah's Ark: Ark-1 Rescue & Delivery Drone" on khoryz666's PartyRock (public, plus a snapshot).
 _TODO: paste the public share link here._
 
 **Problem:** people die in floods, and parcels are hard to deliver through dense forest.
@@ -19,6 +19,9 @@ Sabah fleet, the 2 kg kit, a reply to the sender, and a mission in the backend's
 | Mission for Ark Brain | `shared/schemas/mission.schema.json` |
 | Ask Ark | `hardware/ark.json` and `hardware/README.md` facts, the four SITL scenarios |
 
+The drone is the main character: a "Meet Ark-1" card opens the page, Ark-1 writes its own flight log for each
+mission, the reply is signed by the drone that is coming, and Ask Ark answers as that drone in the first person.
+
 Keep these in sync: if a limit, the fleet or the schema changes in the repo, change the prompt here and in PartyRock.
 
 ## Builder notes (PartyRock, Nov 2026)
@@ -33,6 +36,7 @@ Keep these in sync: if a limit, the fleet or the schema changes in the repo, cha
 ## Widgets (top to bottom)
 | # | Type | Title | Settings |
 |---|---|---|---|
+| 0 | Static Text | Meet Ark-1 | markdown, full width at the top |
 | 1 | Text Input | Message | hint `Type an SOS in any language, or a parcel order`; pre-filled with demo 1 |
 | 2 | Text Input | Where | hint `Village or place in Sabah, e.g. Kampung Tempasuk, Kota Belud`; pre-filled `Kampung Tempasuk, Kota Belud, Sabah` |
 | 3 | File Upload | Photo | optional; `Optional: a photo of where you are (flood water, roof, clearing)` |
@@ -43,11 +47,29 @@ Keep these in sync: if a limit, the fleet or the schema changes in the repo, cha
 | 8 | AI Output | Can Ark fly? | Claude Sonnet 5.5 |
 | 9 | AI Output | Dispatch | Claude Sonnet 5.5 |
 | 10 | AI Output | Drone kit | Claude Sonnet 5.5 |
-| 11 | AI Output | Reply to sender | Claude Sonnet 5.5 |
+| 10b | AI Output | Ark-1 flight log | Claude Sonnet 5.5 |
 | 12 | Image Output | Drone on the way | default |
+| 11 | AI Output | Reply to sender | Claude Sonnet 5.5 |
 | 13 | AI Output | Mission for Ark Brain | Claude Sonnet 5.5 |
 | 14 | Chat Box | Ask Ark | Claude Sonnet 5.5 |
 | 15 | Static Text | Built on our repo | markdown |
+
+### 0. Meet Ark-1 (static text)
+```
+### Ark-1: the drone that answers every request
+Every SOS and parcel below is flown by **Ark-1**, our amphibious delivery drone. This app is its ground control: AWS Bedrock triages the request, checks the weather, picks a drone and packs it. The drone flies, lands and makes its own safety calls, so it finishes or aborts safely even with no signal.
+
+| Ark-1 | |
+|---|---|
+| Carries | 2 kg pod: water, medicine, food or a parcel |
+| Range | 20 km out and 20 km back, 20 % reserve |
+| Weather | Flies in rain; grounded at 12 m/s wind or 30 mm/h rain |
+| On water | Two inflatable pontoons, 107 % reserve buoyancy |
+| Onboard | Pixhawk 6X autopilot and Jetson companion computer |
+| Fleet | 24 drones at 6 Sabah hubs: parcels while idle, SOS first |
+
+**Try it:** send the pre-filled flood SOS, then drag the wind past 12 m/s and send it again.
+```
 
 ### 7. Triage
 ```
@@ -163,6 +185,29 @@ Answer as a table: Item | Qty | Weight (kg) | Why. Then one line: Total: X.XX kg
 The total must not go over 2.00 kg. Write the table in English, whatever language the message was in.
 ```
 
+### 10b. Ark-1 flight log
+Energy figures are estimates: 1.6 %/km and 1.7 %/min hover come from the 1.51 kWh pack, the 1.08 energy margin over
+the 40 km mission and the 333 W-per-rotor hover point in `hardware/ark.json`. Pontoon pressure about 4 s after
+firing is the SITL `water_landing` run (fire at 74.9 s, pressure at 78.65 s).
+```
+Dispatch: @Dispatch
+Weather: @Can Ark fly?
+Kit: @Drone kit
+You are the onboard log of the Ark-1 drone named in the dispatch. Write the flight log for this mission as the drone records it, one line per event, in this form:
+T+00:00 | PREFLIGHT | alt 0 m | 0 m/s | batt 90 % | 4 motors spin-checked, GPS locked, pontoon pressure switches armed
+
+Use these Ark-1 numbers (hardware/ark.json and the SITL runs; the energy figures are estimates):
+- Climb to 60 m in about 1 minute, then cruise at 17 m/s (about 1 km per minute).
+- Battery: about 1.6 % per km flown and 1.7 % per minute hovering or on the water. Start from the battery in the dispatch.
+- Water landing: the radar measures height over the waves; the pontoons fire at 17.3 m, both report pressure about 4 s later, then touchdown on the water with the props 0.32 m clear. It takes off from the water afterwards.
+- Ground landing: descend onto a clear patch, release the pod, take off again.
+- Put the wind, gusts and rain from the weather call in the cruise lines.
+- The drone flies on its own: if the link drops it carries on with the stored mission; if a pontoon fails it retries once, aborts and holds.
+
+Include: preflight, pod loaded (weight from the kit), take-off, cruise, over the drop, landing, pod released, take-off, cruise home, landed at the hub. 10 to 14 lines in a code block. Then one line: flight time, distance flown, battery used.
+If the dispatch says HOLD, write instead a short log of the drone waiting at the hub: pod loaded and ready, launch blocked by the NO-GO, a weather check every 10 minutes with the wind reading.
+```
+
 ### 11. Reply to sender
 ```
 Write the message the sender gets on their phone, in the language they wrote in (see Language in the triage).
@@ -173,11 +218,12 @@ Kit: @Drone kit
 At most 5 short lines. Say help is coming and the ETA. Say what is in the box. For relief: tell them to stay where they are, keep the phone on so the app can share their location, and wave a bright cloth when they hear the drone. Do not promise rescue unless the dispatch says the rescue team was alerted.
 For a parcel: give the ETA and say the drone lands near them.
 If the dispatch says HOLD because of the weather, give no ETA: say the storm is too strong to fly safely right now, their request is first in the queue and checked every 10 minutes, and say the rescue team was told only if the dispatch says so.
+End with a sign-off from the drone that is coming, in their language, e.g. - ARK-117, Noah's Ark drone.
 ```
 
 ### 12. Drone on the way (image)
 ```
-Photo-realistic, cinematic: a white quad-rotor delivery drone with two orange inflatable pontoons under its skids and a small cargo pod beneath, flying low in heavy rain over the place below. If the triage says relief, the village is flooded to the rooftops and a family waves from a roof. If it says gdex, the drone flies over dense Borneo rainforest towards a longhouse clearing. No text in the image.
+Photo-realistic, cinematic: the Ark-1 drone: a large quad-X delivery drone with an off-white sealed shell, orange accent stripes, four big 28-inch propellers, two bright yellow inflatable pontoon tubes in orange covers along its skids, and a small cargo pod slung beneath, flying low in heavy rain over the place below. If the triage says relief, the village is flooded to the rooftops and a family waves from a roof. If it says gdex, the drone flies over dense Borneo rainforest towards a longhouse clearing. No text in the image.
 Place: @Where
 Triage: @Triage
 ```
@@ -207,11 +253,11 @@ Answer with the JSON only, in a json code block.
 ```
 
 ### 14. Ask Ark (chat box)
-Opening message: `Hi, I'm Ark. Ask me about this mission: why this drone, what's in the box, or how it lands on water.`
+Opening message: `Hi, I'm the Ark-1 drone on this mission. Ask me why I was picked, what I'm carrying, or how I land on water.`
 
 Role prompt:
 ```
-You are Ark, the operations assistant for Noah's Ark: Ark-1 amphibious drones that answer SOS calls in floods and deliver GDEX parcels to remote villages while idle, from 6 hubs in Sabah (24 drones). Keep answers short and practical, and quote the numbers below when they help. If you do not know, say so.
+You are the Ark-1 drone that the dispatch picked for this mission (if it says HOLD, you are that drone waiting at the hub). Speak in the first person as the drone, e.g. I'm ARK-117, I'm carrying... You are one of 24 Noah's Ark drones at 6 hubs in Sabah: you answer SOS calls in floods and deliver GDEX parcels to remote villages while idle. Keep answers short and practical, and quote the numbers below when they help. If you do not know, say so.
 
 Ark-1, from the repo's design files (hardware/ark.json): quad X, 16.19 kg all-up, 2 kg payload pod, 20 km out and 20 km back with a 20 % reserve, 12S7P pack of 84 Samsung 50S cells (1.51 kWh), T-Motor MN801-S motors with 28-inch props, thrust-to-weight 2.59, Pixhawk 6X flight controller and a Jetson companion computer. Two 16.8 L inflatable pontoons deploy from the skids before a water touchdown: 107 % reserve buoyancy, 73 mm draft. Flight safety runs on the drone, so it finishes or aborts safely with no signal; the cloud (AWS Bedrock) triages, plans and dispatches.
 
@@ -228,6 +274,7 @@ Triage: @Triage
 Weather: @Can Ark fly?
 Dispatch: @Dispatch
 Kit: @Drone kit
+Flight log: @Ark-1 flight log
 ```
 
 ### 15. Built on our repo (static text)
@@ -268,11 +315,15 @@ the viewer is published somewhere judges can open.
 3. **Parcel while idle.** Message `GDEX parcel for Kundasang: a phone charger and 1 kg of rice, recipient Encik Daniel.`,
    Where `Kundasang, Ranau, Sabah`, wind 4, gusts 6, rain 5.
    Got: gdex, urgency 1; GO; idle ARK-121 from Ranau, 11 km, ground landing.
-4. In Ask Ark, ask "What if a pontoon fails?".
+4. In Ask Ark, ask "Why were you picked?" (it answers as ARK-117 in the first person) and "What if a pontoon fails?".
    Got: the SITL sequence (retry once, abort, hold in GUIDED, operator sends it home to the bank), applied to this
    mission, plus what was not tested (no-signal abort, floating on one tube).
 5. Photo: attached the app's own rainforest image to the parcel run. Got a `Photo:` line in the triage describing a
    calm brown river in a forested valley, steep jungle banks, no dry landing spot.
+
+6. Drone-centred run (flood, monsoon): the flight log ran 13 lines from PREFLIGHT at 90 % through PONTOONS FIRE at
+   17.3 m, WATER LANDING, POD RELEASED (1.96 kg), water take-off, to LANDED at Kota Belud with 43.6 %; the Malay
+   reply ends "ARK-117, dron Noah's Ark".
 
 Known gaps:
 - PartyRock has no current-date source (a Variable is fixed text), so the mission prompt hard-codes the date.
