@@ -1,13 +1,12 @@
 # noah-ark-dispatch (flagship pitch app)
 
-**Share link:** _TODO_ (build at https://partyrock.aws, then paste the link here)
+**Share link:** _TODO_ (built as "Noah's Ark: SOS & Delivery Drone" on khoryz666's PartyRock; paste the public link once shared)
 
 **Problem:** people die in floods, and parcels are hard to deliver through dense forest.
-**Solution:** an SOS app that calls a purpose-built amphibious drone. While no one needs help, the same drone
-delivers parcels.
+**Solution:** an SOS app that calls a purpose-built amphibious drone. While no one needs help, the same drone delivers parcels.
 
 One app tells the whole story: type a message (an SOS in any language, or a parcel order) and Bedrock triages it,
-decides whether an idle parcel drone gets pulled off its route, packs the 2 kg kit, and replies to the sender.
+picks a drone (an urgent SOS can pull one off a parcel run), packs the 2 kg kit, and replies to the sender.
 
 Drone facts used in the prompts come from `hardware/README.md`: 2 kg payload, 20 km out and back, flies in rain,
 lands on water on two pontoons.
@@ -17,28 +16,29 @@ Build them in this order. In PartyRock, `@Name` in a prompt links to the widget 
 
 | # | Type | Title | Model |
 |---|---|---|---|
-| 1 | User input | Message | |
-| 2 | User input | Where | |
-| 3 | AI text | Triage | Claude (any Sonnet-class) |
-| 4 | AI text | Dispatch | Claude |
-| 5 | AI text | Drone kit | Claude |
-| 6 | AI text | Reply to sender | Claude |
-| 7 | Image | Drone on the way | default image model |
-| 8 | Chatbot | Ask Ark | Claude |
+| 1 | Text Input | Message | |
+| 2 | Text Input | Where | |
+| 3 | AI Output | Triage | Claude Sonnet 5.5 |
+| 4 | AI Output | Dispatch | Claude Sonnet 5.5 |
+| 5 | AI Output | Drone kit | Claude Sonnet 5.5 |
+| 6 | AI Output | Reply to sender | Claude Sonnet 5.5 |
+| 7 | Image Output | Drone on the way | default |
+| 8 | Chat Box | Ask Ark | Claude Sonnet 5.5 |
 
 ### 1. Message (user input)
-Placeholder: `Type an SOS in any language, or a parcel order`
+Hint: `Type an SOS in any language, or a parcel order`
+Pre-filled with demo 1's message.
 
 ### 2. Where (user input)
-Placeholder: `Village or place, e.g. Kampung Tanjung, Kota Belud, Sabah`
+Hint: `Village or place, e.g. Kampung Tanjung, Kota Belud, Sabah`
+Pre-filled with `Kampung Tanjung, Kota Belud, Sabah`.
 
 ### 3. Triage (AI text)
 ```
-You are the triage officer for Noah's Ark, a fleet of amphibious delivery drones in Malaysia.
-Read the message and the place.
-
 Message: @Message
 Place: @Where
+You are the triage officer for Noah's Ark, a fleet of amphibious delivery drones in Malaysia.
+Read the message and the place above.
 
 Decide the mode:
 - relief: someone needs help (flood, injury, stranded, no food or water, medicine).
@@ -102,7 +102,7 @@ If the mode is relief, pack for the people:
 - Realistic weights: 500 ml water = 0.52 kg.
 
 Answer as a table: Item | Qty | Weight (kg) | Why. Then one line: Total: X.XX kg of 2.00 kg.
-The total must not go over 2.00 kg.
+The total must not go over 2.00 kg. Write the table in English, whatever language the message was in.
 ```
 
 ### 6. Reply to sender (AI text)
@@ -122,24 +122,26 @@ For a parcel: give the ETA and say the drone lands near them.
 ### 7. Drone on the way (image)
 ```
 Photo-realistic, cinematic: a white quad-rotor delivery drone with two orange inflatable pontoons under its skids
-and a small cargo pod beneath, flying low in heavy rain over @Where. If the triage below says relief, the
+and a small cargo pod beneath, flying low in heavy rain over the place below. If the triage says relief, the
 village is flooded to the rooftops and a family waves from a roof. If it says gdex, the drone flies over dense
 Borneo rainforest towards a longhouse clearing. No text in the image.
-@Triage
+Place: @Where
+Triage: @Triage
 ```
 
 ### 8. Ask Ark (chatbot)
-Initial prompt:
+Opening message: `Hi, I'm Ark. Ask me about this mission: why this drone, what's in the box, or how it lands on water.`
+
+Role prompt:
 ```
 You are Ark, the operations assistant for Noah's Ark: an amphibious drone that answers SOS calls in floods and
 delivers parcels to remote jungle villages while idle. Each drone carries 2 kg, flies 20 km out and back in
 rain, and lands on water on two pontoons. Flight safety runs on the drone, so it finishes or aborts safely with
-no signal. The cloud (AWS Bedrock) triages, plans and dispatches.
+no signal. The cloud (AWS Bedrock) triages, plans and dispatches. Keep answers short and practical.
 Answer questions about this request using:
 Triage: @Triage
 Dispatch: @Dispatch
 Kit: @Drone kit
-Keep answers short and practical.
 ```
 
 ## Demo inputs (for the pitch)
@@ -148,12 +150,13 @@ Run the SOS first, then the parcel, to show the same fleet doing both.
 1. **Flood SOS (Malay).**
    Message: `Tolong! Air naik sampai bumbung. Kami 5 orang, ada bayi 6 bulan dan nenek kencing manis, insulin dah habis.`
    Where: `Kampung Tanjung, Kota Belud, Sabah`
-   Expect: relief, urgency 5, ARK-002 pulled off its parcel run, water landing, kit with water, insulin in a cold
-   pack, ORS, baby formula, reply in Malay.
+   Got (2026-11-22): relief, urgency 5, rescue team alerted, idle ARK-001 sent (no parcel run interrupted, since
+   an idle drone was free), water landing, kit 1.95 of 2.00 kg with water, insulin in a cold pack, ORS, formula
+   and nappies, reply in Malay.
 2. **Jungle parcel.**
    Message: `GDEX parcel for Long Semadoh longhouse: phone charger and 1 kg of rice, recipient Encik Daniel.`
    Where: `Long Semadoh, Lawas, Sarawak`
-   Expect: gdex, urgency 1, idle ARK-001, ground landing, kit under 2 kg.
+   Got (2026-11-22): gdex, urgency 1, idle ARK-001, ground landing at the longhouse, kit under 2 kg.
 
 ## Output
 What the judges see after one run: triage card, dispatch decision, packed kit table, the phone reply in the
