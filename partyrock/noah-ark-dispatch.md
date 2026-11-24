@@ -1,7 +1,9 @@
 # noah-ark-dispatch (Ark SOS on PartyRock)
 
-**PartyRock app:** "Noah's Ark: Rescue & Delivery Drone Fleet" on khoryz666's PartyRock (public, plus a snapshot).
-**Share link:** <https://partyrock.aws/u/khoryz666/Iw39DDeYhCPz/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet>
+**PartyRock app (Ark SOS, built 2026-11-24):** "Noah's Ark: Rescue & Delivery Drone Fleet" on iamzishaan's PartyRock.
+**Share link:** <https://partyrock.aws/u/iamzishaan/hJn7bk5DlUb9/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet>
+**Original all-in-one app:** <https://partyrock.aws/u/khoryz666/Iw39DDeYhCPz/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet>
+(khoryz666; the version described under History).
 
 **Problem:** people die in floods, and parcels are hard to deliver through dense forest.
 **Solution:** an SOS app that calls a purpose-built amphibious drone. While no one needs help, the same drone
@@ -28,7 +30,8 @@ Keep these in sync: if the SOS schema, the hubs or the drop points change in the
 here and in PartyRock.
 
 ## Edits to make in the live PartyRock app
-For khoryz666. Do these in order.
+Done on iamzishaan's remix on 2026-11-24 (steps 1–3 and 5). Step 4 is open: "SOS for Ark Command" and "Hand-off"
+sit at the bottom, under the footer; drag them up under Reply to sender. Repeat these steps to update another copy.
 
 1. **Delete these widgets:** Wind m/s, Gusts m/s, Rain mm/h (the three sliders); Can the drones fly?; Dispatch;
    Drone kit; Drone flight log; Mission for Ark Brain.
@@ -216,7 +219,9 @@ Dispatch, kit, weather and routing run in Ark Command on the live fleet.
 ```
 
 ## Pitch demo (SOS → Ark Command)
-*To run after the edits. Not yet run.*
+Run 1 recorded on 2026-11-24 with the released app: triage relief, urgency 5, Malay, water landing yes, insulin
+flagged; Malay reply with no ETA; SOS JSON `sos_01JD8Q4M7ZK3V9XTBN2E5RFHCA` at 6.42, 116.34. Pasted into Ark
+Command's Fleet page: 1.94 kg kit, nearest hub Kota Belud, and the fleet sim queued the order at urgency 5.
 
 1. **Flood SOS, dispatched to the fleet.** Message: the pre-filled Malay SOS (`Tolong! Air naik sampai bumbung. Kami 5 orang, ada bayi 6 bulan dan nenek kencing manis, insulin dah habis.`), Where `Kampung Tempasuk, Kota Belud, Sabah`. Expect triage urgency 5 with water landing. Copy the SOS for Ark Command, switch to Ark Command (it loads the call), open the Fleet page and press Dispatch. Expect a relief mission in the Dispatcher feed.
 2. **Same SOS, one live drone.** Same copy. Open the Drone page, press Review, then Send to ARK-006.
