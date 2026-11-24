@@ -12,6 +12,7 @@ import { useDrone } from '../hooks/useDrone';
 import { useGroundElevation } from '../hooks/useGroundElevation';
 import { useInterpolatedPose } from '../hooks/useInterpolatedPose';
 import { useManualControl } from '../hooks/useManualControl';
+import { usePartyRockMission } from '../hooks/usePartyRockMission';
 import { useTheme } from '../hooks/useTheme';
 import { buildCommand } from '../lib/commands';
 import { DRONE_ID, MQTT_URL } from '../lib/config';
@@ -37,6 +38,13 @@ export function GdexOps() {
   const [focus, setFocus] = useState<MapFocus | null>(null);
   const [detent, setDetent] = useState<Detent>('peek');
   const [manualOn, setManualOn] = useState(false);
+  const incoming = usePartyRockMission();
+  // Fly the map to a new PartyRock destination (adjusted during render, not in an effect).
+  const [shownId, setShownId] = useState<string | null>(null);
+  if (incoming && incoming.id !== shownId) {
+    setShownId(incoming.id);
+    setFocus({ point: incoming.destination, zoom: 12, seq: (focus?.seq ?? 0) + 1 });
+  }
 
   // The start defaults to where the drone is, once, as soon as telemetry is known.
   if (!start && t) setStart({ lat: t.position.lat, lon: t.position.lon });
@@ -148,6 +156,7 @@ export function GdexOps() {
             onReview={setReview}
             liveKm={liveKm}
             compact={immersive}
+            incoming={incoming}
           />
         </div>
       </aside>

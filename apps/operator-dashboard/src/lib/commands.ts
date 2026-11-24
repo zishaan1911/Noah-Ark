@@ -20,10 +20,22 @@ export interface MissionInput {
   payload: PayloadRow[];
   /** Default gdex; the defence terminal sends military resupply. */
   mode?: Mission['mode'];
+  /** Default ground; a PartyRock mission may ask for water. */
+  landingType?: Mission['landingType'];
+  aiRationale?: string;
 }
 
 /** An approved mission: the operator pressing Send (or Authorise) is the approval. */
-export function buildMission({ droneId, start, dest, plan, payload, mode = 'gdex' }: MissionInput): Mission {
+export function buildMission({
+  droneId,
+  start,
+  dest,
+  plan,
+  payload,
+  mode = 'gdex',
+  landingType = 'ground',
+  aiRationale,
+}: MissionInput): Mission {
   const now = new Date().toISOString();
   const items = toPayloadItems(payload);
   return {
@@ -35,7 +47,8 @@ export function buildMission({ droneId, start, dest, plan, payload, mode = 'gdex
     origin: { lat: start.lat, lon: start.lon },
     destination: { lat: dest.lat, lon: dest.lon },
     waypoints: plan.waypoints,
-    landingType: 'ground',
+    landingType,
+    ...(aiRationale ? { aiRationale } : {}),
     payload: items as Mission['payload'],
     payloadKg: round3(items.reduce((s, p) => s + p.weightKg, 0)),
     distanceKm: plan.distanceKm,

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import type { DroneEvent } from '@contracts';
+import type { DroneEvent, Mission } from '@contracts';
 import type { DroneApi } from '../hooks/useDrone';
 import { ARK1 } from '../lib/ark1';
 import { buildMission, payloadTotalKg } from '../lib/commands';
@@ -36,7 +36,13 @@ interface Props {
   liveKm: number | null;
   /** Chase and Onboard views: only the flying summary, about 300 px wide. */
   compact: boolean;
+  /** A mission copied from the PartyRock dispatch app; the card loads and plans it. */
+  incoming: Mission | null;
 }
+
+/** What an imported mission keeps when the card rebuilds it for the live drone. */
+const fromFields = (m: Mission | null) =>
+  m ? { mode: m.mode, landingType: m.landingType, aiRationale: m.aiRationale } : {};
 
 type StepState = { status: StepStatus; detail?: string };
 type Steps = Record<StepId, StepState>;
@@ -238,8 +244,10 @@ export function DeliveryCard({
   onReview,
   liveKm,
   compact,
+  incoming,
 }: Props) {
   const [rows, setRows] = useState<PayloadRow[]>([{ id: 1, item: 'GDEX parcel', qty: 1, kgEach: 1.2 }]);
+  const [from, setFrom] = useState<Mission | null>(null);
   const [planning, setPlanning] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   const [steps, setSteps] = useState<Steps>(INITIAL_STEPS);
@@ -286,19 +294,46 @@ export function DeliveryCard({
   const patchRow = (id: number, patch: Partial<PayloadRow>) =>
     editRows(rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
-  async function plan() {
-    if (!start || !dest) return;
+  // A PartyRock mission fills the card and plans at once; one that lands mid-flight waits until the card is idle.
+  const imported = useRef<string | null>(null);
+  useEffect(() => {
+    if (!incoming || phase !== 'idle' || imported.current === incoming.id) return;
+    imported.current = incoming.id;
+    const next = incoming.payload.map((p, i) => ({
+      id: i + 1,
+      item: p.item,
+      qty: p.qty,
+      kgEach: p.weightKg / p.qty,
+    }));
+    onSetPoint('start', incoming.origin);
+    onSetPoint('dest', incoming.destination);
+    setRows(next);
+    setFrom(incoming);
+    void plan(incoming.origin, incoming.destination, next, incoming);
+    // plan and onSetPoint are recreated each render; the id guard makes this run once per mission.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incoming, phase]);
+
+  async function plan(s = start, d = dest, r = rows, src = from) {
+    if (!s || !d) return;
     setPlanning(true);
     setPlanError(null);
     setSteps(INITIAL_STEPS);
     try {
-      const res = await planRoute({ start, dest, payloadKg: total, elevationAt });
+      const res = await planRoute({ start: s, dest: d, payloadKg: payloadTotalKg(r), elevationAt });
       if (!res.ok) {
         onReview(null);
         setPlanError(res.reason);
         return;
       }
-      const draft = buildMission({ droneId, start, dest, plan: res.plan, payload: rows });
+      const draft = buildMission({
+        droneId,
+        start: s,
+        dest: d,
+        plan: res.plan,
+        payload: r,
+        ...fromFields(src),
+      });
       onReview({ plan: res.plan, errors: validateMission(draft).errors });
     } catch (err) {
       onReview(null);
@@ -311,7 +346,14 @@ export function DeliveryCard({
   async function send() {
     if (!start || !dest || !review) return;
     // A fresh mission per attempt: new id and timestamps, so a retry is never mistaken for the last try.
-    const mission = buildMission({ droneId, start, dest, plan: review.plan, payload: rows });
+    const mission = buildMission({
+      droneId,
+      start,
+      dest,
+      plan: review.plan,
+      payload: rows,
+      ...fromFields(from),
+    });
     const check = validateMission(mission);
     if (!check.ok) {
       onReview({ plan: review.plan, errors: check.errors });
@@ -332,6 +374,7 @@ export function DeliveryCard({
   }
 
   const backToPlan = () => {
+    setFrom(null);
     setPhase('idle');
     setSteps(INITIAL_STEPS);
     setFlight(null);
@@ -443,7 +486,7 @@ export function DeliveryCard({
           </div>
         </fieldset>
 
-        <button type="button" className="btn btn-primary" disabled={!canPlan} onClick={plan}>
+        <button type="button" className="btn btn-primary" disabled={!canPlan} onClick={() => void plan()}>
           {planning ? 'Reading terrain…' : 'Plan route'}
         </button>
         {planError && (
@@ -457,6 +500,17 @@ export function DeliveryCard({
     body = (
       <>
         <h2 className="m-0 text-[17px] font-semibold tracking-tight">Review route</h2>
+        {from && (
+          <div className="flex flex-col gap-1 rounded-xl bg-fill p-2.5" aria-label="From PartyRock">
+            <span className="text-[13px] font-semibold">
+              From PartyRock · {from.mode} · {from.landingType} landing
+            </span>
+            <span className="text-xs text-sub">
+              AI picked {from.droneId}; the live sim flies it as {droneId}.
+              {from.aiRationale ? ` ${from.aiRationale}` : ''}
+            </span>
+          </div>
+        )}
         <dl className="m-0 grid grid-cols-3 gap-2">
           <Stat label="Distance" value={`${review.plan.distanceKm.toFixed(1)} km`} />
           <Stat label="ETA" value={`${Math.round(review.plan.etaMinutes)} min`} />
