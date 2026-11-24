@@ -1,7 +1,7 @@
 # noah-ark-dispatch (flagship pitch app)
 
 **PartyRock app:** "Noah's Ark: Rescue & Delivery Drone Fleet" on khoryz666's PartyRock (public, plus a snapshot).
-_TODO: paste the public share link here._
+**Share link:** <https://partyrock.aws/u/khoryz666/Iw39DDeYhCPz/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet>
 
 **Problem:** people die in floods, and parcels are hard to deliver through dense forest.
 **Solution:** an SOS app that calls a purpose-built amphibious drone. While no one needs help, the same drone
