@@ -28,12 +28,12 @@ These project skills live in `.claude/skills/` and are **mandatory**, not option
 | **Ark Brain** | Cloud AI + APIs | `backend/`, `ml/`, `infra/` | Python + TypeScript Lambdas, SageMaker, CDK (TypeScript) |
 | **Ark Command** | Operator dashboard | `apps/operator-dashboard/` | React + Vite + TypeScript + Tailwind |
 | **Ark Care** | Maintainer dashboard | `apps/maintainer-dashboard/` | React + Vite + TypeScript + Tailwind |
-| **Ark SOS** | Mobile help app | `apps/sos-mobile/` | Flutter (Dart) |
+| **Ark SOS** | Mobile help app | `apps/sos-mobile/` | Android, Kotlin + Jetpack Compose |
 | PartyRock apps | No-code Bedrock companion apps | `partyrock/` | PartyRock (spec + share link per app) |
 
 ## Architecture
 ```
-Ark SOS (Flutter) ─┐                     ┌─> Ark Command (React)
+Ark SOS (Android) ─┐                     ┌─> Ark Command (React)
 SMS / WhatsApp ────┼─> API Gateway ──> Lambdas ──> DynamoDB / Timestream / S3
                    │        │            │  ├─ Bedrock (triage, planning, agents, reports)
                    │        │            │  ├─ Bedrock Knowledge Bases (maintenance RAG)
@@ -48,7 +48,7 @@ Ark drone (sim) <── IoT Core (MQTT) <──> Greengrass on companion compute
 - **Contracts first:** `shared/schemas/*.schema.json` is the single source of truth for SOS requests, missions and telemetry. Change the schema first, then regenerate types, then update consumers.
   - TypeScript types: `json-schema-to-typescript`
   - Python models: `datamodel-code-generator` (Pydantic)
-  - Dart models: `quicktype`
+  - Kotlin models (kotlinx.serialization): `quicktype`
   - Generated files go in a `generated/` folder and are never hand-edited.
 
 ### Which Lambda language
@@ -60,8 +60,8 @@ Ark drone (sim) <── IoT Core (MQTT) <──> Greengrass on companion compute
 ```
 apps/<name>-dashboard/          React
   src/pages/  src/components/  src/hooks/  src/lib/  src/generated/
-apps/sos-mobile/                Flutter
-  lib/screens/  lib/widgets/  lib/services/  lib/models/  lib/generated/  test/
+apps/sos-mobile/                Android (Gradle)
+  app/src/main/java/com/noahark/arksos/{api,location,ui}/  app/src/test/  (types: shared/generated/kotlin)
 backend/functions/<name>/       Python Lambda             | TypeScript Lambda
   handler.py                                              | src/index.ts
   prompts/*.md   (Bedrock prompts as files, versioned)    | test/*.test.ts
@@ -81,7 +81,7 @@ simulation/                     worlds/, models/, missions/, scripts/
 |---|---|---|
 | Folders, non-code files | kebab-case | `sos-triage/`, `relief-kit-generator.md` |
 | Python modules / functions | snake_case (PEP 8) | `offload_manager.py`, `score_urgency()` |
-| Dart files | snake_case; classes PascalCase | `sos_form_screen.dart`, `SosFormScreen` |
+| Kotlin files | PascalCase file per main class; functions camelCase | `SosViewModel.kt`, `HoldButton()` |
 | React components | PascalCase file + export | `MissionMap.tsx` |
 | TS hooks / utils | camelCase | `useTelemetry.ts`, `formatEta.ts` |
 | Types / classes | PascalCase | `SosRequest`, `Mission` |
@@ -96,7 +96,7 @@ simulation/                     worlds/, models/, missions/, scripts/
 ## Code rules
 - **TypeScript:** strict mode, ESLint + Prettier, Vitest. No `any` without a one-line why.
 - **Python:** 3.12, Ruff (lint + format), pytest, type hints on public functions. One `requirements.txt` per Lambda/package.
-- **Dart/Flutter:** `dart format`, `flutter analyze` clean, `flutter test`. Follow Effective Dart.
+- **Kotlin/Android:** official Kotlin style, Android lint clean, JVM unit tests. Strings in resources (en, ms, zh, ta).
 - **Bedrock:** model IDs and region come from config/env, never hard-coded. Prompts live in `prompts/` files, not inline strings. Bedrock outputs that drive actions (urgency, routes, payloads) are validated against the JSON schemas before use.
 - **Secrets:** never committed. Use SSM Parameter Store / Secrets Manager; local values in `.env` (git-ignored), with a `.env.example` listing the keys.
 - **Shortcuts:** any deliberate limit gets `shortcut: <the limit>, <when to upgrade>` (ponytail convention).
@@ -107,7 +107,7 @@ simulation/                     worlds/, models/, missions/, scripts/
 |---|---|
 | React apps, TS Lambdas, infra | `npm run lint && npm test && npm run build` (infra: `npx cdk synth`) |
 | Python (backend, ml, edge, simulation) | `ruff check . && ruff format --check . && pytest` |
-| Flutter (`apps/sos-mobile`) | `dart format --set-exit-if-changed . && flutter analyze && flutter test` |
+| Android (`apps/sos-mobile`) | `./gradlew testDebugUnitTest lintDebug assembleDebug` |
 
 ## Git & GitHub
 - Remote: `origin` → https://github.com/zishaan1911/Noah-Ark.git. **Ask before pushing.**
