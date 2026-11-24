@@ -11,7 +11,8 @@
     "status": { "title": "SosStatus", "enum": ["new", "triaged", "assigned", "delivered", "closed"] },
     "report": { "$ref": "#/$defs/report" },
     "triage": { "$ref": "#/$defs/triage" },
-    "missionId": { "$ref": "common.schema.json#/$defs/missionId" }
+    "missionId": { "$ref": "common.schema.json#/$defs/missionId" },
+    "delivery": { "$ref": "#/$defs/delivery" }
   },
   "$defs": {
     "need": { "title": "Need", "enum": ["food", "water", "medicine", "baby_supplies", "shelter", "rescue", "other"] },
@@ -29,7 +30,55 @@
         "photoUrl": { "type": "string", "format": "uri" },
         "contactPhone": { "type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$", "description": "E.164, used to reply." },
         "peopleCount": { "type": "integer", "minimum": 1 },
-        "needs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/need" } }
+        "needs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/need" } },
+        "medicines": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "description": "Medicines the sender asks for, in their words, e.g. insulin, paracetamol."
+        },
+        "vulnerable": { "$ref": "#/$defs/vulnerable" }
+      }
+    },
+    "vulnerable": {
+      "title": "SosVulnerable",
+      "description": "How many of peopleCount need extra care. Drives what goes in the 2 kg kit (e.g. baby supplies).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "children": { "type": "integer", "minimum": 0 },
+        "elderly": { "type": "integer", "minimum": 0 },
+        "disabled": { "type": "integer", "minimum": 0 },
+        "pregnant": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "delivery": {
+      "title": "SosDelivery",
+      "description": "The drone on its way, for the sender: GET /missions needs a staff JWT, so Ark SOS reads it here. Set once a mission is approved.",
+      "type": "object",
+      "required": ["droneId", "missionStatus"],
+      "additionalProperties": false,
+      "properties": {
+        "droneId": { "$ref": "common.schema.json#/$defs/droneId" },
+        "missionStatus": { "$ref": "mission.schema.json#/properties/status" },
+        "etaMinutes": { "type": "number", "minimum": 0 },
+        "payload": {
+          "type": "array",
+          "items": { "$ref": "mission.schema.json#/$defs/payloadItem" },
+          "description": "What the drone carries for this SOS (the mission's kit), shown to the sender."
+        },
+        "payloadKg": { "$ref": "mission.schema.json#/properties/payloadKg" }
+      }
+    },
+    "locationUpdate": {
+      "title": "SosLocationUpdate",
+      "description": "The sender's newer position. Ark SOS sends it in the background while help is on the way (POST /sos/{sosId}/location).",
+      "type": "object",
+      "required": ["location", "ts"],
+      "additionalProperties": false,
+      "properties": {
+        "location": { "$ref": "common.schema.json#/$defs/geo" },
+        "ts": { "$ref": "common.schema.json#/$defs/timestamp" }
       }
     },
     "triage": {

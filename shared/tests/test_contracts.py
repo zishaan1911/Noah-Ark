@@ -20,6 +20,7 @@ TARGETS = {
     "sos-request": {"$ref": "sos-request.schema.json"},
     "sos-report": {"$ref": "sos-request.schema.json#/$defs/report"},
     "sos-triage": {"$ref": "sos-request.schema.json#/$defs/triage"},
+    "sos-location-update": {"$ref": "sos-request.schema.json#/$defs/locationUpdate"},
     "mission": {"$ref": "mission.schema.json"},
     "mission-request": {"$ref": "mission.schema.json#/$defs/request"},
     "telemetry": {"$ref": "telemetry.schema.json"},

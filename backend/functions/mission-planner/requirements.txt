@@ -1,0 +1,4 @@
+boto3>=1.35  # in the Lambda runtime; listed for local runs
+jsonschema>=4.23
+pytest>=8
+ruff>=0.6
