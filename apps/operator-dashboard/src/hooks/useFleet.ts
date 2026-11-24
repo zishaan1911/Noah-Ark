@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Mission, Telemetry, Weather } from '@contracts';
+import type { Mission, SosRequest, Telemetry, Weather } from '@contracts';
 import { MQTT_URL } from '../lib/config';
 import {
   applyDrone,
@@ -11,18 +11,21 @@ import {
   type FleetState,
   type FleetStats,
 } from '../lib/fleet';
-import { validateMission, validateTelemetry, validateWeather } from '../lib/validate';
+import { validateMission, validateSosRequest, validateTelemetry, validateWeather } from '../lib/validate';
+import { applySos, type SosFeed } from '../lib/sosFeed';
 import { useMqtt, type MqttApi, type MqttState } from './useMqtt';
 
-const TOPICS = ['ark/+/telemetry', 'fleet/live', 'fleet/stats', 'fleet/weather'] as const;
+const TOPICS = ['ark/+/telemetry', 'fleet/live', 'fleet/stats', 'fleet/weather', 'sos/+'] as const;
 const FLUSH_MS = 500;
 const TELEMETRY_TOPIC = /^ark\/[^/]+\/telemetry$/;
+const SOS_TOPIC = /^sos\/[^/]+$/;
 
 export interface FleetApi {
   conn: MqttState;
   state: FleetState;
   stats: FleetStats | null;
   weather: Weather | null;
+  sos: SosFeed;
   publish: MqttApi['publish'];
 }
 
@@ -31,15 +34,18 @@ export function useFleet(): FleetApi {
   const [state, setState] = useState<FleetState>(emptyFleet);
   const [stats, setStats] = useState<FleetStats | null>(null);
   const [weather, setWeather] = useState<Weather | null>(null);
+  const [sos, setSos] = useState<SosFeed>({});
   const latest = useRef<{
     state: FleetState;
     stats: FleetStats | null;
     weather: Weather | null;
+    sos: SosFeed;
     dirty: boolean;
   }>({
     state,
     stats: null,
     weather: null,
+    sos: {},
     dirty: false,
   });
 
@@ -49,6 +55,10 @@ export function useFleet(): FleetApi {
       const v = validateTelemetry(raw);
       if (!v.ok) return console.warn('Dropped invalid telemetry', v.errors);
       cur.state = applyTelemetry(cur.state, raw as Telemetry);
+    } else if (SOS_TOPIC.test(topic)) {
+      const v = validateSosRequest(raw);
+      if (!v.ok) return console.warn('Dropped invalid SOS', v.errors);
+      cur.sos = applySos(cur.sos, raw as SosRequest);
     } else if (topic === 'fleet/live') {
       const msg = raw as { kind?: unknown; data?: unknown } | null;
       if (msg?.kind === 'drone') {
@@ -85,9 +95,10 @@ export function useFleet(): FleetApi {
       setState(cur.state);
       setStats(cur.stats);
       setWeather(cur.weather);
+      setSos(cur.sos);
     }, FLUSH_MS);
     return () => clearInterval(id);
   }, []);
 
-  return { conn, state, stats, weather, publish };
+  return { conn, state, stats, weather, sos, publish };
 }

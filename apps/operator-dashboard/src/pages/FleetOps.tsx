@@ -10,15 +10,16 @@ import { useFleet } from '../hooks/useFleet';
 import { usePartyRock } from '../hooks/usePartyRock';
 import { useTheme } from '../hooks/useTheme';
 import { fleetWindText, kpis } from '../lib/fleet';
+import { openSos } from '../lib/sosFeed';
 
 const EMPTY_AFTER_MS = 5000;
+const MAX_INBOX = 3;
 
 /** Fleet-scale view: every drone on one map, the dispatch queue, and the delivery numbers. */
 export function FleetOps() {
-  const { conn, state, stats, weather, publish } = useFleet();
+  const { conn, state, stats, weather, sos: feed, publish } = useFleet();
   const item = usePartyRock();
-  const [dismissedId, setDismissedId] = useState<string | null>(null);
-  const sos = item?.kind === 'sos' && item.sos.id !== dismissedId ? item.sos : null;
+  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
   const [radar, setRadar] = useState(true);
   const [theme, toggleTheme] = useTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -32,6 +33,13 @@ export function FleetOps() {
   const numbers = useMemo(() => kpis(state, stats), [state, stats]);
   const droneCount = Object.keys(state.drones).length;
   const empty = droneCount === 0 && Object.keys(state.missions).length === 0;
+
+  // A pasted PartyRock SOS only joins while the MQTT feed has not seen the same id.
+  const pasted = item?.kind === 'sos' && !feed[item.sos.id] ? item.sos : null;
+  const inbox = [...openSos(feed), ...(pasted ? [pasted] : [])]
+    .filter((s) => !dismissed.has(s.id))
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .slice(0, MAX_INBOX);
 
   return (
     <div className="relative h-dvh overflow-hidden">
@@ -71,15 +79,15 @@ export function FleetOps() {
                 Fleet sim not running. Start it with docker compose up fleet.
               </p>
             )}
-            {sos && (
+            {inbox.map((sos) => (
               <SosInbox
                 key={sos.id}
                 sos={sos}
                 connected={conn === 'connected'}
                 onDispatch={(order) => publish('fleet/orders', order, 1)}
-                onDismiss={() => setDismissedId(sos.id)}
+                onDismiss={() => setDismissed((prev) => new Set(prev).add(sos.id))}
               />
-            )}
+            ))}
             <FleetKpis kpis={numbers} stats={stats} />
             <FleetWeather weather={weather} stats={stats} radar={radar} onRadar={setRadar} />
             <DispatchFeed missions={state.missions} />
