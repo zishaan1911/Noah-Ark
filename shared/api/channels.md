@@ -19,6 +19,7 @@ Simulation only (never on a real drone):
 | `fleet/orders` | app → fleet sim | 1 | `mission#/$defs/request` (`sosRequestIds`, `destination`, `payload`, `landingType`, `urgency`) | Ark Command (an operator dispatches a PartyRock SOS) | `simulation/ark_fleet`: queued for the dispatch optimiser like any order |
 | `fleet/stats` | fleet sim → app | 1, retained | `{"flying", "queued", "deliveredTotal", "avgDeliveryMin", "onTimePct", "promiseMin", "windMs", "windFromDeg", "speedup"}` | `simulation/ark_fleet` | Ark Command Fleet page |
 | `fleet/weather` | fleet sim → app | 1, retained | `weather` | `simulation/ark_fleet` (Open-Meteo per hub + a demo storm cell) | Ark Command Fleet page, dispatch (in-process) |
+| `sos/<sosId>` | sos-api → app | 1, retained | `sos-request` | `backend/local-api` (after create, report, location, assignment, delivery) | Ark Command Fleet page: open SOS calls appear in the inbox |
 | `sim/<droneId>/status` | sim → app | 1, retained | `{"state": "booting" \| "ready" \| "error", "lat", "lon", "groundAmslM", "windMs", "windFromDeg", "detail"?}` | `live.py` | Ark Command |
 
 Locally the broker is Mosquitto (`compose.yaml`, MQTT 1883, WebSocket on host port 9101) with the same topics and payloads as IoT Core.

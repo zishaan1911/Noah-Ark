@@ -36,6 +36,14 @@ services:
     depends_on: [broker]
     restart: unless-stopped
 
+  sos-api:
+    # Local SOS API for Ark SOS (stands in for API Gateway + sos-flow).
+    build: backend/local-api
+    ports: ["8080:8080"]
+    volumes: [".:/repo"]
+    depends_on: [broker]
+    restart: unless-stopped
+
   gateway:
     build: edge/flight-bridge
     command: python -u -m flight_bridge --broker broker:1883 --mav tcp:sim:5760 --drone ARK-006

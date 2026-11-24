@@ -1,0 +1,5 @@
+paho-mqtt>=2.1
+jsonschema>=4.23
+boto3>=1.35  # sos-triage calls Bedrock when configured
+pytest>=8
+ruff>=0.6
