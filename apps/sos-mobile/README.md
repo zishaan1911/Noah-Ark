@@ -1,46 +1,58 @@
 # Ark SOS (mobile help app)
 
-Flutter app (Android) for people who need help. No login, no password. It opens on one big red button: hold it for
-2 seconds and the SOS goes out with the phone's location. The app then follows the SOS and keeps sharing the location
-until help is delivered.
+Native Android app (Kotlin + Jetpack Compose) for people who need help. It replaces the Flutter prototype and keeps
+its design. No login, no password. It opens on one big red button: hold it for 2 seconds and the SOS goes out with the
+phone's location. The app then follows the SOS and keeps sharing the location until help is delivered.
+
+Types (`SosRequest`, `SosReport`, `Geo`, ...) come from `shared/generated/kotlin` (package `com.noahark.contracts`),
+generated from `shared/schemas`. They are on the app's source path and are never edited here.
 
 ## Tabs
-Every tab fits a phone screen without scrolling (tested at 360 x 640 in all four languages).
+Every tab fits a 360 x 640 dp phone screen without scrolling.
 
 | Tab | What it does | API (`shared/api/openapi.yaml`) |
 |---|---|---|
-| **SOS** | The red button (hold 2 s; letting go early cancels). Then: SOS sent → help arranged → drone on the way (ETA) → delivered, and whether the location is being shared | `POST /sos`, `GET /sos/{sosId}` every 10 s, `POST /sos/{sosId}/location` |
-| **People** | How many people, and how many are children, elderly, disabled or pregnant. Optional phone | `PUT /sos/{sosId}/report` |
-| **Needs** | Water, food, medicine, baby supplies, shelter, rescue, other; which medicines; anything else (any language) | `PUT /sos/{sosId}/report` |
-| **Supplies** | The kit mission-planner (Bedrock) packed for this SOS, and its weight against the 2 kg cap | `GET /sos/{sosId}` (`delivery.payload`) |
+| **SOS** | The red button (hold 2 s; letting go early cancels; TalkBack users get a custom action). Then: SOS sent → help arranged → drone on the way (ETA) → delivered, and whether the location is shared | `POST /sos`, `GET /sos/{id}` every 10 s, `POST /sos/{id}/location` |
+| **People** | How many people, and how many are children, elderly, disabled or pregnant. Optional phone | `PUT /sos/{id}/report` |
+| **Needs** | Water, food, medicine, baby supplies, shelter, rescue, other; which medicines; anything else (any language) | `PUT /sos/{id}/report` |
+| **Supplies** | The kit mission-planner (Bedrock) packed for this SOS, and its weight against the 2 kg cap | `GET /sos/{id}` (`delivery.payload`) |
 
 - **The details are optional.** Filled in before the button, they go with the SOS. Filled in after, **Send details**
   updates the SOS and the backend triages and plans the kit again. An invalid phone number never blocks the SOS; it is
   left out.
-- **Languages:** English, Bahasa Melayu, 中文, தமிழ். The phone's language is used if supported, and the 🌐 menu
-  switches it. The chosen language goes into the SOS so triage knows what the sender reads. Strings are in
-  `lib/l10n/app_<lang>.arb`.
-- **Background location:** a foreground service with an ongoing notification (geolocator), so the app does not need
-  `ACCESS_BACKGROUND_LOCATION`. Updates every 30 s or 20 m; stops on delivered, closed or a 409.
-- **Reopening the app** returns to the SOS in progress.
-- **Types** come from the `ark_contracts` path package (`shared/generated/dart`). Request bodies drop `null` fields,
-  because the generated `toJson` writes them and the API rejects them.
+- **No location, no SOS.** The schema requires a location, so if permission is refused or there is no fix, the app says
+  why and sends nothing.
+- **Reopening the app** returns to the SOS in progress (its id is kept in `SharedPreferences` `ark_sos`).
+
+## Languages
+English, Bahasa Melayu, 中文, தமிழ். The phone's language is used if supported, and the 🌐 menu switches it without a
+restart. The chosen language goes into the SOS so triage knows what the sender reads. Strings are in
+`app/src/main/res/values{,-ms,-zh,-ta}/strings.xml`.
+
+## Background location
+After the SOS is sent and location permission is granted, a foreground service (`LocationService`, type `location`)
+shows an ongoing notification and posts a `SosLocationUpdate` every 30 s or 20 m. It stops on delivered, closed or a
+409 from the API. Because it is a foreground service, the app does not need `ACCESS_BACKGROUND_LOCATION`. Locations
+come from the platform `LocationManager` (GPS + network), no Play Services.
+
+## Backend
+`BuildConfig.API_URL` empty (the default) = `FakeSosApi`: the SOS walks new → triaged → assigned (drone, ETA, kit) →
+delivered on a 5 s timer, so every screen can be seen. A URL = `HttpSosApi` against the real API.
 
 ## Run
-From the repo root: `nix develop .#mobile` (Flutter, Android SDK + NDK, JDK 17).
 ```bash
 cd apps/sos-mobile
-flutter run                                     # fake backend: the SOS walks every step on a timer, with a kit
-flutter run --dart-define=API_URL=https://…/v1  # the real API
-flutter build apk --debug
+./gradlew installDebug                                          # fake backend
+./gradlew installDebug -PapiUrl=http://10.0.2.2:8080/v1         # local stack, from the emulator
+./gradlew installDebug -PapiUrl=http://<PC LAN IP>:8080/v1      # local stack, from a phone on the same Wi-Fi
 ```
 
 ## Test
 ```bash
-dart format --set-exit-if-changed . && flutter analyze && flutter test
+./gradlew testDebugUnitTest lintDebug
 ```
-- `app_test.dart`: a short press does not send, a 2 s hold does; the language menu; details go with the SOS; every tab
-  fits 360 x 640 in every language, before and after sending.
-- `sos_controller_test.dart`: what goes into the report, details before and after sending, location sharing stops on
-  delivery, location refused.
-- `sos_api_test.dart`: no nulls sent, `PUT` report, 204 / 409 / errors, the fake backend's timeline.
+JVM unit tests only (no emulator):
+- `HttpSosApiTest`: no null fields sent, 404 / 500 throw `ApiException`, location 204 → stored, 409 → stop, `PUT` report.
+- `SosViewModelTest`: what goes into the report, invalid phone left out, details before vs after sending, polling stops
+  on delivered, no location → nothing sent, resume from the saved id.
+- `FakeSosApiTest`: the timeline reaches delivered with a kit of at most 2 kg.

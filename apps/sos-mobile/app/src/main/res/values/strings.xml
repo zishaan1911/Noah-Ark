@@ -1,0 +1,70 @@
+<resources>
+    <string name="app_name" translatable="false">Ark SOS</string>
+    <string name="language">Language</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_ms" translatable="false">Bahasa Melayu</string>
+    <string name="language_zh" translatable="false">中文</string>
+    <string name="language_ta" translatable="false">தமிழ்</string>
+    <string name="sos_label" translatable="false">SOS</string>
+    <string name="phone_hint" translatable="false">+60123456789</string>
+    <string name="tab_sos">SOS</string>
+    <string name="tab_people">People</string>
+    <string name="tab_needs">Needs</string>
+    <string name="tab_supplies">Supplies</string>
+    <string name="hold_to_send">Hold for 2 seconds to call for help</string>
+    <string name="keep_holding">Keep holding…</string>
+    <string name="sos_hint">Your location goes to the rescue team.</string>
+    <string name="finding_location">Finding your location…</string>
+    <string name="sending">Sending…</string>
+    <string name="send_failed">Could not send. Check your signal and try again.</string>
+    <string name="location_off">Turn on location (GPS).</string>
+    <string name="location_denied">Allow location so the drone can find you.</string>
+    <string name="help_coming">Help is coming</string>
+    <string name="help_arrived">Help has arrived</string>
+    <string name="step_sent">SOS sent</string>
+    <string name="step_sent_detail">We have your request and location.</string>
+    <string name="step_arranged">Help is being arranged</string>
+    <string name="step_arranged_detail">A coordinator is choosing what to send.</string>
+    <string name="step_drone">Drone on the way</string>
+    <string name="step_drone_named">Drone %1$s on the way</string>
+    <string name="step_drone_eta">About %1$d min. Stay where you are if it is safe.</string>
+    <string name="step_drone_wait">Stay where you are if it is safe.</string>
+    <string name="step_delivered">Delivered</string>
+    <string name="step_delivered_detail">Take the supplies from the drone.</string>
+    <string name="sharing_on">Sharing your location</string>
+    <string name="sharing_off">Location not shared</string>
+    <string name="done">Done</string>
+    <string name="reference">Reference: %1$s</string>
+    <string name="people_title">Who is with you?</string>
+    <string name="people_total">People (including you)</string>
+    <string name="children">Children</string>
+    <string name="elderly">Elderly</string>
+    <string name="disabled">Disabled</string>
+    <string name="pregnant">Pregnant women</string>
+    <string name="phone_label">Phone (optional)</string>
+    <string name="phone_invalid">Use the international format, e.g. +60123456789</string>
+    <string name="needs_title">What do you need?</string>
+    <string name="need_water">Water</string>
+    <string name="need_food">Food</string>
+    <string name="need_medicine">Medicine</string>
+    <string name="need_baby_supplies">Baby supplies</string>
+    <string name="need_shelter">Shelter</string>
+    <string name="need_rescue">Rescue</string>
+    <string name="need_other">Other</string>
+    <string name="medicines_label">Medicines needed</string>
+    <string name="medicines_hint">e.g. insulin, paracetamol</string>
+    <string name="notes_label">Anything else?</string>
+    <string name="notes_hint">Any language</string>
+    <string name="send_details">Send details</string>
+    <string name="details_sent">Details sent</string>
+    <string name="details_with_sos">Sent with your SOS</string>
+    <string name="supplies_title">What the drone brings</string>
+    <string name="supplies_empty">The rescue team plans what to send once your SOS arrives.</string>
+    <string name="supplies_pending">Planned. Waiting for a coordinator to approve.</string>
+    <string name="supplies_total">%1$s of %2$s kg</string>
+    <string name="fewer">Fewer</string>
+    <string name="more">More</string>
+    <string name="sharing_channel">Location sharing</string>
+    <string name="sharing_notification_title">Sharing your location with Noah\'s Ark</string>
+    <string name="sharing_notification_text">So the drone can find you. It stops when help arrives.</string>
+</resources>
