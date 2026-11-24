@@ -12,12 +12,13 @@ import { useDrone } from '../hooks/useDrone';
 import { useGroundElevation } from '../hooks/useGroundElevation';
 import { useInterpolatedPose } from '../hooks/useInterpolatedPose';
 import { useManualControl } from '../hooks/useManualControl';
-import { usePartyRockMission } from '../hooks/usePartyRockMission';
+import { usePartyRock } from '../hooks/usePartyRock';
 import { useTheme } from '../hooks/useTheme';
 import { buildCommand } from '../lib/commands';
 import { DRONE_ID, MQTT_URL } from '../lib/config';
 import { sendCommand } from '../lib/flightOps';
 import { haversineKm } from '../lib/geo';
+import { sosToMission } from '../lib/sos';
 import type { MapFocus, PickTarget, Point, View } from '../lib/types';
 
 const OPERATOR = 'Zishaan Ahmed';
@@ -38,7 +39,11 @@ export function GdexOps() {
   const [focus, setFocus] = useState<MapFocus | null>(null);
   const [detent, setDetent] = useState<Detent>('peek');
   const [manualOn, setManualOn] = useState(false);
-  const incoming = usePartyRockMission();
+  const item = usePartyRock();
+  const incoming = useMemo(
+    () => (item?.kind === 'mission' ? item.mission : item ? sosToMission(item.sos, DRONE_ID) : null),
+    [item],
+  );
   // Fly the map to a new PartyRock destination (adjusted during render, not in an effect).
   const [shownId, setShownId] = useState<string | null>(null);
   if (incoming && incoming.id !== shownId) {

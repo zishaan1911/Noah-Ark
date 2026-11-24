@@ -5,7 +5,9 @@ import { FleetList } from '../components/FleetList';
 import { FleetMap } from '../components/FleetMap';
 import { FleetWeather } from '../components/FleetWeather';
 import { Header } from '../components/Header';
+import { SosInbox } from '../components/SosInbox';
 import { useFleet } from '../hooks/useFleet';
+import { usePartyRock } from '../hooks/usePartyRock';
 import { useTheme } from '../hooks/useTheme';
 import { fleetWindText, kpis } from '../lib/fleet';
 
@@ -13,7 +15,10 @@ const EMPTY_AFTER_MS = 5000;
 
 /** Fleet-scale view: every drone on one map, the dispatch queue, and the delivery numbers. */
 export function FleetOps() {
-  const { conn, state, stats, weather } = useFleet();
+  const { conn, state, stats, weather, publish } = useFleet();
+  const item = usePartyRock();
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
+  const sos = item?.kind === 'sos' && item.sos.id !== dismissedId ? item.sos : null;
   const [radar, setRadar] = useState(true);
   const [theme, toggleTheme] = useTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -65,6 +70,15 @@ export function FleetOps() {
               <p role="status" className="m-0 rounded-xl bg-amber-tint p-3 text-sm text-amber-ink">
                 Fleet sim not running. Start it with docker compose up fleet.
               </p>
+            )}
+            {sos && (
+              <SosInbox
+                key={sos.id}
+                sos={sos}
+                connected={conn === 'connected'}
+                onDispatch={(order) => publish('fleet/orders', order, 1)}
+                onDismiss={() => setDismissedId(sos.id)}
+              />
             )}
             <FleetKpis kpis={numbers} stats={stats} />
             <FleetWeather weather={weather} stats={stats} radar={radar} onRadar={setRadar} />

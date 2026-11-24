@@ -42,7 +42,9 @@ interface Props {
 
 /** What an imported mission keeps when the card rebuilds it for the live drone. */
 const fromFields = (m: Mission | null) =>
-  m ? { mode: m.mode, landingType: m.landingType, aiRationale: m.aiRationale } : {};
+  m
+    ? { mode: m.mode, landingType: m.landingType, aiRationale: m.aiRationale, sosRequestIds: m.sosRequestIds }
+    : {};
 
 type StepState = { status: StepStatus; detail?: string };
 type Steps = Record<StepId, StepState>;
@@ -506,7 +508,9 @@ export function DeliveryCard({
               From PartyRock · {from.mode} · {from.landingType} landing
             </span>
             <span className="text-xs text-sub">
-              AI picked {from.droneId}; the live sim flies it as {droneId}.
+              {from.droneId !== droneId
+                ? `AI picked ${from.droneId}; the live sim flies it as ${droneId}.`
+                : ''}
               {from.aiRationale ? ` ${from.aiRationale}` : ''}
             </span>
           </div>

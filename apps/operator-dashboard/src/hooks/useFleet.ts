@@ -12,7 +12,7 @@ import {
   type FleetStats,
 } from '../lib/fleet';
 import { validateMission, validateTelemetry, validateWeather } from '../lib/validate';
-import { useMqtt, type MqttState } from './useMqtt';
+import { useMqtt, type MqttApi, type MqttState } from './useMqtt';
 
 const TOPICS = ['ark/+/telemetry', 'fleet/live', 'fleet/stats', 'fleet/weather'] as const;
 const FLUSH_MS = 500;
@@ -23,6 +23,7 @@ export interface FleetApi {
   state: FleetState;
   stats: FleetStats | null;
   weather: Weather | null;
+  publish: MqttApi['publish'];
 }
 
 /** The whole fleet over MQTT. Messages pile up in a ref and reach React at most every 500 ms. */
@@ -74,7 +75,7 @@ export function useFleet(): FleetApi {
     cur.dirty = true;
   }, []);
 
-  const { state: conn } = useMqtt(MQTT_URL, TOPICS, onMessage);
+  const { state: conn, publish } = useMqtt(MQTT_URL, TOPICS, onMessage);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -88,5 +89,5 @@ export function useFleet(): FleetApi {
     return () => clearInterval(id);
   }, []);
 
-  return { conn, state, stats, weather };
+  return { conn, state, stats, weather, publish };
 }

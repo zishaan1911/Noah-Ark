@@ -35,6 +35,14 @@ export const validateTelemetry = validator('telemetry.schema.json');
 export const validateEvent = validator('drone-event.schema.json');
 export const validateManual = validator('manual-control.schema.json');
 export const validateWeather = validator('weather.schema.json');
+export const validateSosRequest = validator('sos-request.schema.json');
+// A fragment ref compiles on first use; ajv.getSchema does not resolve `#/$defs/...` ids.
+const requestFn = ajv.compile({ $ref: 'mission.schema.json#/$defs/request' });
+export const validateMissionRequest = (value: unknown): ValidationResult => {
+  if (requestFn(value)) return { ok: true, errors: [] };
+  const errors = (requestFn.errors ?? []).map((e) => `${e.instancePath || '/'} ${e.message ?? 'is invalid'}`);
+  return { ok: false, errors };
+};
 const validateMissionSchema = validator('mission.schema.json');
 
 /** Schema check plus the rule the schema cannot state: payloadKg equals the sum of the payload lines. */

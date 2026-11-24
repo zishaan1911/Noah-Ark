@@ -23,6 +23,8 @@ export interface MissionInput {
   /** Default ground; a PartyRock mission may ask for water. */
   landingType?: Mission['landingType'];
   aiRationale?: string;
+  /** The SOS requests this mission answers (from a PartyRock SOS). */
+  sosRequestIds?: string[];
 }
 
 /** An approved mission: the operator pressing Send (or Authorise) is the approval. */
@@ -35,6 +37,7 @@ export function buildMission({
   mode = 'gdex',
   landingType = 'ground',
   aiRationale,
+  sosRequestIds,
 }: MissionInput): Mission {
   const now = new Date().toISOString();
   const items = toPayloadItems(payload);
@@ -44,6 +47,7 @@ export function buildMission({
     droneId,
     createdAt: now,
     status: 'approved',
+    ...(sosRequestIds?.length ? { sosRequestIds } : {}),
     origin: { lat: start.lat, lon: start.lon },
     destination: { lat: dest.lat, lon: dest.lon },
     waypoints: plan.waypoints,
