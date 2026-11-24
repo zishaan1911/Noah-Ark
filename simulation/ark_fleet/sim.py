@@ -57,6 +57,8 @@ class _Queued:
     order: Order
     drop: DropPoint
     item: str
+    payload: list[dict[str, Any]] | None = None  # lines {item, qty, weightKg} from an SOS order
+    sos_ids: tuple[str, ...] = ()
 
 
 @dataclass
@@ -163,6 +165,57 @@ class Fleet:
             self.queue.append(_Queued(order, drop, item))
             new.append(order)
         return new
+
+    def add_request(self, req: dict[str, Any], now_s: float) -> Order | None:
+        """Queue an SOS order from Ark Command (`fleet/orders`); None, with nothing queued, if it is invalid."""
+        try:
+            lat, lon = req["destination"]["lat"], req["destination"]["lon"]
+            lines = req["payload"]
+            mode = req.get("mode", "relief")
+            urgency = req.get("urgency", 3)
+            ids = req.get("sosRequestIds") or []
+            nums = (lat, lon)
+            if any(isinstance(n, bool) or not isinstance(n, int | float) for n in nums):
+                return None
+            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                return None
+            if not isinstance(lines, list) or not lines:
+                return None
+            clean: list[dict[str, Any]] = []
+            for ln in lines:
+                item, qty, kg = ln["item"], ln["qty"], ln["weightKg"]
+                if not isinstance(item, str) or not item:
+                    return None
+                if isinstance(qty, bool) or not isinstance(qty, int) or qty < 1:
+                    return None
+                if isinstance(kg, bool) or not isinstance(kg, int | float) or not kg > 0:
+                    return None
+                clean.append({"item": item, "qty": qty, "weightKg": round(float(kg), 3)})
+            total = sum(ln["weightKg"] for ln in clean)
+            if not 0 < total <= MAX_PAYLOAD_KG:
+                return None
+            if mode not in ("gdex", "relief", "military"):
+                return None
+            if isinstance(urgency, bool) or not isinstance(urgency, int) or not 1 <= urgency <= 5:
+                return None
+            if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
+                return None
+            water = req.get("landingType") == "water"
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return None
+        hub = min(HUBS, key=lambda h: haversine_km(h.lat, h.lon, lat, lon))
+        drop = DropPoint(name="SOS", lat=lat, lon=lon, hub=hub.name, water=water)
+        order = Order(
+            id=f"ord_{self._ulid(now_s)}",
+            mode=mode,
+            dest_lat=lat,
+            dest_lon=lon,
+            payload_kg=round(total, 2),
+            urgency=urgency,
+            created_s=now_s,
+        )
+        self.queue.append(_Queued(order, drop, clean[0]["item"], payload=clean, sos_ids=tuple(ids)))
+        return order
 
     # --- records -------------------------------------------------------------------------------------------------
 
@@ -299,8 +352,15 @@ class Fleet:
         extra: dict[str, Any] = (
             {"waypoints": [{"lat": lat, "lon": lon} for lat, lon in c.route[:50]]} if c.route else {}
         )
+        lines = (
+            [{"item": ln["item"], "qty": ln["qty"], "weightKg": round(ln["weightKg"], 3)} for ln in q.payload]
+            if q.payload
+            else [{"item": q.item, "qty": 1, "weightKg": weight}]
+        )
+        sos: dict[str, Any] = {"sosRequestIds": list(q.sos_ids)} if q.sos_ids else {}
         return {
             **extra,
+            **sos,
             "id": f"msn_{self._ulid(now_s)}",
             "mode": q.order.mode,
             "droneId": d.id,
@@ -309,7 +369,7 @@ class Fleet:
             "origin": {"lat": d.home_lat, "lon": d.home_lon},
             "destination": {"lat": q.drop.lat, "lon": q.drop.lon},
             "landingType": "water" if q.drop.water else "ground",
-            "payload": [{"item": q.item, "qty": 1, "weightKg": weight}],
+            "payload": lines,
             "payloadKg": weight,
             "distanceKm": round(c.trip.out_km, 2),
             "etaMinutes": round(c.eta_min, 1),

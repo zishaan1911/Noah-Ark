@@ -3,7 +3,8 @@
     python -m ark_fleet --broker broker:1883 [--drones-per-hub 4] [--speedup 4] [--seed 7] [--no-storm] [--wear-warp 100]
 
 Publishes telemetry (with health sensors) to `ark/<droneId>/telemetry`, changes to `fleet/live`, and the retained
-`fleet/stats` and `fleet/weather`. Listens on `ark/+/events` for health-monitor `fault` verdicts and grounds drones.
+`fleet/stats` and `fleet/weather`. Listens on `ark/+/events` for health-monitor `fault` verdicts and grounds drones, and on `fleet/orders` for SOS orders
+from Ark Command, which it queues for dispatch.
 """
 
 from __future__ import annotations
@@ -73,13 +74,20 @@ def main() -> None:
     health = HealthLayer(fleet.drones, 30, random.Random(a.seed + 1), warp=a.wear_warp, healthy_days=20.0)
     verdicts: queue.SimpleQueue[tuple[str, dict]] = queue.SimpleQueue()  # MQTT thread -> sim loop
 
+    requests: queue.SimpleQueue[dict] = queue.SimpleQueue()  # SOS orders, MQTT thread -> sim loop
+
     def on_connect(c, _userdata, _flags, _reason, _props) -> None:
         c.subscribe("ark/+/events", qos=1)
+        c.subscribe("fleet/orders", qos=1)
 
     def on_message(_c, _userdata, msg) -> None:
         try:
             ev = json.loads(msg.payload)
         except ValueError:
+            return
+        if msg.topic == "fleet/orders":
+            if isinstance(ev, dict):
+                requests.put(ev)
             return
         h = ev.get("health") if isinstance(ev, dict) and ev.get("type") == "fault" else None
         if isinstance(h, dict) and h.get("state") in ("ok", "watch", "ground") and isinstance(ev.get("droneId"), str):
@@ -122,6 +130,15 @@ def main() -> None:
                 drone_id, h = verdicts.get()
                 if (rec := fleet.apply_health(drone_id, h)) is not None:
                     live("drone", rec)
+            while not requests.empty():
+                order = fleet.add_request(requests.get(), sim_s)
+                if order is None:
+                    print("fleet sim: rejected an invalid order", flush=True)
+                else:
+                    print(
+                        f"fleet sim: SOS order {order.id} queued (urgency {order.urgency}, {order.payload_kg:g} kg)",
+                        flush=True,
+                    )
             for ev in fleet.tick(dt, sim_s):
                 live(ev["kind"], ev["data"])
             for drone_id in fleet.repaired:
