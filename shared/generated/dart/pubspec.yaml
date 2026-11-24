@@ -1,5 +1,0 @@
-# Path package for the Dart types written by shared/scripts/codegen.py (lib/ is generated, never edit it).
-name: ark_contracts
-publish_to: none
-environment:
-  sdk: ^3.0.0
