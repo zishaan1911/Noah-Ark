@@ -155,6 +155,10 @@ class SosTriage(BaseModel):
     language: str | None = Field(
         None, description="Detected language of rawMessage, BCP 47."
     )
+    waterLanding: bool | None = Field(
+        None,
+        description="The sender is surrounded by flood water: the drone lands on the water (pontoons).",
+    )
 
 
 class MissionStatus(Enum):
@@ -195,6 +199,10 @@ class MissionRequest(BaseModel):
     destination: Geo | None = None
     payload: list[PayloadItem] | None = None
     landingType: LandingType | None = None
+    urgency: conint(ge=1, le=5) | None = Field(
+        None,
+        description="From the SOS triage; 5 = life-threatening. Dispatch serves higher urgency first.",
+    )
     notes: constr(max_length=2000) | None = None
 
 

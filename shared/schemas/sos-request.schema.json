@@ -44,7 +44,8 @@
         "peopleCount": { "type": "integer", "minimum": 1 },
         "medicalConditions": { "type": "array", "items": { "type": "string" } },
         "summary": { "type": "string", "maxLength": 1000, "description": "One or two sentences in English for the operator." },
-        "language": { "type": "string", "description": "Detected language of rawMessage, BCP 47." }
+        "language": { "type": "string", "description": "Detected language of rawMessage, BCP 47." },
+        "waterLanding": { "type": "boolean", "description": "The sender is surrounded by flood water: the drone lands on the water (pontoons)." }
       }
     }
   }

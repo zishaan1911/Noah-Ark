@@ -16,6 +16,7 @@ Simulation only (never on a real drone):
 |---|---|---|---|---|---|
 | `sim/<droneId>/spawn` | app → sim | 1 | `{"lat": n, "lon": n}` | Ark Command (sim mode) | `simulation/ark_sim/live.py`: reboots SITL there on real terrain and current wind |
 | `fleet/live` | fleet sim → app | 1 | `live-update` (`kind` `drone` or `mission` only) | `simulation/ark_fleet` | Ark Command Fleet page. Stands in for the WebSocket feed |
+| `fleet/orders` | app → fleet sim | 1 | `mission#/$defs/request` (`sosRequestIds`, `destination`, `payload`, `landingType`, `urgency`) | Ark Command (an operator dispatches a PartyRock SOS) | `simulation/ark_fleet`: queued for the dispatch optimiser like any order |
 | `fleet/stats` | fleet sim → app | 1, retained | `{"flying", "queued", "deliveredTotal", "avgDeliveryMin", "onTimePct", "promiseMin", "windMs", "windFromDeg", "speedup"}` | `simulation/ark_fleet` | Ark Command Fleet page |
 | `fleet/weather` | fleet sim → app | 1, retained | `weather` | `simulation/ark_fleet` (Open-Meteo per hub + a demo storm cell) | Ark Command Fleet page, dispatch (in-process) |
 | `sim/<droneId>/status` | sim → app | 1, retained | `{"state": "booting" \| "ready" \| "error", "lat", "lon", "groundAmslM", "windMs", "windFromDeg", "detail"?}` | `live.py` | Ark Command |

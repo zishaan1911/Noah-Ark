@@ -121,6 +121,10 @@ export interface SosTriage {
    * Detected language of rawMessage, BCP 47.
    */
   language?: string;
+  /**
+   * The sender is surrounded by flood water: the drone lands on the water (pontoons).
+   */
+  waterLanding?: boolean;
 }
 /**
  * A planned flight. mission-planner (Bedrock) writes it as pending_approval; an operator approves it in Ark Command before dispatch.
@@ -179,6 +183,10 @@ export interface MissionRequest {
   destination?: Geo;
   payload?: PayloadItem[];
   landingType?: "ground" | "water" | "winch" | "drop";
+  /**
+   * From the SOS triage; 5 = life-threatening. Dispatch serves higher urgency first.
+   */
+  urgency?: number;
   notes?: string;
 }
 /**

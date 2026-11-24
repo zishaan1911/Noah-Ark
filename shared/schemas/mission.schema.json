@@ -56,6 +56,7 @@
         "destination": { "$ref": "common.schema.json#/$defs/geo" },
         "payload": { "type": "array", "items": { "$ref": "#/$defs/payloadItem" } },
         "landingType": { "enum": ["ground", "water", "winch", "drop"] },
+        "urgency": { "type": "integer", "minimum": 1, "maximum": 5, "description": "From the SOS triage; 5 = life-threatening. Dispatch serves higher urgency first." },
         "notes": { "type": "string", "maxLength": 2000 }
       },
       "anyOf": [{ "required": ["sosRequestIds"] }, { "required": ["destination"] }]

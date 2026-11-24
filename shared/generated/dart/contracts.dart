@@ -217,6 +217,9 @@ class SosTriage {
     
     ///5 = life-threatening.
     int urgency;
+    
+    ///The sender is surrounded by flood water: the drone lands on the water (pontoons).
+    bool waterLanding;
 
     SosTriage({
         required this.language,
@@ -225,6 +228,7 @@ class SosTriage {
         required this.peopleCount,
         required this.summary,
         required this.urgency,
+        required this.waterLanding,
     });
 
     factory SosTriage.fromJson(Map<String, dynamic> json) => SosTriage(
@@ -234,6 +238,7 @@ class SosTriage {
         peopleCount: json["peopleCount"],
         summary: json["summary"],
         urgency: json["urgency"],
+        waterLanding: json["waterLanding"],
     );
 
     Map<String, dynamic> toJson() => {
@@ -243,6 +248,7 @@ class SosTriage {
         "peopleCount": peopleCount,
         "summary": summary,
         "urgency": urgency,
+        "waterLanding": waterLanding,
     };
 }
 
