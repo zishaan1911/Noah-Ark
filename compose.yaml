@@ -5,7 +5,7 @@
 services:
   broker:
     # shortcut: Mosquitto stands in for AWS IoT Core (same topics and payloads), swap for the CDK iot stack + Cognito WebSocket auth.
-    image: eclipse-mosquitto:2.0.22
+    image: docker.io/library/eclipse-mosquitto:2.0.22
     ports: ["1883:1883", "9101:9001"]  # 9101 on the host: 9001 is often taken (MinIO)
     volumes: ["./infra/local/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro"]
 
