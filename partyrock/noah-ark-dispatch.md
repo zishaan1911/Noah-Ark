@@ -2,8 +2,6 @@
 
 **PartyRock app (Ark SOS, built 2026-11-24):** "Noah's Ark: Rescue & Delivery Drone Fleet" on iamzishaan's PartyRock.
 **Share link:** <https://partyrock.aws/u/iamzishaan/hJn7bk5DlUb9/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet>
-**Original all-in-one app:** <https://partyrock.aws/u/khoryz666/Iw39DDeYhCPz/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet>
-(khoryz666; the version described under History).
 
 **Problem:** people die in floods, and parcels are hard to deliver through dense forest.
 **Solution:** an SOS app that calls a purpose-built amphibious drone. While no one needs help, the same drone
