@@ -5,7 +5,8 @@
 
 ## Run the demo (one command)
 ```bash
-./demo.sh
+./demo.sh                                                # Linux, macOS
+powershell -ExecutionPolicy Bypass -File .\demo.ps1      # Windows
 ```
 It builds the simulator image and trains the predictive-maintenance model on the first run (about 10 minutes, once),
 starts the local stack, then opens Ark Command at <http://localhost:5173> and the
