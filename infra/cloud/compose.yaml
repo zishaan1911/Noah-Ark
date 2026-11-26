@@ -1,0 +1,28 @@
+# Cloud overrides for the root compose.yaml: run from the repo root with
+#   docker compose -f compose.yaml -f infra/cloud/compose.yaml up -d --build
+# Paths below are relative to the repo root (the first file's folder).
+services:
+  broker:
+    ports: !reset []  # reachable only through Caddy
+    volumes:
+      - ./infra/cloud/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./infra/cloud/acl:/mosquitto/config/acl:ro
+      - ./infra/cloud/passwd:/mosquitto/config/passwd:ro
+    restart: unless-stopped
+
+  sos-api:
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.10.2
+    ports: ["80:80", "443:443"]
+    environment:
+      ARK_DOMAIN: ${ARK_DOMAIN:?set ARK_DOMAIN in .env}
+    volumes:
+      - ./infra/cloud/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on: [broker, sos-api]
+    restart: unless-stopped
+
+volumes:
+  caddy-data:

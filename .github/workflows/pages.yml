@@ -1,0 +1,46 @@
+# Publishes the landing page at / and Ark Command at /command/ on GitHub Pages.
+# Once: Settings -> Pages -> Source: GitHub Actions; Settings -> Secrets and variables -> Actions -> Variables:
+#   MQTT_URL = wss://<your-domain>/mqtt   (see infra/cloud/README.md)
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/operator-dashboard/package-lock.json
+      - name: Build Ark Command
+        working-directory: apps/operator-dashboard
+        env:
+          VITE_MQTT_URL: ${{ vars.MQTT_URL }}
+        run: npm ci && npm run build -- --base ./
+      - name: Assemble site
+        run: |
+          mkdir site
+          cp -r apps/landing/index.html apps/landing/assets site/
+          cp -r apps/operator-dashboard/dist site/command
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

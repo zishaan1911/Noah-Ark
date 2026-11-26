@@ -1,0 +1,12 @@
+# HTTPS front door. Caddy gets the Let's Encrypt certificate for ARK_DOMAIN by itself.
+{$ARK_DOMAIN} {
+	# Ark Command (browser MQTT over WebSocket)
+	handle /mqtt* {
+		reverse_proxy broker:9001
+	}
+	# Ark SOS (Android app): build it with -PapiUrl=https://<domain>/v1
+	handle /v1/* {
+		reverse_proxy sos-api:8080
+	}
+	respond 404
+}

@@ -32,3 +32,6 @@ simulation/.cache/
 result
 result-*
 ml/*/out/
+
+# Mosquitto operator password for the cloud demo (infra/cloud/README.md)
+infra/cloud/passwd

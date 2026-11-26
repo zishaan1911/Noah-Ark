@@ -1,0 +1,6 @@
+# Anonymous visitors (no login): watch only.
+topic read #
+
+# The operator (password in infra/cloud/passwd, never committed): full control.
+user operator
+topic readwrite #
