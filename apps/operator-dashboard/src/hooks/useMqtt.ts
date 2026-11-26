@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import mqtt, { type MqttClient } from 'mqtt'; // the browser ESM bundle has only a default export
+import { MQTT_KEY } from '../lib/config';
 
 export type MqttState = 'connecting' | 'connected' | 'reconnecting';
 
@@ -32,6 +33,7 @@ export function useMqtt(
       reconnectPeriod: 2000,
       connectTimeout: 10_000,
       clean: true,
+      ...(MQTT_KEY && { username: 'operator', password: MQTT_KEY }),
     });
     clientRef.current = client;
     client.on('connect', () => {

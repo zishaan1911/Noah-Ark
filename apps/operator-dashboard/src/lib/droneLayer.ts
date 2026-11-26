@@ -19,7 +19,7 @@ export interface DroneLayer extends CustomLayerInterface {
   setTheme(theme: Theme): void;
 }
 
-const MODEL_URL = '/models/ark1.glb';
+const MODEL_URL = `${import.meta.env.BASE_URL}models/ark1.glb`; // BASE_URL: the app may be served from a subpath (GitHub Pages)
 const PROP_RAD_PER_S = 70;
 const rad = (d: number) => (d * Math.PI) / 180;
 
