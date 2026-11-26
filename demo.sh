@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 PARTYROCK_URL="https://partyrock.aws/u/iamzishaan/hJn7bk5DlUb9/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet"
 DASHBOARD_URL="http://localhost:5173"
 
-if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then
+if command -v docker >/dev/null && docker info >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then  # docker info: the daemon is reachable, not just installed
   ENGINE=docker COMPOSE="docker compose"
 elif command -v podman >/dev/null && command -v podman-compose >/dev/null; then
   ENGINE=podman COMPOSE=podman-compose
