@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noah's Ark · The amphibious delivery drone with an AI brain on AWS</title>
+<meta name="description" content="Noah's Ark is an amphibious, all-weather delivery drone with an AI brain on AWS. It flies in rain, lands on water and reaches the places roads don't.">
+<meta name="theme-color" content="#0a0c0f">
+<link rel="preload" href="assets/fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: Anton; src: url(assets/fonts/anton.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Archivo; src: url(assets/fonts/archivo.woff2) format('woff2'); font-weight: 400 600; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(assets/fonts/jetbrains-mono.woff2) format('woff2'); font-display: swap; }
+
+:root {
+  --night: #0a0c0f; --ink: #fff; --water: #0f3a3f; --orange: #ff6a1a; --yellow: #f5c84b; --giant: #1a1f25;
+  --muted: rgba(255, 255, 255, .62); --line: rgba(255, 255, 255, .12);
+  --u: min(100vw / 1440, 100vh / 960);
+  --edge-px: 62vh; --ph: 0;
+  --display: Anton, Impact, sans-serif; --body: Archivo, system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (max-width: 767px), (orientation: portrait) { :root { --u: min(100vw / 430, 1.4px); } }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--night); color: var(--ink); font-family: var(--body); -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+html, body { overflow-x: clip; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------- hero ---------- */
+.track { position: relative; background: var(--night); height: 500vh; }
+.nav {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(34 * var(--u)) calc(52 * var(--u));
+}
+.wordmark { font-weight: 600; font-size: calc(26 * var(--u)); letter-spacing: -.04em; }
+.nav ul { display: flex; align-items: center; gap: calc(34 * var(--u)); list-style: none; }
+.nav li a, .pill {
+  font-weight: 500; font-size: max(calc(10 * var(--u)), 10px); text-transform: uppercase; letter-spacing: .1em;
+}
+.nav li a:not(.pill) { opacity: .8; transition: opacity .15s; }
+.nav li a:not(.pill):hover { opacity: 1; }
+.pill {
+  display: inline-flex; align-items: center; gap: .6em; white-space: nowrap;
+  border: 1px solid currentColor; border-radius: 999px; padding: 1.05em 1.8em;
+  transition: background-color .15s, color .15s, transform .1s;
+}
+.pill.hot { color: var(--orange); }
+.pill.hot:hover { background: var(--orange); color: var(--night); }
+.pill:active { transform: scale(.97); }
+
+.scene { position: sticky; top: 0; height: 100vh; height: 100lvh; overflow: hidden; }
+.sky { position: absolute; inset: 0; background: radial-gradient(120% 85% at 50% 0%, #1a2129 0%, #0d1014 55%, var(--night) 100%); }
+.sky::after {
+  content: ''; position: absolute; inset: -40px 0 0;
+  background: repeating-linear-gradient(104deg, transparent 0 26px, rgba(255, 255, 255, .028) 26px 27px);
+  background-size: 100% 120px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sky::after { animation: rain .9s linear infinite; }
+  @keyframes rain { to { transform: translateY(40px); } }
+}
+.band {
+  position: absolute; left: 0; right: 0; top: var(--edge-px); bottom: 0;
+  background: linear-gradient(#134349, var(--water) 30%, #082023);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .14);
+}
+.band::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 1px; height: calc(30 * var(--u));
+  background: linear-gradient(rgba(255, 255, 255, .06), transparent);
+}
+.giant {
+  position: absolute; left: 0; bottom: calc(100% - var(--edge-px)); margin-bottom: calc(-6 * var(--u));
+  font: calc(330 * var(--u)) / .8 var(--display); color: var(--giant); white-space: nowrap; will-change: transform;
+  transform: translate3d(100vw, 0, 0);
+}
+#ark { position: absolute; left: 0; top: 0; }
+.readout {
+  position: absolute; left: calc(52 * var(--u)); top: calc(26 * var(--u)); z-index: 3;
+  font: max(calc(10.5 * var(--u)), 10px) var(--mono); letter-spacing: .04em; color: rgba(255, 255, 255, .7);
+  font-variant-numeric: tabular-nums; white-space: pre; opacity: 0; transition: opacity .4s;
+}
+.readout.on { opacity: 1; }
+.readout b { color: var(--orange); font-weight: 400; }
+
+.lane { position: absolute; left: 0; right: 0; top: var(--edge-px); bottom: 0; z-index: 2; }
+.strip {
+  position: absolute; top: calc(76 * var(--u)); left: 0;
+  display: flex; align-items: flex-start; gap: calc(120 * var(--u)); will-change: transform;
+  transform: translate3d(100vw, 0, 0);
+}
+.lead { display: flex; gap: calc(64 * var(--u)); align-items: flex-start; }
+.lead h2 { font: calc(64 * var(--u)) / .98 var(--display); white-space: nowrap; font-weight: 400; }
+.lead h2 span { color: var(--orange); }
+.lead div { width: calc(250 * var(--u)); display: grid; gap: 1em; font-size: calc(12 * var(--u)); line-height: 1.55; color: var(--muted); }
+.cards { display: flex; }
+.card { width: calc(270 * var(--u)); padding: 0 calc(30 * var(--u)); border-left: 1px solid var(--line); --s: -40%; }
+.card:first-child { border-left: 0; }
+.card svg { width: calc(38 * var(--u)); height: calc(38 * var(--u)); margin-bottom: calc(18 * var(--u)); }
+.card h3, .card p {
+  background: linear-gradient(90deg, #fff calc(var(--s) - 34%), var(--orange) calc(var(--s) - 6%), transparent calc(var(--s) + 26%));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.card h3 { font: calc(26 * var(--u)) / 1 var(--display); font-weight: 400; margin-bottom: calc(12 * var(--u)); }
+.card p { font-size: calc(12.4 * var(--u)); line-height: 1.55; }
+.lane .pill {
+  position: absolute; left: 50%; bottom: calc(36 * var(--u)); color: rgba(255, 255, 255, .85);
+  opacity: var(--ph); transform: translate(-50%, calc((1 - var(--ph)) * 24px));
+  transition: opacity .5s, transform .5s cubic-bezier(.2, .8, .2, 1);
+}
+
+@media (max-width: 767px), (orientation: portrait) {
+  .nav li:not(:last-child) { display: none; }
+  .wordmark { font-size: 20px; }
+  .readout { font-size: 11px; left: 20px; top: 22px; }
+  .giant { font-size: calc(180 * var(--u)); }
+  .strip { top: calc(44 * var(--u)); gap: calc(56 * var(--u)); padding-left: 22px; }
+  .lead { flex-direction: column; gap: calc(20 * var(--u)); }
+  .lead h2 { font-size: calc(46 * var(--u)); }
+  .lead div { width: calc(300 * var(--u)); font-size: calc(13 * var(--u)); }
+  .card { width: calc(250 * var(--u)); }
+  .card p { font-size: calc(13 * var(--u)); }
+}
+
+/* ---------- sections ---------- */
+.section { position: relative; padding: clamp(80px, 11vw, 160px) clamp(22px, 5vw, 72px); max-width: 1440px; margin: 0 auto; }
+.eyebrow { font: 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--orange); margin-bottom: 20px; }
+.section h2 { font: clamp(40px, 5.4vw, 76px) / .98 var(--display); font-weight: 400; max-width: 16ch; }
+.section h2 span { color: var(--orange); }
+.lede { margin-top: 24px; max-width: 56ch; font-size: clamp(15px, 1.2vw, 17px); line-height: 1.6; color: var(--muted); }
+hr.rule { border: 0; border-top: 1px solid var(--line); max-width: 1296px; margin: 0 auto; }
+
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s, transform .6s cubic-bezier(.2, .8, .2, 1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { transform: none; transition: opacity .3s; } }
+
+.flow { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 64px; counter-reset: step; }
+.flow li { position: relative; padding: 28px 24px 0 0; border-top: 1px solid var(--line); }
+.flow li::before {
+  counter-increment: step; content: '0' counter(step);
+  position: absolute; top: -7px; left: 0; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--night); box-shadow: inset 0 0 0 2px var(--orange); font-size: 0;
+}
+.flow li::after { content: ''; position: absolute; top: -1px; left: 0; height: 1px; width: 100%; background: var(--orange); transform-origin: left; transform: scaleX(0); transition: transform .9s cubic-bezier(.2, .8, .2, 1) .2s; }
+.flow li.in::after { transform: scaleX(1); }
+.flow .num { font: 11px var(--mono); letter-spacing: .12em; color: var(--muted); }
+.flow h3 { font: 30px / 1 var(--display); font-weight: 400; margin: 10px 0 12px; }
+.flow p { font-size: 14px; line-height: 1.55; color: var(--muted); }
+.flow p b { color: #fff; font-weight: 500; }
+.callout {
+  margin-top: 56px; padding: 20px 24px; border: 1px solid var(--line); border-left: 2px solid var(--orange); border-radius: 4px;
+  font: 13px / 1.7 var(--mono); color: rgba(255, 255, 255, .8); max-width: 900px;
+}
+@media (max-width: 900px) {
+  .flow { grid-template-columns: 1fr; gap: 0; }
+  .flow li { border-top: 0; border-left: 1px solid var(--line); padding: 0 0 36px 28px; }
+  .flow li::before { top: 0; left: -7px; }
+  .flow li::after { display: none; }
+}
+
+.drone { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 80px); margin-top: 64px; align-items: start; }
+.stage { border-radius: 14px; overflow: hidden; background: #0d1013; border: 1px solid var(--line); aspect-ratio: 1654 / 1136; }
+.stage img { width: 100%; height: 100%; object-fit: cover; }
+.thumbs { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 10px; }
+.thumbs button {
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0d1013; cursor: pointer; padding: 0;
+  aspect-ratio: 1654 / 1136; opacity: .55; transition: opacity .15s, border-color .15s, transform .1s;
+}
+.thumbs button:hover { opacity: .85; }
+.thumbs button:active { transform: scale(.96); }
+.thumbs button[aria-pressed='true'] { opacity: 1; border-color: var(--orange); }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.caption { margin-top: 14px; font: 12px var(--mono); color: var(--muted); letter-spacing: .04em; }
+.specs { display: grid; }
+.specs div { display: grid; grid-template-columns: 11em 1fr; gap: 16px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.specs div:first-child { border-top: 1px solid var(--line); }
+.specs dt { font: 11px / 1.9 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.specs dd { font-size: 15px; line-height: 1.5; }
+.specs dd small { display: block; color: var(--muted); font-size: 13px; }
+.foot { margin-top: 20px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.foot b { color: var(--yellow); font-weight: 500; }
+@media (max-width: 900px) {
+  .drone { grid-template-columns: 1fr; }
+  .thumbs { grid-template-columns: repeat(4, 1fr); }
+  .specs div { grid-template-columns: 9em 1fr; }
+}
+
+.apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 64px; }
+.app {
+  display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  background: linear-gradient(180deg, #11151a, #0c0f12);
+}
+.app .art { position: relative; aspect-ratio: 16 / 10; border-bottom: 1px solid var(--line); overflow: hidden; }
+.app .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.app .body { padding: 26px 26px 28px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.app .kind { font: 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.app h3 { font: 34px / 1 var(--display); font-weight: 400; }
+.app h3 span { color: var(--orange); }
+.app p { font-size: 15px; line-height: 1.55; color: var(--muted); flex: 1; }
+.app .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.app .pill { font-size: 11px; padding: .95em 1.5em; }
+.pill[aria-disabled='true'] { opacity: .45; pointer-events: none; }
+.pill[aria-disabled='true']::after { content: '· Coming soon'; }
+@media (max-width: 1000px) { .apps { grid-template-columns: 1fr; max-width: 560px; } }
+
+footer {
+  border-top: 1px solid var(--line); padding: 40px clamp(22px, 5vw, 72px) 56px;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 40px;
+  font-size: 13px; line-height: 1.6; color: var(--muted); max-width: 1440px; margin: 0 auto;
+}
+footer strong { color: #fff; font-weight: 600; }
+footer a { text-decoration: underline; text-underline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<div class="track" id="track">
+  <nav class="nav" aria-label="Main">
+    <a class="wordmark" href="#top" id="top">NOAH'S ARK</a>
+    <ul>
+      <li><a href="#concept">Concept</a></li>
+      <li><a href="#drone">Drone</a></li>
+      <li><a href="#apps">Apps</a></li>
+      <li><a class="pill hot" data-link="ARK_COMMAND_URL" data-fallback="#apps" target="_blank" rel="noopener">Open Ark Command</a></li>
+    </ul>
+  </nav>
+
+  <div class="scene" id="scene">
+    <div class="sky"></div>
+    <div class="band"></div>
+    <div class="giant" id="giant" aria-hidden="true">THE ARK DELIVERS</div>
+    <canvas id="ark" width="1280" height="720" role="img" aria-label="ARK-001 descends through the rain, inflates its two yellow pontoons and lands on floodwater."></canvas>
+    <div class="readout" id="readout" aria-hidden="true">ARK-001 · ALT --.- M · GS 00 KM/H</div>
+
+    <div class="lane">
+      <div class="strip" id="strip">
+        <div class="lead">
+          <h2>ONE DRONE.<br>EVERY MILE.<br><span>ANY WEATHER.</span></h2>
+          <div>
+            <p>Noah's Ark is an amphibious delivery drone with an AI brain on AWS. It flies in rain, lands on water, and finishes or safely aborts a mission with no signal.</p>
+            <p>Built for GDEX's hardest last mile: interior Sabah and Sarawak, flood zones, and the places roads don't reach.</p>
+          </div>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <svg viewBox="0 0 38 38" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M11 9l8-4 8 4v9l-8 4-8-4z"/><path d="M11 9l8 4 8-4M19 13v9"/><path d="M3 33l5-8 4 5 4-7 5 10M21 33l5-7 4 4 5-6"/></svg>
+            <h3>JUNGLE<br>LAST-MILE</h3>
+            <p>GDEX parcels to interior communities in Sabah and Sarawak: 20 km out with 2 kg, drop, 20 km home, 20% in reserve.</p>
+          </article>
+          <article class="card">
+            <svg viewBox="0 0 38 38" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M19 4c4 6 7 9.5 7 13a7 7 0 01-14 0c0-3.5 3-7 7-13z"/><path d="M3 29c3 0 3-2 6-2s3 2 6 2 3-2 6-2 3 2 6 2 3-2 6-2M3 34c3 0 3-2 6-2s3 2 6 2 3-2 6-2 3 2 6 2 3-2 6-2"/></svg>
+            <h3>FLOOD<br>RELIEF</h3>
+            <p>Food and medicine to people cut off by floods. Pontoons inflate in the air, so the Ark lands on water and waits.</p>
+          </article>
+          <article class="card">
+            <svg viewBox="0 0 38 38" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M19 3l13 5v9c0 8-5.5 14-13 18C11.5 31 6 25 6 17V8z"/><path d="M13 15h12v10H13zM13 19h12M19 15v4"/></svg>
+            <h3>DEFENCE<br>RESUPPLY</h3>
+            <p>Ark-1M, an unarmed forward-resupply variant: 4 kg payload, low-signature skin, self-sealing pontoons.</p>
+          </article>
+          <article class="card">
+            <svg viewBox="0 0 38 38" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="10" y="3" width="18" height="32" rx="3.5"/><path d="M16 31h6M12 18h4l2-4 3 8 2-4h3"/></svg>
+            <h3>SOS<br>TRIAGE</h3>
+            <p>People ask for help in Malay, English, Chinese or Tamil. Amazon Bedrock reads the call, scores urgency and builds the kit.</p>
+          </article>
+          <article class="card">
+            <svg viewBox="0 0 38 38" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M11 20a6 6 0 01.8-11.9A8 8 0 0127 9a5.5 5.5 0 01-.5 11z"/><circle cx="8" cy="31" r="2.2"/><circle cx="30" cy="31" r="2.2"/><path d="M10.2 31H16c3 0 3-6 6-6h3M19 20v5" stroke-dasharray="2 2.5"/></svg>
+            <h3>FLEET<br>BRAIN</h3>
+            <p>Bedrock plans routes and dispatches the nearest drone. Flight safety stays on board; the cloud plans, forecasts and learns.</p>
+          </article>
+        </div>
+      </div>
+      <a class="pill" href="#concept">What the Ark does</a>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section class="section" id="concept" aria-labelledby="concept-h">
+    <p class="eyebrow">How it works</p>
+    <h2 id="concept-h">FROM A CALL FOR HELP TO A <span>DROP ON THE DOORSTEP.</span></h2>
+    <p class="lede">The cloud plans, dispatches and forecasts. The drone flies, sees and decides. Each step is an event, so nothing waits on a link that might drop.</p>
+    <ol class="flow">
+      <li class="reveal"><span class="num">01 · SOS</span><h3>ASK</h3><p>A call for help from the <b>Ark SOS</b> app, SMS or WhatsApp, with the caller's location attached.</p></li>
+      <li class="reveal"><span class="num">02 · TRIAGE</span><h3>UNDERSTAND</h3><p><b>Amazon Bedrock</b> reads the message in any of four languages, scores urgency and lists what's needed.</p></li>
+      <li class="reveal"><span class="num">03 · PLAN</span><h3>ROUTE</h3><p><b>Bedrock</b> and <b>Amazon Location Service</b> pick the route, the drone and the payload, around geofences and weather.</p></li>
+      <li class="reveal"><span class="num">04 · DISPATCH</span><h3>SEND</h3><p><b>Step Functions</b> runs the flow and <b>AWS IoT Core</b> sends the mission to the drone over MQTT.</p></li>
+      <li class="reveal"><span class="num">05 · DELIVER</span><h3>FLY</h3><p><b>ARK-001</b> flies it, with edge AI on an NVIDIA Jetson under <b>IoT Greengrass</b>, and lands on land or water.</p></li>
+    </ol>
+    <p class="callout reveal">OFFLOAD MANAGER: each task runs on the drone or in the cloud, chosen by link quality, battery and urgency. Lose the link, and the Ark still finishes or aborts safely.</p>
+  </section>
+
+  <hr class="rule">
+
+  <section class="section" id="drone" aria-labelledby="drone-h">
+    <p class="eyebrow">The drone · Ark-1</p>
+    <h2 id="drone-h">SIZED FROM THE ELECTRONICS. <span>BUILT TO FLOAT.</span></h2>
+    <p class="lede">Every part is a real catalogue part, every wire is in the harness, and every number comes from a script that checks it.</p>
+    <div class="drone">
+      <div class="reveal">
+        <figure>
+          <div class="stage"><img id="stage-img" src="assets/renders/ark1-hero.webp" alt="ARK-001 three-quarter view, white shell with orange livery and the orange float kit on its skids." width="1400" height="961"></div>
+          <figcaption class="caption" id="stage-cap">Hero · white composite shell, float kit packed on the skids</figcaption>
+        </figure>
+        <div class="thumbs" id="thumbs" role="group" aria-label="Choose a view"></div>
+      </div>
+      <div class="reveal">
+        <dl class="specs">
+          <div><dt>All-up mass</dt><dd>16.19 kg</dd></div>
+          <div><dt>Payload</dt><dd>2 kg<small>Ark-1M defence variant: 4 kg</small></dd></div>
+          <div><dt>Mission</dt><dd>20 km out, drop, 20 km back<small>with 20% battery in reserve</small></dd></div>
+          <div><dt>Flight control</dt><dd>Pixhawk 6X, ArduPilot</dd></div>
+          <div><dt>Edge compute</dt><dd>NVIDIA Jetson</dd></div>
+          <div><dt>Water landing</dt><dd>Two inflatable pontoons at 35 kPa<small>flown in ArduCopter 4.7.2 SITL</small></dd></div>
+          <div><dt>Electronics</dt><dd>51 catalogue parts, 75-wire harness<small>SPICE-checked power chain</small></dd></div>
+        </dl>
+        <p class="foot"><b>Designed and simulated</b> to a buildable level of detail. Not yet built.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="section" id="apps" aria-labelledby="apps-h">
+    <p class="eyebrow">Try it</p>
+    <h2 id="apps-h">ONE FLEET. <span>THREE WAYS IN.</span></h2>
+    <p class="lede">Operators run the fleet from Ark Command. People in need reach it from Ark SOS, as a no-code PartyRock prototype or as a native Android app.</p>
+    <div class="apps">
+      <article class="app reveal">
+        <div class="art" aria-hidden="true">
+          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="200" fill="#0f1418"/>
+            <g stroke="#1d2a30" stroke-width="1"><path d="M0 40h320M0 80h320M0 120h320M0 160h320M64 0v200M128 0v200M192 0v200M256 0v200"/></g>
+            <path d="M-10 150c40-20 70 10 110-15s60-60 110-50 80 30 120 10" fill="none" stroke="#134349" stroke-width="18" stroke-linecap="round"/>
+            <path d="M70 140C110 110 150 120 186 82S244 52 262 48" fill="none" stroke="#ff6a1a" stroke-width="1.6" stroke-dasharray="4 4"/>
+            <circle cx="70" cy="140" r="5" fill="#ff6a1a"/><circle cx="262" cy="48" r="9" fill="none" stroke="#f5c84b" stroke-width="1.5"/><circle cx="262" cy="48" r="3" fill="#f5c84b"/>
+            <rect x="14" y="14" width="96" height="40" rx="6" fill="#0a0c0f" stroke="#2a3439"/>
+            <text x="24" y="31" fill="#fff" font-family="JetBrains Mono, monospace" font-size="8">ARK-001 · EN ROUTE</text>
+            <text x="24" y="44" fill="#97a2a6" font-family="JetBrains Mono, monospace" font-size="7">ETA 11 MIN · 78%</text>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="kind">Operator dashboard · Web</span>
+          <h3>ARK <span>COMMAND</span></h3>
+          <p>A live fleet map, the incoming SOS queue and one-click mission dispatch, with every drone's battery, link and ETA.</p>
+          <div class="actions"><a class="pill hot" data-link="ARK_COMMAND_URL" target="_blank" rel="noopener">Open Ark Command</a></div>
+        </div>
+      </article>
+
+      <article class="app reveal">
+        <div class="art" aria-hidden="true">
+          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="200" fill="#0f1418"/>
+            <g font-family="JetBrains Mono, monospace" font-size="8">
+              <rect x="28" y="26" width="180" height="34" rx="8" fill="#151b20" stroke="#2a3439"/>
+              <text x="40" y="47" fill="#c9d2d4">"Banjir, 6 orang di bumbung..."</text>
+              <rect x="112" y="74" width="180" height="46" rx="8" fill="#1d1510" stroke="#ff6a1a"/>
+              <text x="124" y="92" fill="#ff6a1a">URGENCY 5 / 5 · FLOOD</text>
+              <text x="124" y="106" fill="#c9d2d4">Kit: water, ORS, blankets ×6</text>
+              <rect x="28" y="134" width="200" height="40" rx="8" fill="#151b20" stroke="#2a3439"/>
+              <text x="40" y="151" fill="#f5c84b">DISPATCH ARK-003</text>
+              <text x="40" y="164" fill="#97a2a6">2.0 kg · water landing · 9 min</text>
+            </g>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="kind">Prototype · PartyRock on Amazon Bedrock</span>
+          <h3>ARK SOS <span>PARTYROCK</span></h3>
+          <p>The whole flow as a no-code Bedrock app: describe an emergency, get triage, a relief kit and a dispatch plan.</p>
+          <div class="actions"><a class="pill hot" data-link="ARK_SOS_PARTYROCK_URL" target="_blank" rel="noopener">Try on PartyRock</a></div>
+        </div>
+      </article>
+
+      <article class="app reveal">
+        <div class="art" aria-hidden="true">
+          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="200" fill="#0f1418"/>
+            <rect x="118" y="14" width="84" height="172" rx="14" fill="#0a0c0f" stroke="#2a3439" stroke-width="1.5"/>
+            <text x="160" y="44" fill="#fff" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="13">ARK SOS</text>
+            <circle cx="160" cy="100" r="30" fill="#ff6a1a"/><circle cx="160" cy="100" r="38" fill="none" stroke="#ff6a1a" stroke-opacity=".35"/>
+            <text x="160" y="104" fill="#0a0c0f" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="12">HELP</text>
+            <text x="160" y="152" fill="#97a2a6" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="6.5">EN · BM · 中文 · தமிழ்</text>
+            <text x="160" y="166" fill="#f5c84b" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="6.5">● LOCATION SHARED</text>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="kind">Mobile · Android, Kotlin + Jetpack Compose</span>
+          <h3>ARK SOS <span>ANDROID</span></h3>
+          <p>The native app. It sends your location and a call for help in four languages, straight to Ark Command.</p>
+          <div class="actions">
+            <a class="pill hot" data-link="ARK_SOS_APK_URL" target="_blank" rel="noopener">Download APK</a>
+            <a class="pill" href="https://github.com/zishaan1911/Noah-Ark/tree/main/apps/sos-mobile" target="_blank" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div><strong>Noah's Ark</strong> · AWS x GDEX Hackathon 2026 · Best Logistics AI Solution<br>Hardware is design and simulation only.</div>
+  <div><a href="https://github.com/zishaan1911/Noah-Ark" target="_blank" rel="noopener">GitHub</a></div>
+</footer>
+
+<script src="assets/ark/frames.js"></script>
+<script>
+(() => {
+  // ---- links: one place to fill them in. Empty -> disabled "Coming soon" (or data-fallback)
+  // shortcut: placeholders until Ark Command is hosted and the Ark SOS APK is released
+  const LINKS = {
+    ARK_COMMAND_URL: '',
+    ARK_SOS_PARTYROCK_URL: "https://partyrock.aws/u/iamzishaan/hJn7bk5DlUb9/Noah's-Ark%253A-Rescue-and-Delivery-Drone-Fleet",
+    ARK_SOS_APK_URL: '',
+  };
+  document.querySelectorAll('[data-link]').forEach(a => {
+    const url = LINKS[a.dataset.link];
+    if (url) a.href = url;
+    else if (a.dataset.fallback) { a.href = a.dataset.fallback; a.removeAttribute('target'); }
+    else { a.setAttribute('aria-disabled', 'true'); a.removeAttribute('target'); }
+  });
+
+  // ---- drone gallery
+  const views = [
+    ['hero', 'Hero · white composite shell, float kit packed on the skids'],
+    ['side', 'Side · payload pod slung under the hub'],
+    ['top', 'Top · four 711 mm carbon props on T-Motor MN801-S motors'],
+    ['under', 'Under · radar altimeter and cargo connector'],
+    ['floats', 'Pontoons · CO₂-inflated in the air, before touchdown'],
+    ['water', 'Afloat · two yellow pontoons hold it on the water'],
+    ['inside', 'Inside · battery in the belly well, electronics in the hub'],
+    ['landing-30', 'SITL · the water landing flown in ArduCopter 4.7.2'],
+  ];
+  const thumbs = document.getElementById('thumbs'), stage = document.getElementById('stage-img'), cap = document.getElementById('stage-cap');
+  views.forEach(([k, label], i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.setAttribute('aria-pressed', String(i === 0)); b.setAttribute('aria-label', label.split(' · ')[0]);
+    b.innerHTML = `<img src="assets/renders/ark1-${k}.webp" alt="" loading="lazy">`;
+    b.addEventListener('click', () => {
+      stage.src = `assets/renders/ark1-${k}.webp`; stage.alt = label; cap.textContent = label;
+      thumbs.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    });
+    thumbs.appendChild(b);
+  });
+
+  // ---- reveal on scroll
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .2 });
+  document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 5) * 70 + 'ms'; io.observe(el); });
+
+  // ---- hero: scroll scrubs the rendered landing (frames + horizon from apps/landing/scripts/render_frames.py)
+  const D = window.ARK_FRAMES, N = D.waterline.length, WL = D.waterline, ALT = D.alt;
+  const root = document.documentElement, track = document.getElementById('track');
+  const canvas = document.getElementById('ark'), ctx = canvas.getContext('2d');
+  const strip = document.getElementById('strip'), giant = document.getElementById('giant'), readout = document.getElementById('readout');
+  const cards = [...strip.querySelectorAll('.card')];
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const A = 2.4;
+  let B = 1, vw = 0, vh = 0, cw = 0, ch = 0, cx = 0, cy = 0, stripW = 0, lettersW = 0;
+
+  const small = matchMedia('(max-width: 900px)').matches;
+  const dir = small ? 'assets/ark/sm/' : 'assets/ark/';
+  if (small) { canvas.width = 640; canvas.height = 360; }
+  const imgs = Array.from({ length: N }, (_, i) => {
+    const im = new Image(); im.decoding = 'async';
+    im.onload = () => { if (i <= shown) last = -1; }; // a better frame arrived: redraw
+    im.src = `${dir}f_${String(i).padStart(3, '0')}.webp`;
+    return im;
+  });
+  let last = -1, shown = 0;
+  function draw(f) {
+    let i = f; while (i > 0 && !imgs[i].complete) i--; // nearest loaded frame at or before f
+    if (!imgs[i].complete || !imgs[i].naturalWidth) return false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgs[i], 0, 0, canvas.width, canvas.height);
+    return i === f;
+  }
+
+  function layout() {
+    vw = root.clientWidth; vh = window.innerHeight;
+    const portrait = vw < 768 || vw <= vh;
+    if (!portrait) { const s = Math.max(vw / 1920, vh / 1080); cw = 1920 * s; ch = 1080 * s; cx = (vw - cw) / 2; cy = (vh - ch) / 2; }
+    else { cw = 1.55 * vw; ch = cw * 9 / 16; cx = vw / 2 - 0.5 * cw; cy = 0.40 * vh - WL[N - 1] * ch; }
+    Object.assign(canvas.style, { left: cx + 'px', top: cy + 'px', width: cw + 'px', height: ch + 'px' });
+    stripW = strip.scrollWidth + (portrait ? 22 : 0); lettersW = giant.scrollWidth;
+    B = (stripW + 0.45 * vw) / vw * 1.1;
+    track.style.height = (1 + A + B) * vh + 'px';
+    last = -1;
+  }
+
+  let cur = 0, lastY = window.scrollY, lastT = performance.now(), speed = 0;
+  function update(y, gs, snap) {
+    const q = clamp(y / (A * vh));
+    cur = snap ? q : cur + (q - cur) * 0.2;
+    if (Math.abs(q - cur) < 1e-4) cur = q;
+    const f = Math.round(cur * (N - 1));
+    if (f !== last) {
+      shown = f; if (draw(f)) last = f;
+      // the water stays off-screen until it enters the frame, even where the frame doesn't reach the bottom (phones)
+      const edge = cy + WL[f] * ch + Math.max(0, vh - cy - ch) * clamp((WL[f] - WL[N - 1]) / (1 - WL[N - 1]));
+      root.style.setProperty('--edge-px', edge.toFixed(1) + 'px');
+    }
+    const settled = q >= 0.94;
+    const r = clamp((y - A * vh) / (B * vh));
+    root.style.setProperty('--ph', settled && r < 0.04 ? 1 : 0); // a scroll hint: gone once the strip arrives
+    const sx = vw - r * (stripW + 0.45 * vw);
+    strip.style.transform = `translate3d(${sx.toFixed(1)}px,0,0)`;
+    giant.style.transform = `translate3d(${(vw - r * (lettersW + vw)).toFixed(1)}px,0,0)`;
+    if (r > 0) cards.forEach(c => c.style.setProperty('--s', (clamp((0.98 - (sx + c.offsetLeft) / vw) / 0.3, -0.4, 1.6) * 100).toFixed(1) + '%'));
+
+    readout.classList.toggle('on', y > vh * 0.06);
+    const alt = settled ? '<b>AFLOAT</b>' : `${ALT[f].toFixed(1).padStart(4, '0')} M`;
+    readout.innerHTML = `ARK-001 · ALT ${alt} · GS ${String(Math.min(99, Math.round(gs))).padStart(2, '0')} KM/H`;
+    return f;
+  }
+
+  const rec = new URLSearchParams(location.search).has('rec');
+  function tick(now) {
+    if (!rec) {
+      const y = window.scrollY, dt = (now - lastT) / 1000;
+      if (dt > 0) speed += (Math.abs(y - lastY) / dt / 32 - speed) * 0.12;
+      lastY = y; lastT = now;
+      update(y, speed, false);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ---- recorder mode (?rec=1): an 11 s animation drives progress, deterministic per frame time
+  if (rec) {
+    const probe = document.createElement('i'); probe.style.position = 'absolute'; document.body.appendChild(probe);
+    const anim = probe.animate([
+      { transform: 'translateX(0px)', offset: 0 },
+      { transform: 'translateX(0px)', offset: .04, easing: 'cubic-bezier(.4,.05,.55,.95)' },
+      { transform: 'translateX(1000px)', offset: .96 },
+      { transform: 'translateX(1000px)', offset: 1 },
+    ], { duration: 11000, fill: 'both' });
+    anim.pause();
+    const progress = t => { anim.currentTime = clamp(t, 0, 11) * 1000; return new DOMMatrix(getComputedStyle(probe).transform).e / 1000; };
+    window.__recTime = t => {
+      const max = track.offsetHeight - vh, y = progress(t) * max, y0 = progress(t - 1 / 30) * max;
+      window.scrollTo(0, y);
+      return update(y, Math.abs(y - y0) * 30 / 32, true);
+    };
+  }
+
+  layout();
+  addEventListener('resize', layout);
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
