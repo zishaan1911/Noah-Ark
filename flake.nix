@@ -38,22 +38,23 @@
           ];
         };
 
-        # Ark SOS (Flutter + Android) is big, so it gets its own shell: `nix develop .#mobile`.
-        # SDK versions match what Flutter's Gradle plugin asks for (compileSdk 36, its pinned NDK).
+        # Ark SOS (native Kotlin + Compose) is big, so it gets its own shell: `nix develop .#mobile`.
+        # compileSdk 36 and JDK 17 match apps/sos-mobile; the emulator and a Pixel image show the app on a laptop.
         mobile =
           let
             android = pkgs.androidenv.composeAndroidPackages {
-              platformVersions = [ "35" "36" ];
-              buildToolsVersions = [ "35.0.0" "36.0.0" ];
-              ndkVersions = [ "28.2.13676358" ];
-              cmakeVersions = [ "3.22.1" ];
-              includeNDK = true;
+              platformVersions = [ "36" ];
+              buildToolsVersions = [ "36.0.0" ];
+              includeEmulator = true;
+              includeSystemImages = true;
+              systemImageTypes = [ "google_apis" ];
+              abiVersions = [ (if pkgs.stdenv.hostPlatform.isAarch64 then "arm64-v8a" else "x86_64") ];
             };
             sdk = "${android.androidsdk}/libexec/android-sdk";
           in
           pkgs.mkShell {
             inputsFrom = [ default ];
-            packages = [ pkgs.flutter pkgs.jdk17 android.androidsdk ];
+            packages = [ pkgs.jdk17 android.androidsdk ];
             ANDROID_HOME = sdk;
             ANDROID_SDK_ROOT = sdk;
             JAVA_HOME = pkgs.jdk17.home;
