@@ -1,14 +1,17 @@
-# Noah's Ark landing page
+# GDEX × Noah's Ark landing page
 
-A one-page pitch for GDEX: a scroll-driven hero where ARK-001 lands on floodwater, then the concept, the drone and links to the apps (Ark Command, Ark SOS on PartyRock, Ark SOS for Android).
-Plain HTML, CSS and JS: no framework, no build step.
+A one-page pitch for GDEX, in plain HTML, CSS and JS: no framework, no build step.
+
+1. **Freight hero:** a reach stacker loads a GDEX container onto a truck. The clip is scrubbed by scroll. "OUR SERVICES" then slides behind the truck while the services strip slides in.
+2. **Jungle last mile:** ARK-001 flies a GDEX parcel 20 km over the rainforest, drops it at a longhouse village and flies home.
+3. How it works, the drone (specs and gallery), and the apps (Ark Command, Ark SOS on PartyRock, Ark SOS for Android).
 
 ## Run
 
 ```sh
 python -m http.server 8000 --directory apps/landing   # then open http://localhost:8000
 ```
-Opening `index.html` straight from disk also works, but the font preloads are blocked on `file://`.
+The hero clip streams from CloudFront, so the page needs a network connection.
 
 ## Links
 
@@ -20,22 +23,24 @@ Set the app links in the `LINKS` object at the top of the script in `index.html`
 | `ARK_SOS_PARTYROCK_URL` | the PartyRock app from `partyrock/noah-ark-dispatch.md` |
 | `ARK_SOS_APK_URL` | placeholder (no APK release yet) |
 
-## The hero frames
+## Assets and how they're made
 
-`assets/ark/` holds 97 transparent WebP frames (1280×720, plus 640×360 in `sm/` for small screens) and `frames.js`, which gives the waterline and SITL altitude for each frame. They are rendered from the Ark-1 viewer's ArduCopter SITL water landing:
+| Asset | Made by |
+|---|---|
+| `assets/hero/container.js` | `scripts/track_container.py <clip-1080.mp4>`: the container's side for each clip frame, so the GDEX decal rides on it |
+| `assets/jungle/ark-*.webp` | `scripts/render_drone.py`: ARK-001 in four poses from the drone viewer. It prints the pod box used for the parcel drop (`POD` in `index.html`) |
+| `assets/brand/gdex-logo.png` | copied from `hardware/industrial-design/livery/` (see `SOURCES.md` there) |
+| `assets/renders/` | the stills in `hardware/industrial-design/out/renders/final/`, as WebP |
 
-```sh
-python hardware/industrial-design/build_viewer.py      # if the drone changed
-python apps/landing/scripts/render_frames.py           # all frames, ~2 min (Edge + Playwright)
-python apps/landing/scripts/render_frames.py 0 60 96   # just these, for checking
-```
-The camera schedule is `KEYS` in the script. The water plane is rendered depth-only, so it hides the submerged parts of the pontoons, and the page draws the water as a CSS band.
+The jungle itself (ridges, canopy, river, longhouse) is SVG generated in the page, so it fits any screen size.
 
-`?rec=1` switches to recorder mode: `window.__recTime(t)` for t in 0–11 s scrolls the page to a fixed point and returns the frame index, which makes frame-by-frame video capture deterministic.
+`?rec=1` switches to recorder mode: `window.__recTime(video, t)` for t in 0–11 s scrolls the hero to a fixed point and returns the clip time, which makes frame-by-frame video capture deterministic.
 
 ## Test
 
-No unit tests; it's a static page. To check it, serve it, scroll the hero at 1440×960 and 390×844, and confirm:
-- no horizontal scroll;
-- "THE ARK DELIVERS" stays behind the drone;
+No unit tests; it's a static page. To check it, serve it, scroll at 1440×960 and 390×844, and confirm:
+- the decal stays on the container;
+- "OUR SERVICES" never shows through the truck;
+- the drone and the copy never overlap;
+- there's no horizontal scroll;
 - every link opens or shows "Coming soon".
