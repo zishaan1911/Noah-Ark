@@ -1,0 +1,11 @@
+# generated or licensed: rebuild per README
+clips/
+music/
+fr/
+node_modules/
+package*.json
+.chrome-profile/
+stage/ml/
+stage/ark_viewer.html
+stage/sos*.mp4
+stage/sos*.png

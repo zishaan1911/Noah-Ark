@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Regions</title>
+<link rel="stylesheet" href="ml/maplibre-gl.css">
+<style>
+  html,body,#m{margin:0;height:100%;background:#05080e}
+  .pin{position:relative;width:26px;height:26px}
+  .pin .w{position:absolute;inset:0}.pin i{position:absolute;inset:0;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px #fff,0 0 30px var(--c)}
+  .pin b{position:absolute;inset:-22px;border-radius:50%;border:4px solid var(--c);animation:p 1.8s infinite}
+  @keyframes p{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.4);opacity:0}}
+  .lab{position:absolute;left:40px;top:-24px;width:max-content;max-width:420px;padding:12px 16px;border-radius:14px;background:rgba(10,14,22,.9);color:#fff;
+    font:600 20px/1.3 Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transition:opacity .6s}
+  .lab small{display:block;margin-top:4px;font-weight:500;font-size:16px;color:#c9d3e0}
+  .lab em{font-style:normal;color:var(--c);text-transform:uppercase;font-size:14px;letter-spacing:.08em}
+  .on .lab{opacity:1}
+  .pin>div.w{opacity:0;transition:opacity .6s}.pin.show>div.w{opacity:1}
+</style></head><body><div id="m"></div>
+<script type="module">
+import * as ml from './ml/maplibre-gl.mjs';
+ml.setWorkerUrl(new URL('./ml/maplibre-gl-worker.mjs', location.href).href);
+const map = new ml.Map({ container: 'm', style: 'https://tiles.openfreemap.org/styles/liberty', center: [109.5, 4.2], zoom: 5.2, attributionControl: false, interactive: false });
+const P = {
+  flood: { at: [102.25, 5.6], c: '#2f8cff', t: 'Disaster relief', h: 'Kelantan · Terengganu · Pahang', s: 'Monsoon floods every Nov–Jan. Families stranded on rooftops, roads under water.' },
+  sabah: { at: [115.75, 5.35], c: '#2f8cff', t: 'Disaster relief', h: 'Beaufort & Kota Belud, Sabah', s: 'Padas and Tempasuk rivers flood low-lying kampungs.' },
+  gdex: { at: [116.6, 5.9], c: '#ff6a13', t: 'GDEX last mile', h: 'Sabah & Sarawak interior', s: 'Longhouse villages hours from the nearest road. A parcel takes days.' },
+  sarawak: { at: [113.6, 2.6], c: '#ff6a13', t: 'GDEX last mile', h: 'Sarawak interior', s: 'Upriver communities reached by boat or logging road.' },
+  mil: { at: [118.3, 5.05], c: '#4dff7a', t: 'Defence logistics', h: 'ESSZONE · east Sabah', s: 'Frontline posts resupplied without exposing a convoy.' },
+};
+const els = {};
+for (const [k, v] of Object.entries(P)) {
+  const el = document.createElement('div'); el.className = 'pin'; el.style.setProperty('--c', v.c);
+  el.innerHTML = `<div class="w"><i></i><b></b><div class="lab"><em>${v.t}</em><br>${v.h}<small>${v.s}</small></div></div>`;
+  new ml.Marker({ element: el }).setLngLat(v.at).addTo(map); els[k] = el;
+}
+window.__show = (k, label = true) => { els[k].classList.add('show'); els[k].classList.toggle('on', label); };
+window.__hideLabels = () => Object.values(els).forEach((e) => e.classList.remove('on'));
+window.__fly = (center, zoom, ms = 3500) => void map.flyTo({ center, zoom, duration: ms, essential: true });
+map.on('idle', () => (window.__ready = true));
+</script></body></html>
