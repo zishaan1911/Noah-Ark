@@ -181,6 +181,7 @@ resource "oci_core_instance" "ark" {
       duckdns_token     = var.duckdns_token
       operator_password = var.operator_password
       repo_branch       = var.repo_branch
+      sim_cpus          = min(var.ocpus, 2) # A1: 1 OCPU = 1 CPU
     }))
   }
 

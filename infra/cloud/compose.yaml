@@ -10,6 +10,9 @@ services:
       - ./infra/cloud/passwd:/mosquitto/config/passwd:ro
     restart: unless-stopped
 
+  sim:
+    cpus: ${SIM_CPUS:-2} # Docker refuses a limit above the VM's CPU count (1-OCPU A1 = 1 CPU)
+
   sos-api:
     ports: !reset []
 

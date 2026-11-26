@@ -30,7 +30,7 @@ write_files:
       sudo -u opc git clone -b ${repo_branch} https://github.com/zishaan1911/Noah-Ark.git
       chcon -R -t container_file_t Noah-Ark # SELinux: let containers read the bind-mounted repo
       cd Noah-Ark
-      echo "ARK_DOMAIN=${domain}" > .env
+      printf 'ARK_DOMAIN=${domain}\nSIM_CPUS=${sim_cpus}\n' > .env
 
       set +x # keep the password out of the log
       OPERATOR_PASSWORD="$(cat /opt/noah-ark/operator-password)" docker run --rm -e OPERATOR_PASSWORD \
