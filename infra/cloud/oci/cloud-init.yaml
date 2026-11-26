@@ -1,0 +1,49 @@
+#cloud-config
+# Runs once, on first boot. Template for main.tf: $${...} is filled in by Terraform.
+# Progress: sudo tail -f /var/log/noah-ark-setup.log
+write_files:
+  - path: /opt/noah-ark/operator-password
+    permissions: "0600"
+    content: ${jsonencode(operator_password)}
+  - path: /opt/noah-ark/setup.sh
+    permissions: "0700"
+    content: |
+      #!/bin/bash
+      set -euxo pipefail
+
+      # Point the DuckDNS name at this VM (empty ip= means "the address this request comes from").
+      set +x # keep the token out of the log
+      curl -fsS "https://www.duckdns.org/update?domains=${duckdns_subdomain}&token=${duckdns_token}&ip="
+      set -x
+
+      firewall-cmd --permanent --add-service=http --add-service=https
+      firewall-cmd --reload
+
+      dnf install -y dnf-plugins-core git
+      dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+      dnf remove -y podman buildah runc || true # conflict with docker-ce's containerd
+      dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+      usermod -aG docker opc
+
+      cd /home/opc
+      sudo -u opc git clone -b ${repo_branch} https://github.com/zishaan1911/Noah-Ark.git
+      chcon -R -t container_file_t Noah-Ark # SELinux: let containers read the bind-mounted repo
+      cd Noah-Ark
+      echo "ARK_DOMAIN=${domain}" > .env
+
+      set +x # keep the password out of the log
+      OPERATOR_PASSWORD="$(cat /opt/noah-ark/operator-password)" docker run --rm -e OPERATOR_PASSWORD \
+        -v ./infra/cloud:/c eclipse-mosquitto:2.0.22 \
+        sh -c 'mosquitto_passwd -c -b /c/passwd operator "$OPERATOR_PASSWORD" && chown 1883:1883 /c/passwd'
+      set -x
+
+      docker run --rm -v .:/repo -w /repo/ml/predictive-maintenance python:3.12-slim \
+        sh -c 'pip install -q -r requirements.txt && python generate.py && python train.py'
+
+      docker build -t noah-ark-sitl simulation # ARM: compiles ArduCopter, ~20 min
+      docker compose -f compose.yaml -f infra/cloud/compose.yaml up -d --build
+      echo "NOAH ARK READY"
+
+runcmd:
+  - bash -c '/opt/noah-ark/setup.sh > /var/log/noah-ark-setup.log 2>&1'

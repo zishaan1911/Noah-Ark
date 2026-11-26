@@ -12,6 +12,8 @@ Oracle Cloud free VM: Caddy (HTTPS) -> Mosquitto, sos-api, sim, fleet, health, g
 Anyone with the link can **watch**. Only a browser opened once with the operator key can **command** drones.
 
 ## 1. Get the VM (once)
+Shortcut: [oci/](oci/README.md) does steps 1 to 3 with one `tofu apply` (Terraform). The manual way:
+
 1. Sign up for [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/). It asks for a card but does not charge for Always Free resources.
 2. Create an instance with the shape **VM.Standard.A1.Flex** (Ampere ARM), 4 OCPU and 24 GB RAM, image **Ubuntu 24.04**.
    If it says "out of capacity", retry later or pick another availability domain.

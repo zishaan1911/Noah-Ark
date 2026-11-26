@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+tenancy_ocid        = "ocid1.tenancy.oc1..xxxx"
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+duckdns_subdomain   = "khoryz666"
+duckdns_token       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+operator_password   = "pick-a-long-one"
+repo_branch         = "chore/deploy" # switch to "main" once chore/deploy is merged

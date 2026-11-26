@@ -35,3 +35,9 @@ ml/*/out/
 
 # Mosquitto operator password for the cloud demo (infra/cloud/README.md)
 infra/cloud/passwd
+
+# Terraform / OpenTofu (infra/cloud/oci): local state and secrets
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
