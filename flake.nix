@@ -44,7 +44,7 @@
           let
             android = pkgs.androidenv.composeAndroidPackages {
               platformVersions = [ "36" ];
-              buildToolsVersions = [ "36.0.0" ];
+              buildToolsVersions = [ "35.0.0" "36.0.0" ]; # 35: the Android Gradle plugin's default
               includeEmulator = true;
               includeSystemImages = true;
               systemImageTypes = [ "google_apis" ];
